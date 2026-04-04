@@ -1,0 +1,40 @@
+{
+  "name": "bootstrap-team",
+  "summary": "Deterministic project spin-up team for governed repos.",
+  "roles": [
+    {
+      "name": "scaffold-planner",
+      "responsibility": "Select the minimum correct governance footprint for the target project.",
+      "inputs": ["project purpose", "existing repo state", "bootstrap rules"],
+      "outputs": ["scaffold plan"],
+      "stop_condition": "The required file footprint and local-skill decision are explicit."
+    },
+    {
+      "name": "bootstrap-executor",
+      "responsibility": "Run the deterministic bootstrap script or standardization process.",
+      "inputs": ["scaffold plan", "bootstrap script"],
+      "outputs": ["created or updated project scaffold"],
+      "stop_condition": "The required files and symlinks exist."
+    },
+    {
+      "name": "post-bootstrap-verifier",
+      "responsibility": "Validate the scaffold against the registry and verifier expectations.",
+      "inputs": ["project scaffold", "registry", "verifier output"],
+      "outputs": ["verification report", "follow-up checklist"],
+      "stop_condition": "The scaffold is verified or concrete failures are captured."
+    }
+  ],
+  "handoff_artifacts": [
+    "scaffold summary",
+    "verification report",
+    "follow-up checklist"
+  ],
+  "claude_mapping": {
+    "primitives": ["slash commands", "subagents when specialization helps"],
+    "preferred_entry": "project-bootstrap"
+  },
+  "codex_mapping": {
+    "primitives": ["skills", "deterministic scripts"],
+    "preferred_entry": "project-bootstrap"
+  }
+}

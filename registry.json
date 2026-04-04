@@ -1,0 +1,354 @@
+{
+  "version": 3,
+  "governed_projects": [
+    {
+      "name": "jarvis",
+      "root": "jarvis",
+      "skills_synced": true,
+      "required_files": [
+        "AGENTS.md",
+        "CLAUDE.md",
+        "docs/CONOPS.md",
+        "docs/HANDOFF.md",
+        ".claude/CLAUDE.md",
+        ".claude/agents/jarvis-system.md",
+        ".claude/agents/jarvis-coder.md",
+        ".claude/commands/jarvis-healthcheck.md",
+        ".claude/commands/jarvis-reviewer.md",
+        ".claude/commands/jarvis-audit.md"
+      ]
+    },
+    {
+      "name": "RoboNaaz",
+      "root": "RoboNaaz",
+      "required_files": [
+        "AGENTS.md",
+        "CLAUDE.md",
+        "docs/CONOPS.md",
+        "docs/HANDOFF.md",
+        ".claude/CLAUDE.md"
+      ]
+    },
+    {
+      "name": "ZorroClaw",
+      "root": "ZorroClaw",
+      "required_files": [
+        "AGENTS.md",
+        "docs/CONOPS.md",
+        "docs/HANDOFF.md",
+        ".claude/CLAUDE.md"
+      ]
+    },
+    {
+      "name": "homelab",
+      "root": "homelab",
+      "required_files": [
+        "AGENTS.md",
+        "AI_GUIDE.md",
+        "docs/HANDOFF.md",
+        ".claude/CLAUDE.md"
+      ]
+    },
+    {
+      "name": "factory",
+      "root": "ZorroForge/factory",
+      "required_files": [
+        "AGENTS.md",
+        "README.md",
+        "docs/HANDOFF.md",
+        ".claude/CLAUDE.md"
+      ]
+    },
+    {
+      "name": "playlist-archive",
+      "root": "playlist-archive",
+      "required_files": [
+        "AGENTS.md",
+        "CLAUDE.md",
+        "docs/CONOPS.md",
+        "docs/HANDOFF.md",
+        ".claude/CLAUDE.md"
+      ]
+    }
+  ],
+  "skills": [
+    {
+      "name": "multi-agent-governor",
+      "scope": "global",
+      "project": null,
+      "canonical_skill": "skills/global/multi-agent-governor/SKILL.md",
+      "targets": ["codex", "claude"],
+      "claude": {
+        "mode": "command",
+        "path": "claude/global/commands/multi-agent-governor.md",
+        "command_name": "multi-agent-governor"
+      },
+      "codex": {
+        "path": "skills/global/multi-agent-governor"
+      }
+    },
+    {
+      "name": "project-bootstrap",
+      "scope": "global",
+      "project": null,
+      "canonical_skill": "skills/global/project-bootstrap/SKILL.md",
+      "targets": ["codex", "claude"],
+      "claude": {
+        "mode": "command",
+        "path": "claude/global/commands/project-bootstrap.md",
+        "command_name": "project-bootstrap"
+      },
+      "codex": {
+        "path": "skills/global/project-bootstrap"
+      }
+    },
+    {
+      "name": "portability-auditor",
+      "scope": "global",
+      "project": null,
+      "canonical_skill": "skills/global/portability-auditor/SKILL.md",
+      "targets": ["codex", "claude"],
+      "claude": {
+        "mode": "command",
+        "path": "claude/global/commands/portability-audit.md",
+        "command_name": "portability-audit"
+      },
+      "codex": {
+        "path": "skills/global/portability-auditor"
+      }
+    },
+    {
+      "name": "code-review-doctrine",
+      "scope": "global",
+      "project": null,
+      "canonical_skill": "skills/global/code-review-doctrine/SKILL.md",
+      "targets": ["codex", "claude"],
+      "claude": {
+        "mode": "command",
+        "path": "claude/global/commands/doctrine-review.md",
+        "command_name": "doctrine-review"
+      },
+      "codex": {
+        "path": "skills/global/code-review-doctrine"
+      }
+    },
+    {
+      "name": "zorroforge-infra",
+      "scope": "global",
+      "project": null,
+      "canonical_skill": "skills/global/zorroforge-infra/SKILL.md",
+      "targets": ["codex", "claude"],
+      "claude": {
+        "mode": "subagent",
+        "path": "claude/global/agents/zorroforge-infra.md",
+        "agent_name": "zorroforge-infra"
+      },
+      "codex": {
+        "path": "skills/global/zorroforge-infra"
+      }
+    },
+    {
+      "name": "zorroforge-finance",
+      "scope": "global",
+      "project": null,
+      "canonical_skill": "skills/global/zorroforge-finance/SKILL.md",
+      "targets": ["codex", "claude"],
+      "claude": {
+        "mode": "subagent",
+        "path": "claude/global/agents/zorroforge-finance.md",
+        "agent_name": "zorroforge-finance"
+      },
+      "codex": {
+        "path": "skills/global/zorroforge-finance"
+      }
+    },
+    {
+      "name": "zorroforge-brand",
+      "scope": "global",
+      "project": null,
+      "canonical_skill": "skills/global/zorroforge-brand/SKILL.md",
+      "targets": ["codex", "claude"],
+      "claude": {
+        "mode": "subagent",
+        "path": "claude/global/agents/zorroforge-brand.md",
+        "agent_name": "zorroforge-brand"
+      },
+      "codex": {
+        "path": "skills/global/zorroforge-brand"
+      }
+    },
+    {
+      "name": "zorroforge-legal",
+      "scope": "global",
+      "project": null,
+      "canonical_skill": "skills/global/zorroforge-legal/SKILL.md",
+      "targets": ["codex", "claude"],
+      "claude": {
+        "mode": "subagent",
+        "path": "claude/global/agents/zorroforge-legal.md",
+        "agent_name": "zorroforge-legal"
+      },
+      "codex": {
+        "path": "skills/global/zorroforge-legal"
+      }
+    },
+    {
+      "name": "zorroforge-procurement",
+      "scope": "global",
+      "project": null,
+      "canonical_skill": "skills/global/zorroforge-procurement/SKILL.md",
+      "targets": ["codex", "claude"],
+      "claude": {
+        "mode": "subagent",
+        "path": "claude/global/agents/zorroforge-procurement.md",
+        "agent_name": "zorroforge-procurement"
+      },
+      "codex": {
+        "path": "skills/global/zorroforge-procurement"
+      }
+    },
+    {
+      "name": "governor-auditor",
+      "scope": "global",
+      "project": null,
+      "canonical_skill": "skills/global/multi-agent-governor/SKILL.md",
+      "targets": ["claude"],
+      "claude": {
+        "mode": "subagent",
+        "path": "claude/global/agents/governor-auditor.md",
+        "agent_name": "governor-auditor"
+      }
+    },
+    {
+      "name": "portability-reviewer",
+      "scope": "global",
+      "project": null,
+      "canonical_skill": "skills/global/portability-auditor/SKILL.md",
+      "targets": ["claude"],
+      "claude": {
+        "mode": "subagent",
+        "path": "claude/global/agents/portability-reviewer.md",
+        "agent_name": "portability-reviewer"
+      }
+    },
+    {
+      "name": "remediation-planner",
+      "scope": "global",
+      "project": null,
+      "canonical_skill": "skills/global/multi-agent-governor/SKILL.md",
+      "targets": ["claude"],
+      "claude": {
+        "mode": "subagent",
+        "path": "claude/global/agents/remediation-planner.md",
+        "agent_name": "remediation-planner"
+      }
+    },
+    {
+      "name": "jarvis-system",
+      "scope": "project-local",
+      "project": "jarvis",
+      "canonical_skill": "skills/projects/jarvis/jarvis-system/SKILL.md",
+      "targets": ["codex", "claude"],
+      "claude": {
+        "mode": "subagent",
+        "path": "claude/projects/jarvis/agents/jarvis-system.md",
+        "agent_name": "jarvis-system"
+      },
+      "codex": {
+        "path": "skills/projects/jarvis/jarvis-system"
+      }
+    },
+    {
+      "name": "jarvis-coder",
+      "scope": "project-local",
+      "project": "jarvis",
+      "canonical_skill": "skills/projects/jarvis/jarvis-coder/SKILL.md",
+      "targets": ["codex", "claude"],
+      "claude": {
+        "mode": "subagent",
+        "path": "claude/projects/jarvis/agents/jarvis-coder.md",
+        "agent_name": "jarvis-coder"
+      },
+      "codex": {
+        "path": "skills/projects/jarvis/jarvis-coder"
+      }
+    },
+    {
+      "name": "jarvis-healthcheck",
+      "scope": "project-local",
+      "project": "jarvis",
+      "canonical_skill": "skills/projects/jarvis/jarvis-healthcheck/SKILL.md",
+      "targets": ["codex", "claude"],
+      "claude": {
+        "mode": "command",
+        "path": "claude/projects/jarvis/commands/jarvis-healthcheck.md",
+        "command_name": "jarvis-healthcheck"
+      },
+      "codex": {
+        "path": "skills/projects/jarvis/jarvis-healthcheck"
+      }
+    },
+    {
+      "name": "jarvis-reviewer",
+      "scope": "project-local",
+      "project": "jarvis",
+      "canonical_skill": "skills/projects/jarvis/jarvis-reviewer/SKILL.md",
+      "targets": ["codex", "claude"],
+      "claude": {
+        "mode": "command",
+        "path": "claude/projects/jarvis/commands/jarvis-reviewer.md",
+        "command_name": "jarvis-reviewer"
+      },
+      "codex": {
+        "path": "skills/projects/jarvis/jarvis-reviewer"
+      }
+    },
+    {
+      "name": "jarvis-audit",
+      "scope": "project-local",
+      "project": "jarvis",
+      "canonical_skill": "skills/projects/jarvis/jarvis-audit/SKILL.md",
+      "targets": ["codex", "claude"],
+      "claude": {
+        "mode": "command",
+        "path": "claude/projects/jarvis/commands/jarvis-audit.md",
+        "command_name": "jarvis-audit"
+      },
+      "codex": {
+        "path": "skills/projects/jarvis/jarvis-audit"
+      }
+    }
+  ],
+  "teams": [
+    {
+      "name": "governance-team",
+      "canonical_manifest": "teams/governance-team.json",
+      "purpose": "Keep repos aligned with Agent Forge governance, portability, and adapter wiring.",
+      "roles": [
+        "governor-auditor",
+        "portability-reviewer",
+        "remediation-planner"
+      ]
+    },
+    {
+      "name": "bootstrap-team",
+      "canonical_manifest": "teams/bootstrap-team.json",
+      "purpose": "Create or standardize governed projects and verify the output.",
+      "roles": [
+        "scaffold-planner",
+        "bootstrap-executor",
+        "post-bootstrap-verifier"
+      ]
+    },
+    {
+      "name": "delivery-team",
+      "canonical_manifest": "teams/delivery-team.json",
+      "purpose": "Plan, build, and review work in governed repos without collapsing into a single god agent.",
+      "roles": [
+        "architect-planner",
+        "builder-implementer",
+        "reviewer-tester"
+      ]
+    }
+  ]
+}

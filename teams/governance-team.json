@@ -1,0 +1,39 @@
+{
+  "name": "governance-team",
+  "summary": "Audit-first team for keeping governed repos aligned with Agent Forge contracts and portability rules.",
+  "roles": [
+    {
+      "name": "governor-auditor",
+      "responsibility": "Inspect repo governance state, registry alignment, adapter wiring, and required docs.",
+      "inputs": ["registry", "project contracts", "verifier output"],
+      "outputs": ["findings report"],
+      "stop_condition": "All major governance findings are identified and categorized."
+    },
+    {
+      "name": "portability-reviewer",
+      "responsibility": "Check for suitcase-doctrine and agent-agnostic portability drift.",
+      "inputs": ["repo files", "config paths", "docs"],
+      "outputs": ["portability warnings or blockers"],
+      "stop_condition": "All portability-sensitive surfaces have been reviewed."
+    },
+    {
+      "name": "remediation-planner",
+      "responsibility": "Turn findings into ordered remediation actions without mutating by default.",
+      "inputs": ["findings report", "warnings", "blockers"],
+      "outputs": ["remediation checklist", "commands or patch plan"],
+      "stop_condition": "A human can act on the remediation plan without re-interpreting it."
+    }
+  ],
+  "handoff_artifacts": [
+    "findings report",
+    "remediation checklist"
+  ],
+  "claude_mapping": {
+    "primitives": ["slash commands", "subagents when needed"],
+    "preferred_entry": "multi-agent-governor"
+  },
+  "codex_mapping": {
+    "primitives": ["skills", "delegated runtime agents when needed"],
+    "preferred_entry": "multi-agent-governor"
+  }
+}

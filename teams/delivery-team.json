@@ -1,0 +1,47 @@
+{
+  "name": "delivery-team",
+  "summary": "Default project work pattern separating planning, implementation, and review.",
+  "roles": [
+    {
+      "name": "architect-planner",
+      "responsibility": "Clarify scope, constraints, interfaces, and acceptance criteria before implementation.",
+      "inputs": ["user goal", "repo state", "governance rules"],
+      "outputs": ["implementation plan"],
+      "stop_condition": "The work is decision-complete enough for a builder to execute."
+    },
+    {
+      "name": "builder-implementer",
+      "responsibility": "Make the scoped code, config, or doc changes while staying inside the plan.",
+      "inputs": ["implementation plan", "repo files"],
+      "outputs": ["change summary", "updated code or docs"],
+      "stop_condition": "The scoped work is complete and locally verified as far as practical."
+    },
+    {
+      "name": "reviewer-tester",
+      "responsibility": "Review changes for regressions, risk, and missing tests or verification.",
+      "inputs": ["diff", "changed files", "test output"],
+      "outputs": ["findings report", "verification result"],
+      "stop_condition": "The changes are either approved or concrete findings are documented."
+    }
+  ],
+  "handoff_artifacts": [
+    "implementation plan",
+    "change summary",
+    "findings or verification report"
+  ],
+  "claude_mapping": {
+    "primitives": ["subagents", "slash commands"],
+    "preferred_entries": [
+      "jarvis-system",
+      "jarvis-coder",
+      "doctrine-review"
+    ]
+  },
+  "codex_mapping": {
+    "primitives": ["skills", "delegated runtime agents"],
+    "preferred_entries": [
+      "project skills",
+      "code-review-doctrine"
+    ]
+  }
+}
