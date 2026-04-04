@@ -1,6 +1,8 @@
 ---
 name: jarvis-system
 description: Jarvis Phase 1 operating doctrine. Enforces subscription-first, local-first, CLI-native principles. Load this when working in the Jarvis repo.
+context_cost: medium
+model_tier: any
 ---
 
 # Jarvis System Skill

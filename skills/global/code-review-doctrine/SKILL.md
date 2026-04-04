@@ -1,6 +1,8 @@
 ---
 name: code-review-doctrine
 description: Review code changes for doctrine violations, portability regressions, hidden risk, hardcoded secrets, premature infrastructure, and over-engineered abstractions. Use when the user asks for a review or pre-commit audit.
+context_cost: light
+model_tier: any
 ---
 
 # Code Review Doctrine

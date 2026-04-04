@@ -1,10 +1,9 @@
 {
-  "version": 3,
+  "version": 4,
   "governed_projects": [
     {
       "name": "jarvis",
       "root": "jarvis",
-      "skills_synced": true,
       "required_files": [
         "AGENTS.md",
         "CLAUDE.md",
@@ -83,6 +82,9 @@
         "path": "claude/global/commands/multi-agent-governor.md",
         "command_name": "multi-agent-governor"
       },
+      "claude_skill": {
+        "projects": ["jarvis"]
+      },
       "codex": {
         "path": "skills/global/multi-agent-governor"
       }
@@ -97,6 +99,9 @@
         "mode": "command",
         "path": "claude/global/commands/project-bootstrap.md",
         "command_name": "project-bootstrap"
+      },
+      "claude_skill": {
+        "projects": ["jarvis"]
       },
       "codex": {
         "path": "skills/global/project-bootstrap"
@@ -113,6 +118,9 @@
         "path": "claude/global/commands/portability-audit.md",
         "command_name": "portability-audit"
       },
+      "claude_skill": {
+        "projects": ["jarvis"]
+      },
       "codex": {
         "path": "skills/global/portability-auditor"
       }
@@ -127,6 +135,9 @@
         "mode": "command",
         "path": "claude/global/commands/doctrine-review.md",
         "command_name": "doctrine-review"
+      },
+      "claude_skill": {
+        "projects": ["jarvis"]
       },
       "codex": {
         "path": "skills/global/code-review-doctrine"
@@ -143,6 +154,9 @@
         "path": "claude/global/agents/zorroforge-infra.md",
         "agent_name": "zorroforge-infra"
       },
+      "claude_skill": {
+        "projects": ["jarvis"]
+      },
       "codex": {
         "path": "skills/global/zorroforge-infra"
       }
@@ -157,6 +171,9 @@
         "mode": "subagent",
         "path": "claude/global/agents/zorroforge-finance.md",
         "agent_name": "zorroforge-finance"
+      },
+      "claude_skill": {
+        "projects": ["jarvis"]
       },
       "codex": {
         "path": "skills/global/zorroforge-finance"
@@ -173,6 +190,9 @@
         "path": "claude/global/agents/zorroforge-brand.md",
         "agent_name": "zorroforge-brand"
       },
+      "claude_skill": {
+        "projects": ["jarvis"]
+      },
       "codex": {
         "path": "skills/global/zorroforge-brand"
       }
@@ -188,6 +208,9 @@
         "path": "claude/global/agents/zorroforge-legal.md",
         "agent_name": "zorroforge-legal"
       },
+      "claude_skill": {
+        "projects": ["jarvis"]
+      },
       "codex": {
         "path": "skills/global/zorroforge-legal"
       }
@@ -202,6 +225,9 @@
         "mode": "subagent",
         "path": "claude/global/agents/zorroforge-procurement.md",
         "agent_name": "zorroforge-procurement"
+      },
+      "claude_skill": {
+        "projects": ["jarvis"]
       },
       "codex": {
         "path": "skills/global/zorroforge-procurement"
@@ -244,6 +270,51 @@
       }
     },
     {
+      "name": "context-engineer",
+      "scope": "global",
+      "project": null,
+      "canonical_skill": "skills/global/context-engineer/SKILL.md",
+      "targets": ["codex", "claude"],
+      "claude": {
+        "mode": "command",
+        "path": "claude/global/commands/context-engineer.md",
+        "command_name": "context-engineer"
+      },
+      "codex": {
+        "path": "skills/global/context-engineer"
+      }
+    },
+    {
+      "name": "evidence-packager",
+      "scope": "global",
+      "project": null,
+      "canonical_skill": "skills/global/evidence-packager/SKILL.md",
+      "targets": ["codex", "claude"],
+      "claude": {
+        "mode": "command",
+        "path": "claude/global/commands/evidence-packager.md",
+        "command_name": "evidence-packager"
+      },
+      "codex": {
+        "path": "skills/global/evidence-packager"
+      }
+    },
+    {
+      "name": "quality-gate",
+      "scope": "global",
+      "project": null,
+      "canonical_skill": "skills/global/quality-gate/SKILL.md",
+      "targets": ["codex", "claude"],
+      "claude": {
+        "mode": "command",
+        "path": "claude/global/commands/quality-gate.md",
+        "command_name": "quality-gate"
+      },
+      "codex": {
+        "path": "skills/global/quality-gate"
+      }
+    },
+    {
       "name": "jarvis-system",
       "scope": "project-local",
       "project": "jarvis",
@@ -253,6 +324,9 @@
         "mode": "subagent",
         "path": "claude/projects/jarvis/agents/jarvis-system.md",
         "agent_name": "jarvis-system"
+      },
+      "claude_skill": {
+        "projects": ["jarvis"]
       },
       "codex": {
         "path": "skills/projects/jarvis/jarvis-system"
@@ -269,6 +343,9 @@
         "path": "claude/projects/jarvis/agents/jarvis-coder.md",
         "agent_name": "jarvis-coder"
       },
+      "claude_skill": {
+        "projects": ["jarvis"]
+      },
       "codex": {
         "path": "skills/projects/jarvis/jarvis-coder"
       }
@@ -283,6 +360,9 @@
         "mode": "command",
         "path": "claude/projects/jarvis/commands/jarvis-healthcheck.md",
         "command_name": "jarvis-healthcheck"
+      },
+      "claude_skill": {
+        "projects": ["jarvis"]
       },
       "codex": {
         "path": "skills/projects/jarvis/jarvis-healthcheck"
@@ -299,6 +379,9 @@
         "path": "claude/projects/jarvis/commands/jarvis-reviewer.md",
         "command_name": "jarvis-reviewer"
       },
+      "claude_skill": {
+        "projects": ["jarvis"]
+      },
       "codex": {
         "path": "skills/projects/jarvis/jarvis-reviewer"
       }
@@ -313,6 +396,9 @@
         "mode": "command",
         "path": "claude/projects/jarvis/commands/jarvis-audit.md",
         "command_name": "jarvis-audit"
+      },
+      "claude_skill": {
+        "projects": ["jarvis"]
       },
       "codex": {
         "path": "skills/projects/jarvis/jarvis-audit"
@@ -348,6 +434,46 @@
         "architect-planner",
         "builder-implementer",
         "reviewer-tester"
+      ]
+    },
+    {
+      "name": "research-team",
+      "canonical_manifest": "teams/research-team.json",
+      "purpose": "Gather sources, triage evidence, and hand off a compact evidence pack instead of raw context sprawl.",
+      "roles": [
+        "research-scout",
+        "source-triager",
+        "evidence-packager"
+      ]
+    },
+    {
+      "name": "planning-team",
+      "canonical_manifest": "teams/planning-team.json",
+      "purpose": "Turn evidence and repo truth into decision-complete implementation briefs.",
+      "roles": [
+        "goal-clarifier",
+        "plan-author",
+        "execution-briefer"
+      ]
+    },
+    {
+      "name": "assessment-team",
+      "canonical_manifest": "teams/assessment-team.json",
+      "purpose": "Check outcomes for regressions, quality gaps, and evidence that the goal was actually met.",
+      "roles": [
+        "result-auditor",
+        "regression-reviewer",
+        "scorecard-writer"
+      ]
+    },
+    {
+      "name": "improvement-team",
+      "canonical_manifest": "teams/improvement-team.json",
+      "purpose": "Convert findings into prioritized improvements, doctrine updates, and the next clean iteration plan.",
+      "roles": [
+        "gap-prioritizer",
+        "remediation-designer",
+        "doctrine-updater"
       ]
     }
   ]

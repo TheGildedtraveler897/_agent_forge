@@ -1,6 +1,8 @@
 ---
 name: ZorroForge Legal Drafting
 description: Draft corporate governance instruments, contracts, resolutions, and compliance documents for a federally incorporated CCPC (CBCA) with BC extra-provincial registration. Use when creating board resolutions, shareholder agreements, lease agreements, corporate policies, minute book entries, or reviewing legal structures for founder control and liability isolation. Always verify statutes via search.
+context_cost: medium
+model_tier: sonnet
 ---
 
 # ZorroForge Legal Drafting Advisor

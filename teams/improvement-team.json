@@ -1,0 +1,48 @@
+{
+  "name": "improvement-team",
+  "summary": "Follow-on team for converting findings into prioritized improvements, doctrine updates, and cleaner next runs.",
+  "roles": [
+    {
+      "name": "gap-prioritizer",
+      "responsibility": "Rank findings by leverage, urgency, and repeatability.",
+      "inputs": ["findings report", "scorecard", "handoff"],
+      "outputs": ["prioritized gap list"],
+      "stop_condition": "The highest-value next improvements are ordered clearly."
+    },
+    {
+      "name": "remediation-designer",
+      "responsibility": "Turn prioritized gaps into a concrete remediation path.",
+      "inputs": ["prioritized gap list", "repo state"],
+      "outputs": ["improvement plan"],
+      "stop_condition": "A builder knows exactly what to tighten next."
+    },
+    {
+      "name": "doctrine-updater",
+      "responsibility": "Capture durable process changes in the framework docs and runbooks.",
+      "inputs": ["improvement plan", "relevant docs"],
+      "outputs": ["doctrine/doc update checklist"],
+      "stop_condition": "The next run benefits from the learning instead of repeating the same mistake."
+    }
+  ],
+  "collapse_condition": "Findings are few and the fix is obvious — a single worker can prioritize and apply the improvement directly.",
+  "escalate_condition": "Findings span multiple repos or doctrine layers, or the improvement requires coordinated changes across skills, teams, and docs.",
+  "handoff_artifacts": [
+    "prioritized gap list",
+    "improvement plan",
+    "doctrine/doc update checklist"
+  ],
+  "claude_mapping": {
+    "primitives": ["slash commands", "subagents when improvement threads split cleanly"],
+    "preferred_entries": [
+      "quality-gate",
+      "context-engineer"
+    ]
+  },
+  "codex_mapping": {
+    "primitives": ["skills", "delegated runtime agents when the write surfaces are disjoint"],
+    "preferred_entries": [
+      "quality-gate",
+      "context-engineer"
+    ]
+  }
+}

@@ -24,6 +24,8 @@
       "stop_condition": "A human can act on the remediation plan without re-interpreting it."
     }
   ],
+  "collapse_condition": "Single repo with a small number of expected files — run verify-agent-forge.py and act on its output directly.",
+  "escalate_condition": "Multiple repos need auditing, portability drift is suspected across the workspace, or remediation requires coordinated registry and script changes.",
   "handoff_artifacts": [
     "findings report",
     "remediation checklist"

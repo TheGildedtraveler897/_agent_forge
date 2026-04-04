@@ -1,6 +1,8 @@
 ---
 name: multi-agent-governor
 description: Audit a project for SOTA 2026 multi-agent, multi-LLM, agent-agnostic governance readiness. Use when checking whether a repo stays aligned with Agent Forge contracts, adapter wiring, handoff discipline, portability rules, and canonical skill delivery.
+context_cost: light
+model_tier: any
 ---
 
 # Multi Agent Governor

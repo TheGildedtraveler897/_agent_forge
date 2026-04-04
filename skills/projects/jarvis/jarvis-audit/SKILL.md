@@ -1,6 +1,8 @@
 ---
 name: jarvis-audit
 description: System health and dependency auditor. Ensures the Suitcase Doctrine is intact.
+context_cost: medium
+model_tier: any
 ---
 
 # jarvis-audit

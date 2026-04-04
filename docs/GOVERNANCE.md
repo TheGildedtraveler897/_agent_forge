@@ -1,6 +1,6 @@
 # Agent Forge Governance
 
-This document defines the two layers that keep projects aligned with the shared multi-agent architecture.
+This document defines the layers that keep projects aligned with the shared multi-agent architecture.
 
 ## 1. Governance Audit
 
@@ -46,8 +46,24 @@ Default bootstrap footprint:
 - `.claude/CLAUDE.md`
 - `.claude/agents/`
 - `.claude/commands/`
+- `.claude/skills/`
 
-## 3. Canonical Versus Generated
+## 3. Skill Delivery Governance
+
+Claude now has three governed delivery surfaces:
+
+- `~/.claude/agents/`
+- `~/.claude/commands/`
+- `<project>/.claude/skills/`
+
+Rules:
+
+- user-level agents and commands are global delivery surfaces
+- project `.claude/skills/` is selective, not automatic
+- the registry is the source of truth for which rich skills belong in which project
+- delivery targets are symlinks only
+
+## 4. Canonical Versus Generated
 
 Always edit canonical sources in `_agent_forge`.
 
@@ -58,7 +74,7 @@ Always edit canonical sources in `_agent_forge`.
 
 Tool-home directories and per-project `.claude/` outputs are delivery targets only.
 
-## 4. Agents And Teams
+## 5. Agents And Teams
 
 Agent Forge now also carries a canonical distinction between:
 
@@ -69,6 +85,10 @@ Agent Forge now also carries a canonical distinction between:
 Primary artifacts:
 
 - `docs/AGENTS_AND_TEAMS.md`
+- `docs/TEAM_SELECTION.md`
+- `docs/CONTEXT_ENGINEERING.md`
+- `docs/OPERATOR_TEMPLATES.md`
+- `docs/EVALUATION.md`
 - `teams/*.json`
 - `registry.json` team entries
 

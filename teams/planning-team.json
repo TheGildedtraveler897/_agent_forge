@@ -1,0 +1,48 @@
+{
+  "name": "planning-team",
+  "summary": "Decision-complete planning team for turning evidence and repo truth into implementation briefs.",
+  "roles": [
+    {
+      "name": "goal-clarifier",
+      "responsibility": "Resolve the real goal, success criteria, and constraints before solution shaping.",
+      "inputs": ["user request", "repo truth", "evidence pack"],
+      "outputs": ["clarified objective", "constraints list"],
+      "stop_condition": "The problem is explicit enough that solution quality can be judged."
+    },
+    {
+      "name": "plan-author",
+      "responsibility": "Write the minimum decision-complete plan needed for execution safety.",
+      "inputs": ["clarified objective", "constraints list", "repo state"],
+      "outputs": ["implementation brief"],
+      "stop_condition": "An executor does not need to make major product or architecture decisions."
+    },
+    {
+      "name": "execution-briefer",
+      "responsibility": "Convert the plan into a compact operator handoff for the executing model.",
+      "inputs": ["implementation brief"],
+      "outputs": ["executor brief", "acceptance criteria"],
+      "stop_condition": "A cheaper or narrower worker can execute without dragging the whole planning context along."
+    }
+  ],
+  "collapse_condition": "Requirements are already clear, scope is small, and a single worker can write the brief directly from repo state.",
+  "escalate_condition": "Requirements are ambiguous, multiple stakeholders or constraints compete, or the plan must survive handoff to a cheaper model.",
+  "handoff_artifacts": [
+    "implementation brief",
+    "executor brief",
+    "acceptance criteria"
+  ],
+  "claude_mapping": {
+    "primitives": ["slash commands", "subagents when planning surface is large"],
+    "preferred_entries": [
+      "context-engineer",
+      "quality-gate"
+    ]
+  },
+  "codex_mapping": {
+    "primitives": ["skills", "delegated runtime agents when role separation matters"],
+    "preferred_entries": [
+      "context-engineer",
+      "quality-gate"
+    ]
+  }
+}

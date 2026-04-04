@@ -24,6 +24,8 @@
       "stop_condition": "The scaffold is verified or concrete failures are captured."
     }
   ],
+  "collapse_condition": "The project is new and uses the default governance footprint — bootstrap-project.sh handles it end-to-end.",
+  "escalate_condition": "The project is an existing repo needing standardization, has unusual governance requirements, or needs project-local skills configured.",
   "handoff_artifacts": [
     "scaffold summary",
     "verification report",

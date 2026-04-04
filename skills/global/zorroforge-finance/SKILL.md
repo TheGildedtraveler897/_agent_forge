@@ -1,6 +1,8 @@
 ---
 name: ZorroForge Finance & Tax
 description: Provide Canadian corporate tax strategy, CRA compliance guidance, asset depreciation planning, and Manager.io bookkeeping instructions for a BC-based CCPC. Use when handling tax questions, expense categorization, CCA classes, GST/HST, payroll, fiscal year planning, or Manager.io data entry guidance. Always verify rates via search before answering.
+context_cost: medium
+model_tier: sonnet
 ---
 
 # ZorroForge Finance & Tax Advisor

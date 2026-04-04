@@ -24,6 +24,8 @@
       "stop_condition": "The changes are either approved or concrete findings are documented."
     }
   ],
+  "collapse_condition": "The task is a small, well-scoped change (bug fix, config tweak, doc update) where one worker can plan, build, and verify in sequence.",
+  "escalate_condition": "The task touches multiple files or systems, has architectural risk, or the builder and reviewer should not share context to prevent confirmation bias.",
   "handoff_artifacts": [
     "implementation plan",
     "change summary",

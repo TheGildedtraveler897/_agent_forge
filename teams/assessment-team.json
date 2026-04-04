@@ -1,0 +1,48 @@
+{
+  "name": "assessment-team",
+  "summary": "Verification-first team for checking whether an outcome is correct, complete, and worth keeping.",
+  "roles": [
+    {
+      "name": "result-auditor",
+      "responsibility": "Compare the outcome against the stated goal and acceptance criteria.",
+      "inputs": ["result", "acceptance criteria", "brief"],
+      "outputs": ["goal-fit findings"],
+      "stop_condition": "It is clear whether the result satisfies the original goal."
+    },
+    {
+      "name": "regression-reviewer",
+      "responsibility": "Look for risks, regressions, and verification gaps introduced by the change.",
+      "inputs": ["result", "diff", "test output"],
+      "outputs": ["regression findings"],
+      "stop_condition": "The major keep-or-fix risks are documented."
+    },
+    {
+      "name": "scorecard-writer",
+      "responsibility": "Produce a compact scorecard that a human or follow-on model can act on immediately.",
+      "inputs": ["goal-fit findings", "regression findings"],
+      "outputs": ["scorecard", "release or rollback recommendation"],
+      "stop_condition": "The next action is obvious without re-reviewing the whole artifact set."
+    }
+  ],
+  "collapse_condition": "The change is small, acceptance criteria are binary, and a single reviewer can verify and score in one pass.",
+  "escalate_condition": "The change touches multiple systems, has regression risk, or the result will be handed to a different team for follow-on work.",
+  "handoff_artifacts": [
+    "findings report",
+    "scorecard",
+    "release or rollback recommendation"
+  ],
+  "claude_mapping": {
+    "primitives": ["slash commands", "subagents when review surfaces should stay separate"],
+    "preferred_entries": [
+      "quality-gate",
+      "doctrine-review"
+    ]
+  },
+  "codex_mapping": {
+    "primitives": ["skills", "delegated runtime reviewers when useful"],
+    "preferred_entries": [
+      "quality-gate",
+      "code-review-doctrine"
+    ]
+  }
+}

@@ -1,6 +1,8 @@
 ---
 name: ZorroForge Brand Guidelines
 description: Enforce ZorroForge Cyber Corp's Alpine Brutalist visual identity across all creative outputs. Use when creating presentations, documents, image generation prompts, logos, letterheads, social media assets, website designs, or any visual material for ZorroForge. Includes color theory, typography rules, mascot specifications, and layout architecture.
+context_cost: medium
+model_tier: sonnet
 ---
 
 # ZorroForge Brand Guidelines

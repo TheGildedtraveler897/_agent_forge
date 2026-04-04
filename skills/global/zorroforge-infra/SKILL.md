@@ -1,6 +1,8 @@
 ---
 name: ZorroForge Infrastructure Auditor
 description: Audit and validate Docker Compose files, homelab configurations, and self-hosted service deployments. Use when reviewing YAML configs, adding new Docker services, troubleshooting container networking, or planning homelab infrastructure changes. Enforces portability, security, firewall rules, and generates migration ledger entries.
+context_cost: medium
+model_tier: sonnet
 ---
 
 # ZorroForge Infrastructure Auditor

@@ -33,6 +33,13 @@ def check_symlink(path: Path, expected_target: Path) -> bool:
     return True
 
 
+def project_root_by_name(registry: dict) -> dict[str, Path]:
+    roots: dict[str, Path] = {}
+    for project in registry.get("governed_projects", []):
+        roots[project["name"]] = ROOT.parent / project["root"]
+    return roots
+
+
 def main() -> int:
     if not REGISTRY_PATH.exists():
         fail(f"Missing registry: {REGISTRY_PATH}")
@@ -42,6 +49,8 @@ def main() -> int:
         registry = json.load(fh)
 
     status = 0
+    project_roots = project_root_by_name(registry)
+    expected_project_skills: dict[str, dict[str, Path]] = {}
 
     for entry in registry.get("skills", []):
         canonical_skill = ROOT / entry["canonical_skill"]
@@ -83,8 +92,14 @@ def main() -> int:
             if not check_symlink(target, adapter_source):
                 status = 1
 
+        skill_delivery = entry.get("claude_skill")
+        if skill_delivery:
+            skill_dir = canonical_skill.parent
+            for project_name in skill_delivery.get("projects", []):
+                expected_project_skills.setdefault(project_name, {})[entry["name"]] = skill_dir
+
     for project in registry.get("governed_projects", []):
-        project_root = ROOT.parent / project["root"]
+        project_root = project_roots[project["name"]]
         if project_root.exists():
             ok(f"Governed project present: {project['name']}")
         else:
@@ -100,33 +115,23 @@ def main() -> int:
                 fail(f"Missing governance file: {target}")
                 status = 1
 
-        # Check .claude/skills/ symlinks for projects with skills_synced
-        if project.get("skills_synced"):
+        expected_skills = expected_project_skills.get(project["name"], {})
+        if expected_skills:
             skills_target_dir = project_root / ".claude" / "skills"
             if not skills_target_dir.exists():
                 fail(f"Missing .claude/skills/ directory: {skills_target_dir}")
                 status = 1
                 continue
 
-            # Check global skills are symlinked
-            global_skills_dir = ROOT / "skills" / "global"
-            if global_skills_dir.exists():
-                for skill_dir in sorted(global_skills_dir.iterdir()):
-                    if not skill_dir.is_dir():
-                        continue
-                    skill_link = skills_target_dir / skill_dir.name
-                    if not check_symlink(skill_link, skill_dir):
-                        status = 1
+            for skill_name, skill_dir in sorted(expected_skills.items()):
+                skill_link = skills_target_dir / skill_name
+                if not check_symlink(skill_link, skill_dir):
+                    status = 1
 
-            # Check project-local skills are symlinked
-            project_skills_dir = ROOT / "skills" / "projects" / project["name"]
-            if project_skills_dir.exists():
-                for skill_dir in sorted(project_skills_dir.iterdir()):
-                    if not skill_dir.is_dir():
-                        continue
-                    skill_link = skills_target_dir / skill_dir.name
-                    if not check_symlink(skill_link, skill_dir):
-                        status = 1
+            for actual_path in sorted(skills_target_dir.iterdir()):
+                if actual_path.name not in expected_skills:
+                    fail(f"Unexpected .claude/skills entry for {project['name']}: {actual_path}")
+                    status = 1
 
     for team in registry.get("teams", []):
         manifest = ROOT / team["canonical_manifest"]

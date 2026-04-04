@@ -6,9 +6,9 @@ ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 PROJECTS_ROOT="$(cd "${ROOT_DIR}/.." && pwd)"
 GLOBAL_AGENTS_DIR="${ROOT_DIR}/claude/global/agents"
 GLOBAL_COMMANDS_DIR="${ROOT_DIR}/claude/global/commands"
-GLOBAL_SKILLS_DIR="${ROOT_DIR}/skills/global"
 TARGET_USER_AGENTS="${HOME}/.claude/agents"
 TARGET_USER_COMMANDS="${HOME}/.claude/commands"
+REGISTRY_PATH="${ROOT_DIR}/registry.json"
 PROJECT_NAME=""
 
 usage() {
@@ -21,12 +21,36 @@ and, optionally, project-level locations using symlinks.
 Syncs three delivery targets:
   ~/.claude/agents/      <- claude/global/agents/*.md
   ~/.claude/commands/    <- claude/global/commands/*.md
-  <project>/.claude/skills/ <- skills/global/* and skills/projects/<project>/*
+  <project>/.claude/skills/ <- only registry-declared Claude skills for that project
 
 Options:
   --project NAME   Also sync project-local adapters for the named project
   -h, --help       Show this message
 EOF
+}
+
+project_skill_links() {
+  python3 - "${REGISTRY_PATH}" "${ROOT_DIR}" "${PROJECT_NAME}" <<'PY'
+import json
+from pathlib import Path
+import sys
+
+registry_path = Path(sys.argv[1])
+root = Path(sys.argv[2])
+project = sys.argv[3]
+
+with registry_path.open() as fh:
+    registry = json.load(fh)
+
+for entry in registry.get("skills", []):
+    skill_delivery = entry.get("claude_skill")
+    if not skill_delivery:
+        continue
+    if project not in skill_delivery.get("projects", []):
+        continue
+    skill_dir = root / Path(entry["canonical_skill"]).parent
+    print(f"{entry['name']}\t{skill_dir}")
+PY
 }
 
 while [[ $# -gt 0 ]]; do
@@ -88,30 +112,30 @@ if [[ -n "${PROJECT_NAME}" ]]; then
   link_dir_contents "${PROJECT_AGENTS_SOURCE}" "${PROJECT_AGENTS_TARGET}"
   link_dir_contents "${PROJECT_COMMANDS_SOURCE}" "${PROJECT_COMMANDS_TARGET}"
 
-  # Sync global skills into project .claude/skills/
-  for skill_dir in "${GLOBAL_SKILLS_DIR}"/*/; do
-    [[ -d "${skill_dir}" ]] || continue
-    skill_name="$(basename "${skill_dir}")"
+  declare -A desired_skills=()
+
+  while IFS=$'\t' read -r skill_name skill_dir; do
+    [[ -n "${skill_name}" ]] || continue
+    desired_skills["${skill_name}"]=1
     if [[ -e "${PROJECT_SKILLS_TARGET}/${skill_name}" && ! -L "${PROJECT_SKILLS_TARGET}/${skill_name}" ]]; then
       echo "Refusing to replace non-symlink target: ${PROJECT_SKILLS_TARGET}/${skill_name}" >&2
       exit 1
     fi
     ln -sfn "${skill_dir}" "${PROJECT_SKILLS_TARGET}/${skill_name}"
-  done
+  done < <(project_skill_links)
 
-  # Sync project-local skills into project .claude/skills/
-  PROJECT_SKILLS_SOURCE="${ROOT_DIR}/skills/projects/${PROJECT_NAME}"
-  if [[ -d "${PROJECT_SKILLS_SOURCE}" ]]; then
-    for skill_dir in "${PROJECT_SKILLS_SOURCE}"/*/; do
-      [[ -d "${skill_dir}" ]] || continue
-      skill_name="$(basename "${skill_dir}")"
-      if [[ -e "${PROJECT_SKILLS_TARGET}/${skill_name}" && ! -L "${PROJECT_SKILLS_TARGET}/${skill_name}" ]]; then
-        echo "Refusing to replace non-symlink target: ${PROJECT_SKILLS_TARGET}/${skill_name}" >&2
+  for existing_path in "${PROJECT_SKILLS_TARGET}"/*; do
+    [[ -e "${existing_path}" ]] || continue
+    entry_name="$(basename "${existing_path}")"
+    if [[ -z "${desired_skills[${entry_name}]+x}" ]]; then
+      if [[ -L "${existing_path}" ]]; then
+        rm -f "${existing_path}"
+      else
+        echo "Refusing to remove non-symlink target: ${existing_path}" >&2
         exit 1
       fi
-      ln -sfn "${skill_dir}" "${PROJECT_SKILLS_TARGET}/${skill_name}"
-    done
-  fi
+    fi
+  done
 fi
 
 echo "Claude adapter sync complete"

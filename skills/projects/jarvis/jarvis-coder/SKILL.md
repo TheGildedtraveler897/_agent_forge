@@ -1,6 +1,8 @@
 ---
 name: jarvis-coder
 description: Lead Builder for Jarvis. Writes lean, portable, doctrine-aligned code.
+context_cost: medium
+model_tier: any
 ---
 
 # Jarvis Coder Skill

@@ -1,6 +1,8 @@
 ---
 name: ZorroForge Procurement
 description: Evaluate and recommend used enterprise server hardware, networking equipment, and homelab components for a BC-based buyer. Use when sourcing hardware, comparing server listings, calculating total cost of ownership including power consumption, or evaluating deals on eBay.ca, GovDeals, or r/homelab. Factors in Canadian import duties, BC Hydro electricity costs, and noise/cooling for residential deployment.
+context_cost: medium
+model_tier: sonnet
 ---
 
 # ZorroForge Procurement Advisor

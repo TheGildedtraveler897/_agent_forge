@@ -71,9 +71,10 @@ All teams in Agent Forge follow these rules:
 
 ### Claude
 
-- skills are represented indirectly through canonical `SKILL.md` plus native adapters
+- skills are canonical `SKILL.md` files and may also be delivered into project `.claude/skills/`
 - agents are subagents in `.claude/agents/` or `~/.claude/agents/`
 - utility workflows are slash commands in `.claude/commands/` or `~/.claude/commands/`
+- rich Skill-tool delivery is explicitly scoped per project through `registry.json`
 - hooks enforce session or tool rules, but are not the team model
 
 ### Codex
@@ -82,7 +83,7 @@ All teams in Agent Forge follow these rules:
 - agents are delegated runtime workers
 - teams are orchestrated patterns that combine delegated workers with skill-guided behavior
 
-## 6. The First Three Teams
+## 6. Core Teams
 
 ### Governance Team
 
@@ -128,7 +129,77 @@ Handoff artifacts:
 - code/result summary
 - findings or test result report
 
-## 7. What We Are Not Doing Yet
+### Research Team
+
+Purpose:
+- gather evidence without flooding downstream workers with raw context
+
+Roles:
+- research-scout
+- source-triager
+- evidence-packager
+
+Handoff artifacts:
+- evidence pack
+- source table
+- unresolved questions list
+
+### Planning Team
+
+Purpose:
+- turn evidence and repo truth into decision-complete implementation briefs
+
+Roles:
+- goal-clarifier
+- plan-author
+- execution-briefer
+
+Handoff artifacts:
+- implementation brief
+- assumptions list
+- acceptance criteria
+
+### Assessment Team
+
+Purpose:
+- determine whether a result is correct, complete, and worth keeping
+
+Roles:
+- result-auditor
+- regression-reviewer
+- scorecard-writer
+
+Handoff artifacts:
+- findings report
+- scorecard
+- release or rollback recommendation
+
+### Improvement Team
+
+Purpose:
+- convert findings into a tighter next iteration instead of another vague brainstorm
+
+Roles:
+- gap-prioritizer
+- remediation-designer
+- doctrine-updater
+
+Handoff artifacts:
+- prioritized improvement list
+- remediation plan
+- doctrine/doc update checklist
+
+## 7. Context Discipline
+
+Agent Forge optimizes for reusable capability, not maximal prompt size.
+
+Rules:
+- prefer handoff artifacts over replaying full chat history
+- keep rich skills project-scoped when possible
+- use teams to split context only when role boundaries are real
+- compact long sessions into evidence packs, briefs, and scorecards
+
+## 8. What We Are Not Doing Yet
 
 Not yet in scope:
 - fully automated swarms

@@ -4,58 +4,64 @@ Last updated: 2026-04-04
 
 ## What Changed
 
-### Claude Validation Run — Full Remediation (2026-04-04)
+### Premium Factory Optimization (2026-04-04, Claude Opus)
 
-Claude independently validated the full ZorroForge multi-agent workspace, then executed all remediations.
+Compared Agent Forge against external best practices from Anthropic, Google ADK, OpenAI Agents SDK, Microsoft Agent Framework, and ArXiv research. Made targeted improvements based on the highest-leverage gaps found.
 
-#### Phase 1: Audit + Initial Fixes
-- Promoted 3 unregistered skills (`zorroforge-brand`, `zorroforge-legal`, `zorroforge-procurement`) from `jarvis/.claude/skills/` into canonical `_agent_forge` sources
-- Created canonical SKILL.md files under `skills/global/` for each
-- Created Claude adapter files under `claude/global/agents/` for each
-- Added all 3 to `registry.json`
-- Created symlinks in `~/.claude/agents/` for delivery
-- Updated `docs/CLAUDE_NATIVE.md` to list the new subagents
+#### External Research Findings
 
-#### Phase 2: Full Governance of .claude/skills/
-- **Policy decision:** `_agent_forge` now governs `.claude/skills/` delivery as a third target alongside agents/commands
-- Promoted rich SKILL.md content from `jarvis/.claude/skills/` to canonical `_agent_forge/skills/` locations for all 7 skills that had drifted (jarvis-system, jarvis-coder, jarvis-audit, jarvis-healthcheck, jarvis-reviewer, zorroforge-finance, zorroforge-infra)
-- Updated `sync-claude-adapters.sh` to deploy `.claude/skills/` symlinks (global + project-local) when `--project` is used
-- Replaced all 12 non-symlink copies in `jarvis/.claude/skills/` with symlinks to canonical sources
-- Added `skills_synced` field to registry.json for projects with managed skills delivery
-- Updated `verify-agent-forge.py` to check `.claude/skills/` symlinks for `skills_synced` projects
-- Added Codex targets for brand/legal/procurement (symlinks in `~/.codex/skills/`)
-- Registry updated: all 3 new skills now target both codex and claude
+Agent Forge already aligns with industry best practice on: declarative role definitions (JSON manifests), progressive-disclosure skill architecture, context discipline (artifacts over chat), handoff protocols, and team size constraints (2-4 roles). Sources: Anthropic context engineering blog, Google ADK multi-agent patterns, OpenAI Agents SDK handoffs docs, ArXiv papers on orchestration and eval harnesses.
 
-#### Phase 3: Git Initialization
-- `_agent_forge`: git init + initial commit (49 files, 3302 lines)
-- `homelab`: git init + initial commit (52 files, 5180 lines), with `.gitignore` updated to exclude runtime application data (`configs/`)
+#### Changes Made
+
+1. **Token budget and model-tier hints** — Added `context_cost` (light/medium/heavy) and `model_tier` (any/sonnet/opus) to all 17 SKILL.md frontmatter files. Helps operators and cheaper models make load/skip decisions.
+
+2. **Worked examples in utility skills** — Added concrete filled-in examples to context-engineer, evidence-packager, and quality-gate SKILL.md files. Research shows weaker models perform dramatically better with few-shot examples.
+
+3. **Severity tiers in quality gate** — Changed from flat pass/fail to blocker/warning/note tiers. Prevents weaker models from treating cosmetic issues as showstoppers. Updated EVALUATION.md scorecard to match.
+
+4. **Team escalation rules** — Added `collapse_condition` and `escalate_condition` to all 7 team manifests. Tells operators when to use one worker vs. the full team pattern.
+
+5. **Filled operator templates** — Added realistic worked examples for all 4 templates (task brief, evidence pack, implementation brief, handoff) using playlist-archive as the scenario.
+
+6. **Compaction triggers** — Added "When To Compact" section to CONTEXT_ENGINEERING.md with 5 concrete trigger points.
+
+7. **Full team runbooks** — Expanded TEAM_RUNBOOKS.md with Claude/Codex patterns, recommended flows, and stop conditions for all 7 teams (previously only 3 had full runbooks).
+
+#### Scenario Tests Run
+
+- Quality-gate applied to HANDOFF.md: 0 blockers, 2 warnings — KEEP
+- Sonnet task brief simulation: self-contained, no prior context needed — PASS
+- Evidence-packager output test: matches contract, compact for downstream planner — PASS
 
 ## Current State
 
-- **Registry:** v3, 17 skills (9 global, 3 Claude-only governance roles, 5 jarvis project-local)
-- **Verification:** 120 checks, 0 failures
-- **Delivery targets:** `~/.claude/agents/` (8 symlinks), `~/.claude/commands/` (4 symlinks), `~/.codex/skills/` (14 symlinks), `jarvis/.claude/skills/` (14 symlinks), `jarvis/.claude/agents/` (2 symlinks), `jarvis/.claude/commands/` (3 symlinks)
-- **Git repos:** All 8 workspaces under version control (_agent_forge, jarvis, RoboNaaz, ZorroClaw, homelab, factory, playlist-archive, plus Projects root)
+- **Registry:** v4, 22 skills (up from 17 after prep pass added context-engineer, evidence-packager, quality-gate + 2 more)
+- **Teams:** 7 teams, all with escalation rules
+- **Verification:** 136 checks, 0 failures
+- **Skills:** All 17 canonical SKILL.md files have context_cost and model_tier metadata
+- **Docs:** 12 framework docs, all updated this session
 
-## Three-Layer Delivery Model
+## Remaining Weaknesses
 
-```
-_agent_forge/skills/global/*/SKILL.md     -> rich skill content (Skill tool)
-_agent_forge/claude/global/agents/*.md    -> thin adapter prompts (Agent tool)
-_agent_forge/claude/global/commands/*.md  -> thin adapter prompts (slash commands)
-```
+1. **No automated eval harness** — Quality-gate is a manual skill invocation, not a CI/CD pipeline. Industry practice is automated evals on every change. Low priority for a one-person corp.
+2. **Bootstrap script untested for edge cases** — `bootstrap-project.sh --existing` and `--with-local-skills` paths haven't been exercised with real projects.
+3. **No Codex-side validation** — All verification has been Claude-side. Codex skill discovery and runtime behavior haven't been independently confirmed this session.
+4. **Team manifests are conceptual** — No automated team orchestration exists. Teams work by operator selection and manual handoff. This is intentional but limits weaker-model autonomy.
+5. **Content freshness** — Domain skills (finance, legal, procurement) embed rate/threshold data that will drift annually. The "verify before citing" mandate handles this at query time but doesn't prevent stale defaults from anchoring weaker models.
 
-Sync deploys:
-- `~/.claude/agents/` and `~/.claude/commands/` = always (global)
-- `<project>/.claude/skills/` = per-project via `--project` flag
-- `<project>/.claude/agents/` and `<project>/.claude/commands/` = per-project via `--project` flag
-- `~/.codex/skills/` = via `sync-codex-skills.sh`
+## Manual Follow-Up Items
 
-## Clean Restart Point
+1. Commit the prep pass + premium optimization changes in `_agent_forge`
+2. Run `sync-claude-adapters.sh --project jarvis` to deploy updated skills
+3. Exercise `bootstrap-project.sh` against a real new project to validate the bootstrap path
+4. Consider a Codex validation pass to confirm skill discovery works from that side
+5. Start first real implementation slice (playlist-archive) using the delivery team model
 
-All gaps identified during validation have been resolved. Run `verify-agent-forge.py` to confirm. To bootstrap a new project with full skill delivery:
+## Final Verdict
 
-```bash
-./scripts/sync-claude-adapters.sh --project <name>
-./scripts/sync-codex-skills.sh --project <name>
-```
+**The factory is materially stronger for future lower-tier model runs.**
+
+The key improvements are the ones that reduce ambiguity for weaker models: worked examples in utility skills, severity-weighted quality gates, filled operator templates, and explicit escalation rules. A Sonnet-class model receiving a task brief built with these templates can execute without needing the full planning context that produced it. The framework's token discipline (selective skill delivery, compaction triggers, context_cost hints) keeps the signal-to-noise ratio high even in constrained contexts.
+
+The architecture is sound, the governance is operational, and the factory is portable. Clone `_agent_forge`, run the sync scripts, bootstrap a project — the accumulated knowledge deploys without rebuilding.

@@ -19,7 +19,7 @@ Bootstrap a governed project under ~/Projects with Agent Forge contracts:
   - docs/CONOPS.md
   - docs/HANDOFF.md
   - .claude/CLAUDE.md symlink
-  - .claude/agents and .claude/commands directories
+  - .claude/agents, .claude/commands, and .claude/skills directories
 
 Options:
   --name PROJECT_NAME      Project display/name token used for docs
@@ -71,6 +71,26 @@ if [[ -z "${PROJECT_PATH}" ]]; then
 fi
 
 TARGET_ROOT="${PROJECTS_ROOT}/${PROJECT_PATH}"
+ROOT_AGENTS_REL="$(python3 - "${TARGET_ROOT}" "${PROJECTS_ROOT}/AGENTS.md" <<'PY'
+from pathlib import Path
+import os
+import sys
+
+target_root = Path(sys.argv[1])
+root_agents = Path(sys.argv[2])
+print(os.path.relpath(root_agents, target_root))
+PY
+)"
+ROOT_CLAUDE_REL="$(python3 - "${TARGET_ROOT}/.claude" "${PROJECTS_ROOT}/CLAUDE.md" <<'PY'
+from pathlib import Path
+import os
+import sys
+
+target_dir = Path(sys.argv[1])
+root_claude = Path(sys.argv[2])
+print(os.path.relpath(root_claude, target_dir))
+PY
+)"
 
 if [[ "${MODE}" == "new" ]]; then
   mkdir -p "${TARGET_ROOT}"
@@ -79,12 +99,12 @@ elif [[ ! -d "${TARGET_ROOT}" ]]; then
   exit 1
 fi
 
-mkdir -p "${TARGET_ROOT}/docs" "${TARGET_ROOT}/.claude" "${TARGET_ROOT}/.claude/agents" "${TARGET_ROOT}/.claude/commands"
+mkdir -p "${TARGET_ROOT}/docs" "${TARGET_ROOT}/.claude" "${TARGET_ROOT}/.claude/agents" "${TARGET_ROOT}/.claude/commands" "${TARGET_ROOT}/.claude/skills"
 
 cat > "${TARGET_ROOT}/AGENTS.md" <<EOF
 # ${PROJECT_NAME} Agent Contract
 
-Read [\`/home/pheonixprotocol/Projects/AGENTS.md\`](/home/pheonixprotocol/Projects/AGENTS.md) first.
+Read the workspace root \`AGENTS.md\` first: \`${ROOT_AGENTS_REL}\`.
 
 ## Project Purpose
 
@@ -126,6 +146,7 @@ Claude: use [\`AGENTS.md\`](${TARGET_ROOT}/AGENTS.md) as the shared project cont
 - Keep this file thin.
 - Put shared workflow changes in \`AGENTS.md\`, not here.
 - Add project-local Claude subagents or commands under \`.claude/\` only when the project genuinely needs them.
+- Rich Claude skill delivery in \`.claude/skills/\` is governed from \`_agent_forge/registry.json\`.
 EOF
 
 cat > "${TARGET_ROOT}/docs/CONOPS.md" <<EOF
@@ -168,7 +189,7 @@ Last updated: $(date +%F)
 3. Add local skills only if the project truly needs project-specific expert or utility behavior
 EOF
 
-ln -sfn /home/pheonixprotocol/Projects/CLAUDE.md "${TARGET_ROOT}/.claude/CLAUDE.md"
+ln -sfn "${ROOT_CLAUDE_REL}" "${TARGET_ROOT}/.claude/CLAUDE.md"
 
 if [[ "${WITH_LOCAL_SKILLS}" == "1" ]]; then
   mkdir -p "${AGENT_FORGE_ROOT}/skills/projects/${PROJECT_NAME}"
@@ -180,4 +201,6 @@ echo "Bootstrapped project at ${TARGET_ROOT}"
 echo "Next steps:"
 echo "  1. Fill in docs/CONOPS.md"
 echo "  2. Add project-specific read-order references to AGENTS.md"
-echo "  3. Run _agent_forge/scripts/verify-agent-forge.py after wiring any local skills"
+echo "  3. Run _agent_forge/scripts/sync-claude-adapters.sh --project ${PROJECT_PATH}"
+echo "  4. Run _agent_forge/scripts/sync-codex-skills.sh --project ${PROJECT_PATH}"
+echo "  5. Run _agent_forge/scripts/verify-agent-forge.py after wiring any local skills"
