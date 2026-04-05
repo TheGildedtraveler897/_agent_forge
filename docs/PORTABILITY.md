@@ -41,6 +41,18 @@ Deploy on a target machine with:
 
 The deploy flow installs `_agent_forge`, shared doctrine docs, and user-level Claude/Codex delivery targets.
 
+Portable deployment now has two layers:
+
+1. **Factory deploy** — copy `_agent_forge`, doctrine docs, and tool-native delivery surfaces
+2. **Workstation bootstrap** — install the hosted coding CLIs and walk the operator through authentication
+
+After deploy, run:
+
+```bash
+cd ~/Projects/_agent_forge
+./scripts/bootstrap-workstation.sh
+```
+
 Validated on 2026-04-05 with an isolated smoke test using:
 
 - export root: `/tmp/agent-forge-export`
@@ -95,7 +107,7 @@ Additional `.claude/agents/` and `.claude/commands/` entries are only required w
 - `_agent_forge/` canonical source
 - shared root doctrine docs
 - team manifests
-- sync/bootstrap/export/deploy scripts
+- sync/bootstrap/export/deploy/workstation scripts
 - portable handoff and operator docs
 
 ## Never Carry

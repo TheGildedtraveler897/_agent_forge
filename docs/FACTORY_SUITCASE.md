@@ -8,7 +8,7 @@ The suitcase is a portable snapshot of the factory layer only:
 
 - `_agent_forge/` canonical source
 - shared root doctrine docs needed under `~/Projects`
-- bootstrap, sync, export, and deploy scripts
+- bootstrap, sync, export, deploy, and workstation-setup scripts
 
 It is designed for:
 
@@ -65,6 +65,25 @@ Useful overrides:
 
 Use `--replace-factory` if the target already has an `_agent_forge` snapshot and you intentionally want to refresh it from the new suitcase.
 
+## Prepare The Workstation
+
+After deploy, the machine still is not ready for actual LLM development until the hosted CLI tools are installed and authenticated.
+
+Run:
+
+```bash
+cd ~/Projects/_agent_forge
+./scripts/bootstrap-workstation.sh
+```
+
+That script handles:
+
+- base development dependencies
+- Claude Code installation
+- Codex installation
+- Gemini CLI installation
+- guided authentication notes and a durable machine setup log
+
 ## Current Validation Status
 
 Validated on 2026-04-05 with an isolated temp-root smoke test:
@@ -87,15 +106,18 @@ These counts reflect the portable global factory layer only. Project-local skill
 2. Copy the archive into the Debian VM.
 3. Unpack it.
 4. Run `./_agent_forge/scripts/deploy-factory.sh`.
-5. Verify:
+5. Run `~/Projects/_agent_forge/scripts/bootstrap-workstation.sh`.
+6. Verify:
    - `~/Projects/_agent_forge` exists
    - `~/.claude/agents` and `~/.claude/commands` are populated
    - `~/.codex/skills` is populated
    - root doctrine docs exist under `~/Projects`
-6. Bootstrap the next proof project:
+   - selected hosted CLIs are installed and authenticated
+7. Bootstrap the next proof project:
 
 ```bash
 cd ~/Projects/_agent_forge
+./scripts/bootstrap-workstation.sh
 ./scripts/bootstrap-project.sh --name reddit-archive
 ./scripts/sync-claude-adapters.sh --project reddit-archive
 ./scripts/sync-codex-skills.sh --project reddit-archive

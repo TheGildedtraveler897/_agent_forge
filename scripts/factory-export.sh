@@ -96,10 +96,18 @@ cd <unpacked-bundle>
 ./_agent_forge/scripts/deploy-factory.sh
 \`\`\`
 
+## Prepare The Machine For LLM Development
+
+\`\`\`bash
+cd ~/Projects/_agent_forge
+./scripts/bootstrap-workstation.sh
+\`\`\`
+
 ## Bootstrap A New Project After Deploy
 
 \`\`\`bash
 cd ~/Projects/_agent_forge
+./scripts/bootstrap-workstation.sh
 ./scripts/bootstrap-project.sh --name reddit-archive
 ./scripts/sync-claude-adapters.sh --project reddit-archive
 ./scripts/sync-codex-skills.sh --project reddit-archive
