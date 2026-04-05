@@ -6,14 +6,15 @@ ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 PROJECTS_ROOT="$(cd "${ROOT_DIR}/.." && pwd)"
 GLOBAL_AGENTS_DIR="${ROOT_DIR}/claude/global/agents"
 GLOBAL_COMMANDS_DIR="${ROOT_DIR}/claude/global/commands"
-TARGET_USER_AGENTS="${HOME}/.claude/agents"
-TARGET_USER_COMMANDS="${HOME}/.claude/commands"
+CLAUDE_HOME="${HOME}/.claude"
+TARGET_USER_AGENTS="${CLAUDE_HOME}/agents"
+TARGET_USER_COMMANDS="${CLAUDE_HOME}/commands"
 REGISTRY_PATH="${ROOT_DIR}/registry.json"
 PROJECT_NAME=""
 
 usage() {
   cat <<'EOF'
-Usage: sync-claude-adapters.sh [--project NAME]
+Usage: sync-claude-adapters.sh [--project NAME] [--projects-root DIR] [--claude-home DIR]
 
 Sync canonical Claude-native adapters from Agent Forge into Claude's user-level
 and, optionally, project-level locations using symlinks.
@@ -24,8 +25,10 @@ Syncs three delivery targets:
   <project>/.claude/skills/ <- only registry-declared Claude skills for that project
 
 Options:
-  --project NAME   Also sync project-local adapters for the named project
-  -h, --help       Show this message
+  --project NAME      Also sync project-local adapters for the named project
+  --projects-root DIR Override the target Projects root
+  --claude-home DIR   Override the Claude home directory (default: ~/.claude)
+  -h, --help          Show this message
 EOF
 }
 
@@ -57,6 +60,16 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --project)
       PROJECT_NAME="${2:?missing project name}"
+      shift 2
+      ;;
+    --projects-root)
+      PROJECTS_ROOT="${2:?missing projects root}"
+      shift 2
+      ;;
+    --claude-home)
+      CLAUDE_HOME="${2:?missing claude home}"
+      TARGET_USER_AGENTS="${CLAUDE_HOME}/agents"
+      TARGET_USER_COMMANDS="${CLAUDE_HOME}/commands"
       shift 2
       ;;
     -h|--help)

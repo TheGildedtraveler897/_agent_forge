@@ -8,6 +8,24 @@ ROOT = Path(__file__).resolve().parent.parent
 REGISTRY_PATH = ROOT / "registry.json"
 CODEX_HOME = Path.home() / ".codex" / "skills"
 CLAUDE_HOME = Path.home() / ".claude"
+REQUIRED_SCRIPT_PATHS = [
+    ROOT / "scripts" / "bootstrap-project.sh",
+    ROOT / "scripts" / "sync-claude-adapters.sh",
+    ROOT / "scripts" / "sync-codex-skills.sh",
+    ROOT / "scripts" / "deploy-factory.sh",
+    ROOT / "scripts" / "factory-export.sh",
+]
+REQUIRED_DOC_PATHS = [
+    ROOT / "docs" / "PORTABILITY.md",
+    ROOT / "docs" / "FACTORY_SUITCASE.md",
+]
+EXECUTABLE_SCRIPT_PATHS = [
+    ROOT / "scripts" / "bootstrap-project.sh",
+    ROOT / "scripts" / "sync-claude-adapters.sh",
+    ROOT / "scripts" / "sync-codex-skills.sh",
+    ROOT / "scripts" / "deploy-factory.sh",
+    ROOT / "scripts" / "factory-export.sh",
+]
 
 
 def fail(msg: str) -> None:
@@ -33,6 +51,20 @@ def check_symlink(path: Path, expected_target: Path) -> bool:
     return True
 
 
+def check_executable(path: Path) -> bool:
+    if not path.exists():
+        fail(f"Missing executable script: {path}")
+        return False
+    if not path.is_file():
+        fail(f"Expected regular executable file: {path}")
+        return False
+    if path.stat().st_mode & 0o111 == 0:
+        fail(f"Script is not executable: {path}")
+        return False
+    ok(f"Executable script OK: {path}")
+    return True
+
+
 def project_root_by_name(registry: dict) -> dict[str, Path]:
     roots: dict[str, Path] = {}
     for project in registry.get("governed_projects", []):
@@ -51,6 +83,24 @@ def main() -> int:
     status = 0
     project_roots = project_root_by_name(registry)
     expected_project_skills: dict[str, dict[str, Path]] = {}
+
+    for script_path in REQUIRED_SCRIPT_PATHS:
+        if script_path.exists():
+            ok(f"Script present: {script_path}")
+        else:
+            fail(f"Missing required script: {script_path}")
+            status = 1
+
+    for script_path in EXECUTABLE_SCRIPT_PATHS:
+        if not check_executable(script_path):
+            status = 1
+
+    for doc_path in REQUIRED_DOC_PATHS:
+        if doc_path.exists():
+            ok(f"Doc present: {doc_path}")
+        else:
+            fail(f"Missing required doc: {doc_path}")
+            status = 1
 
     for entry in registry.get("skills", []):
         canonical_skill = ROOT / entry["canonical_skill"]

@@ -4,6 +4,20 @@ Last updated: 2026-04-04
 
 ## What Changed
 
+### Factory Suitcase Export + Deploy Batch (2026-04-05, Codex)
+
+Added the first explicit portable snapshot workflow for Agent Forge so the factory can be moved to a clean machine or Debian VM without carrying project repos or secrets.
+
+#### Changes Made
+
+1. **Portable suitcase export script** — Added `scripts/factory-export.sh` to build an unpacked suitcase directory plus `.tar.gz` and `.zip` archives. The payload includes `_agent_forge`, shared root doctrine docs, a manifest, and bundle README.
+2. **Target-machine deploy script** — Added `scripts/deploy-factory.sh` to install the exported factory snapshot into a target `Projects` root, copy shared doctrine docs, and sync Claude/Codex delivery surfaces.
+3. **Target override support for Claude sync** — Extended `sync-claude-adapters.sh` with `--projects-root` and `--claude-home` so deployment can be tested in a VM-style temp root without touching the source machine's active setup.
+4. **Suitcase runbook** — Added `docs/FACTORY_SUITCASE.md` covering build, deploy, Debian VM validation, and the next Reddit archive pilot flow.
+5. **Portability docs updated** — Expanded `docs/PORTABILITY.md` with the suitcase snapshot model, what is safe to carry, and what must never travel.
+6. **Verification coverage expanded** — `verify-agent-forge.py` now checks that the suitcase export/deploy scripts and runbook exist, and that the factory shell scripts are executable.
+7. **Isolated smoke test completed** — Exported a suitcase to `/tmp/agent-forge-export`, deployed it into `/tmp/agent-forge-suitcase-smoke`, confirmed root doctrine docs and delivery surfaces, and re-ran deploy successfully with `--replace-factory`.
+
 ### Premium Factory Optimization (2026-04-04, Claude Opus)
 
 Compared Agent Forge against external best practices from Anthropic, Google ADK, OpenAI Agents SDK, Microsoft Agent Framework, and ArXiv research. Made targeted improvements based on the highest-leverage gaps found.
@@ -38,25 +52,27 @@ Agent Forge already aligns with industry best practice on: declarative role defi
 
 - **Registry:** v4, 22 skills (up from 17 after prep pass added context-engineer, evidence-packager, quality-gate + 2 more)
 - **Teams:** 7 teams, all with escalation rules
-- **Verification:** 136 checks, 0 failures
+- **Verification:** includes suitcase export/deploy surfaces in addition to the existing skill and governance checks
 - **Skills:** All 17 canonical SKILL.md files have context_cost and model_tier metadata
-- **Docs:** 12 framework docs, all updated this session
+- **Docs:** factory now includes a dedicated suitcase/export/deploy runbook
+- **Suitcase status:** export and isolated deploy smoke test passed; Debian VM proof still pending
 
 ## Remaining Weaknesses
 
 1. **No automated eval harness** — Quality-gate is a manual skill invocation, not a CI/CD pipeline. Industry practice is automated evals on every change. Low priority for a one-person corp.
 2. **Bootstrap script untested for edge cases** — `bootstrap-project.sh --existing` and `--with-local-skills` paths haven't been exercised with real projects.
-3. **No Codex-side validation** — All verification has been Claude-side. Codex skill discovery and runtime behavior haven't been independently confirmed this session.
-4. **Team manifests are conceptual** — No automated team orchestration exists. Teams work by operator selection and manual handoff. This is intentional but limits weaker-model autonomy.
-5. **Content freshness** — Domain skills (finance, legal, procurement) embed rate/threshold data that will drift annually. The "verify before citing" mandate handles this at query time but doesn't prevent stale defaults from anchoring weaker models.
+3. **No suitcase VM proof yet** — Export and deploy flows are smoke-tested in temp roots, but they still need a real Debian VM validation pass.
+4. **No Codex-side validation** — All verification has been Claude-side. Codex skill discovery and runtime behavior haven't been independently confirmed this session.
+5. **Team manifests are conceptual** — No automated team orchestration exists. Teams work by operator selection and manual handoff. This is intentional but limits weaker-model autonomy.
+6. **Content freshness** — Domain skills (finance, legal, procurement) embed rate/threshold data that will drift annually. The "verify before citing" mandate handles this at query time but doesn't prevent stale defaults from anchoring weaker models.
 
 ## Manual Follow-Up Items
 
-1. Commit the prep pass + premium optimization changes in `_agent_forge`
-2. Run `sync-claude-adapters.sh --project jarvis` to deploy updated skills
-3. Exercise `bootstrap-project.sh` against a real new project to validate the bootstrap path
+1. Run the first real Debian VM deployment using the validated suitcase flow
+2. Bootstrap `reddit-archive` from the deployed suitcase instead of assembling it manually
+3. Exercise `bootstrap-project.sh` against that new project to validate the bootstrap path
 4. Consider a Codex validation pass to confirm skill discovery works from that side
-5. Start first real implementation slice (playlist-archive) using the delivery team model
+5. Use the artifact chain strictly during the Reddit pilot: evidence pack -> implementation brief -> scorecard -> handoff
 
 ## Final Verdict
 
