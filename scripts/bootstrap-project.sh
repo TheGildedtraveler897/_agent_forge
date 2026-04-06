@@ -8,10 +8,17 @@ PROJECT_NAME=""
 PROJECT_PATH=""
 MODE="new"
 WITH_LOCAL_SKILLS="0"
+SKIP_CONOPS_PROMPT="0"   # set to 1 to suppress the interactive CONOPS question
+
+# Detect whether stdin is a terminal; fall back to non-interactive if not.
+if [[ ! -t 0 ]]; then
+  SKIP_CONOPS_PROMPT="1"
+fi
 
 usage() {
   cat <<'EOF'
 Usage: bootstrap-project.sh --name PROJECT_NAME [--path RELATIVE_PATH] [--existing] [--with-local-skills]
+                             [--define | --no-define]
 
 Bootstrap a governed project under ~/Projects with Agent Forge contracts:
   - AGENTS.md
@@ -21,11 +28,17 @@ Bootstrap a governed project under ~/Projects with Agent Forge contracts:
   - .claude/CLAUDE.md symlink
   - .claude/agents, .claude/commands, and .claude/skills directories
 
+After scaffold creation the script automatically syncs Claude adapters and
+Codex skills, then offers an interactive project-definition flow (unless
+--no-define is passed or stdin is not a terminal).
+
 Options:
   --name PROJECT_NAME      Project display/name token used for docs
   --path RELATIVE_PATH     Relative path under ~/Projects (defaults to PROJECT_NAME)
   --existing               Standardize an existing project instead of creating a new top-level directory
   --with-local-skills      Create local skill source and Claude adapter directories under _agent_forge
+  --define                 Always run the interactive project-definition flow (skip the prompt)
+  --no-define              Never run the interactive project-definition flow
   -h, --help               Show this message
 EOF
 }
@@ -48,6 +61,16 @@ while [[ $# -gt 0 ]]; do
       WITH_LOCAL_SKILLS="1"
       shift
       ;;
+    --define)
+      SKIP_CONOPS_PROMPT="0"
+      # DEFINE_NOW="1" signals: skip the "do you want to define this?" prompt and go straight in
+      DEFINE_NOW="1"
+      shift
+      ;;
+    --no-define)
+      SKIP_CONOPS_PROMPT="1"
+      shift
+      ;;
     -h|--help)
       usage
       exit 0
@@ -59,6 +82,8 @@ while [[ $# -gt 0 ]]; do
       ;;
   esac
 done
+
+DEFINE_NOW="${DEFINE_NOW:-0}"   # set to 1 by --define to skip the y/n prompt
 
 if [[ -z "${PROJECT_NAME}" ]]; then
   echo "Missing required --name" >&2
@@ -198,9 +223,123 @@ if [[ "${WITH_LOCAL_SKILLS}" == "1" ]]; then
 fi
 
 echo "Bootstrapped project at ${TARGET_ROOT}"
-echo "Next steps:"
-echo "  1. Fill in docs/CONOPS.md"
-echo "  2. Add project-specific read-order references to AGENTS.md"
-echo "  3. Run _agent_forge/scripts/sync-claude-adapters.sh --project ${PROJECT_PATH}"
-echo "  4. Run _agent_forge/scripts/sync-codex-skills.sh --project ${PROJECT_PATH}"
-echo "  5. Run _agent_forge/scripts/verify-agent-forge.py after wiring any local skills"
+echo
+
+# ── Auto-sync adapters and skills ─────────────────────────────────────────────
+
+echo "── Syncing Claude adapters and Codex skills ─────────────────────────────────"
+
+SYNC_CLAUDE_OK=0
+SYNC_CODEX_OK=0
+
+if "${AGENT_FORGE_ROOT}/scripts/sync-claude-adapters.sh" --project "${PROJECT_PATH}"; then
+  SYNC_CLAUDE_OK=1
+fi
+
+# Only pass --project to sync-codex-skills when local skill sources actually
+# exist (i.e., when --with-local-skills was used).  A fresh project with no
+# project-local skills directory would cause the script to exit with an error.
+CODEX_SYNC_ARGS=()
+if [[ "${WITH_LOCAL_SKILLS}" == "1" ]]; then
+  CODEX_SYNC_ARGS+=("--project" "${PROJECT_PATH}")
+fi
+
+if "${AGENT_FORGE_ROOT}/scripts/sync-codex-skills.sh" "${CODEX_SYNC_ARGS[@]+"${CODEX_SYNC_ARGS[@]}"}"; then
+  SYNC_CODEX_OK=1
+fi
+
+if [[ "${SYNC_CLAUDE_OK}" -eq 1 && "${SYNC_CODEX_OK}" -eq 1 ]]; then
+  echo "  Adapters and skills synced."
+else
+  [[ "${SYNC_CLAUDE_OK}" -eq 0 ]] && echo "  Warning: Claude adapter sync failed — run manually:"
+  [[ "${SYNC_CLAUDE_OK}" -eq 0 ]] && echo "    ${AGENT_FORGE_ROOT}/scripts/sync-claude-adapters.sh --project ${PROJECT_PATH}"
+  [[ "${SYNC_CODEX_OK}"  -eq 0 ]] && echo "  Warning: Codex skill sync failed — run manually:"
+  [[ "${SYNC_CODEX_OK}"  -eq 0 ]] && echo "    ${AGENT_FORGE_ROOT}/scripts/sync-codex-skills.sh"
+fi
+
+echo
+
+# ── Interactive project-definition flow ───────────────────────────────────────
+
+define_project_interactively() {
+  echo "── Define this project ──────────────────────────────────────────────────────"
+  echo "Answer each prompt (press Enter to leave as a placeholder):"
+  echo
+
+  local mission audience deliverable constraints
+
+  read -r -p "Project mission (1-2 sentences — what is this for?):  " mission       || mission=""
+  read -r -p "Primary audience or users:                              " audience     || audience=""
+  read -r -p "Primary deliverable or system role:                     " deliverable  || deliverable=""
+  read -r -p "Key constraints or notable boundaries:                  " constraints  || constraints=""
+
+  mission="${mission:-TODO: describe the project mission and audience.}"
+  audience="${audience:-TODO: describe who this project serves.}"
+  deliverable="${deliverable:-TODO: describe the primary deliverable or system role.}"
+  constraints="${constraints:-TODO: describe key constraints, boundaries, or assumptions.}"
+
+  cat > "${TARGET_ROOT}/docs/CONOPS.md" <<EOF
+# ${PROJECT_NAME} CONOPS
+Last updated: $(date +%F)
+
+## Mission
+
+${mission}
+
+## Audience
+
+${audience}
+
+## Primary Deliverable
+
+${deliverable}
+
+## Constraints
+
+${constraints}
+
+## Current State
+
+- Governance scaffold bootstrapped from Agent Forge
+- First-pass definition captured at bootstrap time
+
+## Architecture
+
+TODO: describe the major components, data flow, and source-of-truth docs.
+
+## Pending Tasks
+
+- [ ] Flesh out architecture section when implementation begins
+- [ ] Add project-specific read-order references to \`AGENTS.md\`
+- [ ] Decide whether project-local skills are needed
+EOF
+
+  echo "  CONOPS.md written with your inputs."
+}
+
+if [[ "${SKIP_CONOPS_PROMPT}" != "1" ]]; then
+  if [[ "${DEFINE_NOW}" == "1" ]]; then
+    define_project_interactively
+  else
+    echo "── Optional: define this project now ────────────────────────────────────────"
+    read -r -p "Would you like to fill in the project definition now? [y/n]: " _ans || _ans="n"
+    case "${_ans}" in
+      y|Y|yes|YES)
+        echo
+        define_project_interactively
+        ;;
+      *)
+        echo "  Skipped. Edit docs/CONOPS.md whenever you are ready."
+        ;;
+    esac
+    echo
+  fi
+fi
+
+# ── Summary ───────────────────────────────────────────────────────────────────
+
+echo "── ${PROJECT_NAME} is ready ─────────────────────────────────────────────────"
+echo "  Location:  ${TARGET_ROOT}"
+echo "  Next:      Fill in docs/CONOPS.md if you skipped the definition step."
+echo "             Add project-specific references to AGENTS.md as the project grows."
+echo "             Run scripts/verify-agent-forge.py after wiring any local skills."

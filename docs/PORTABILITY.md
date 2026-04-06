@@ -26,47 +26,43 @@ Use:
 ./scripts/factory-export.sh
 ```
 
+You are asked to choose an export mode:
+
+- **`clean`** — factory capability only; session history replaced with stubs. Use for new machines / new companies.
+- **`backup`** — preserves current-state notes and session history. Use for personal backups.
+
+Pass `--mode clean` or `--mode backup` to skip the interactive prompt.
+
 The export produces:
 
 - an unpacked suitcase directory
 - a `.tar.gz` archive
 - a `.zip` archive
-- a `MANIFEST.json` describing what was included
+- a `MANIFEST.json` describing what was included (including `export_mode`)
 
-Deploy on a target machine with:
+Deploy on a target machine with the one-shot wrapper:
 
 ```bash
-./_agent_forge/scripts/deploy-factory.sh
+cd <unpacked-bundle>
+./_agent_forge/scripts/deploy-and-bootstrap.sh
 ```
 
-The deploy flow installs `_agent_forge`, shared doctrine docs, and user-level Claude/Codex delivery targets.
+This wrapper runs `deploy-factory.sh` (no packages) and then asks whether to run `bootstrap-workstation.sh` (installs CLIs). Nothing is installed silently.
 
-Portable deployment now has two layers:
+Portable deployment has two layers:
 
 1. **Factory deploy** — copy `_agent_forge`, doctrine docs, and tool-native delivery surfaces
 2. **Workstation bootstrap** — install the hosted coding CLIs and walk the operator through authentication
 
-After deploy, run:
+The wrapper chains them with a prompt between steps. See `docs/VM_OPERATOR_RUNBOOK.md` for the full Debian VM walkthrough.
 
-```bash
-cd ~/Projects/_agent_forge
-./scripts/bootstrap-workstation.sh
-```
+Validated on 2026-04-05 (suitcase + deploy) and 2026-04-06 (clean/backup export modes + deploy-and-bootstrap wrapper + bootstrap-project auto-sync) with isolated smoke tests.
 
-Validated on 2026-04-05 with an isolated smoke test using:
-
-- export root: `/tmp/agent-forge-export`
-- target Projects root: `/tmp/agent-forge-suitcase-smoke/Projects`
-- isolated Claude home: `/tmp/agent-forge-suitcase-smoke/.claude`
-- isolated Codex home: `/tmp/agent-forge-suitcase-smoke/.codex`
-
-The tested flow:
-
-1. build suitcase snapshot
-2. deploy into isolated temp roots
-3. confirm root doctrine docs copied
-4. confirm Claude agents/commands and Codex skills synced
-5. re-run deploy with `--replace-factory`
+Smoke-test coverage:
+- `factory-export.sh --mode clean` — HANDOFF/TECH_DEBT replaced with stubs; runtime/ excluded; skills preserved
+- `factory-export.sh --mode backup` — current state preserved intact
+- `deploy-and-bootstrap.sh --no-bootstrap` — deploy succeeds, bootstrap skipped cleanly
+- `bootstrap-project.sh --no-define` — scaffold created, Claude adapter sync succeeds, Codex global sync succeeds
 
 ## Migration Rule
 

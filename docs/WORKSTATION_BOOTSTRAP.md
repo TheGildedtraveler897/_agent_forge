@@ -2,7 +2,14 @@
 
 The suitcase export and deploy flow copies the Agent Forge factory to a machine. It does **not** make that machine ready for interactive LLM development by itself.
 
-To prepare a fresh Debian/Ubuntu or macOS workstation, run:
+**Recommended:** use the one-shot wrapper from an unpacked suitcase bundle — it deploys the factory then asks whether to run this script:
+
+```bash
+cd <unpacked-bundle>
+./_agent_forge/scripts/deploy-and-bootstrap.sh
+```
+
+Or run this script directly from an already-deployed factory:
 
 ```bash
 cd ~/Projects/_agent_forge
@@ -84,9 +91,17 @@ Gemini-specific pitfalls:
 
 ## Ready State
 
+The bootstrap script runs a ready-state check at the end and prints a summary of which CLIs are installed and whether authentication steps are still pending.
+
 A workstation is considered ready when:
 
 1. suitcase deploy completed successfully
-2. selected CLIs are installed and on `PATH`
+2. selected CLIs are installed and on `PATH` (confirmed by the ready-state check)
 3. the operator completed authentication
 4. `_agent_forge/runtime/machine-setup/` contains a successful setup log
+
+After the machine is ready, bootstrap a project:
+
+```bash
+./scripts/bootstrap-project.sh --name <your-project>
+```

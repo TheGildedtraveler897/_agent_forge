@@ -11,6 +11,7 @@ CLAUDE_HOME = Path.home() / ".claude"
 REQUIRED_SCRIPT_PATHS = [
     ROOT / "scripts" / "bootstrap-project.sh",
     ROOT / "scripts" / "bootstrap-workstation.sh",
+    ROOT / "scripts" / "deploy-and-bootstrap.sh",
     ROOT / "scripts" / "sync-claude-adapters.sh",
     ROOT / "scripts" / "sync-codex-skills.sh",
     ROOT / "scripts" / "deploy-factory.sh",
@@ -21,10 +22,12 @@ REQUIRED_DOC_PATHS = [
     ROOT / "docs" / "FACTORY_SUITCASE.md",
     ROOT / "docs" / "WORKSTATION_BOOTSTRAP.md",
     ROOT / "docs" / "OPEN_MODEL_ROADMAP.md",
+    ROOT / "docs" / "VM_OPERATOR_RUNBOOK.md",
 ]
 EXECUTABLE_SCRIPT_PATHS = [
     ROOT / "scripts" / "bootstrap-project.sh",
     ROOT / "scripts" / "bootstrap-workstation.sh",
+    ROOT / "scripts" / "deploy-and-bootstrap.sh",
     ROOT / "scripts" / "sync-claude-adapters.sh",
     ROOT / "scripts" / "sync-codex-skills.sh",
     ROOT / "scripts" / "deploy-factory.sh",

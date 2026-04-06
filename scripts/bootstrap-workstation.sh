@@ -328,11 +328,62 @@ write_log_header() {
 
 - Generated: $(date -u +%Y-%m-%dT%H:%M:%SZ)
 - Host OS: ${OS_NAME}
+- Package mode: ${PACKAGE_MODE:-unknown}
 - Projects root: ${PROJECTS_ROOT}
 - Factory root: ${ROOT_DIR}
 
-## Installed Services
+## Selected Services
+
 EOF
+}
+
+check_ready_state() {
+  local any_missing=0
+
+  record_section "## Ready State"
+  echo
+  echo "── Ready state check ────────────────────────────────────────────────────────"
+
+  _check_cli() {
+    local label="$1"
+    local binary="$2"
+    local auth_hint="$3"
+    local ver
+
+    if command -v "${binary}" >/dev/null 2>&1; then
+      ver="$("${binary}" --version 2>&1 || echo "version unknown")"
+      record_line "- ${label}: installed (${ver}) — auth: pending"
+      echo "  ${label}: installed — ${ver}"
+      echo "    To authenticate: ${auth_hint}"
+    else
+      record_line "- ${label}: NOT found on PATH"
+      echo "  ${label}: NOT found on PATH"
+      any_missing=1
+    fi
+  }
+
+  [[ "${INSTALL_CLAUDE}" == "1" ]] && _check_cli "Claude Code" "claude" "run: claude"
+  [[ "${INSTALL_CODEX}"  == "1" ]] && _check_cli "Codex"       "codex"  "run: codex --login"
+  [[ "${INSTALL_GEMINI}" == "1" ]] && _check_cli "Gemini CLI"  "gemini" "run: gemini"
+
+  echo
+
+  if [[ "${any_missing}" -eq 0 ]]; then
+    record_line "- overall: all selected CLIs installed — complete auth steps above"
+    echo "  All selected CLIs installed."
+    echo "  Complete the authentication steps above, then bootstrap a project."
+  else
+    record_line "- overall: one or more CLIs not found — check PATH or re-run install"
+    echo "  One or more CLIs are not on PATH. Check the install output above,"
+    echo "  open a fresh shell, and re-run this script if needed."
+  fi
+
+  record_section "## Next Recommended Command"
+  record_line ""
+  record_line "\`\`\`bash"
+  record_line "cd ${ROOT_DIR}"
+  record_line "./scripts/bootstrap-project.sh --name <your-project>"
+  record_line "\`\`\`"
 }
 
 detect_platform
@@ -353,6 +404,13 @@ record_line "- Node version: $(node --version)"
 
 choose_services
 
+record_line ""
+[[ "${INSTALL_CLAUDE}" == "1" ]] && record_line "- Claude Code: selected"
+[[ "${INSTALL_CODEX}"  == "1" ]] && record_line "- Codex: selected"
+[[ "${INSTALL_GEMINI}" == "1" ]] && record_line "- Gemini CLI: selected"
+
+record_section "## Install Results"
+
 if [[ "${INSTALL_CLAUDE}" == "1" ]]; then
   install_claude
 fi
@@ -364,19 +422,19 @@ if [[ "${INSTALL_GEMINI}" == "1" ]]; then
 fi
 
 auth_guidance
+check_ready_state
 
 record_section "## Next Steps"
 record_line "1. Complete the auth flows described above."
-record_line "2. Export the current suitcase again whenever the canonical factory changes."
-record_line "3. Bootstrap the next governed project after auth succeeds."
+record_line "2. Bootstrap the next governed project after auth succeeds:"
+record_line "     ${ROOT_DIR}/scripts/bootstrap-project.sh --name <your-project>"
 
 cat <<EOF
 
 Workstation bootstrap completed.
 Log written to: ${MACHINE_SETUP_LOG}
 
-Next steps:
-  1. Complete the authentication flows shown above.
-  2. cd ${ROOT_DIR}
-  3. ./scripts/bootstrap-project.sh --name reddit-archive
+Next step:
+  cd ${ROOT_DIR}
+  ./scripts/bootstrap-project.sh --name <your-project>
 EOF

@@ -1,6 +1,6 @@
 # Agent Forge Handoff
 
-Last updated: 2026-04-04
+Last updated: 2026-04-06
 
 ## What Changed
 
@@ -62,39 +62,68 @@ Agent Forge already aligns with industry best practice on: declarative role defi
 - Sonnet task brief simulation: self-contained, no prior context needed — PASS
 - Evidence-packager output test: matches contract, compact for downstream planner — PASS
 
+### Operator UX Remediation (2026-04-06, Claude Sonnet)
+
+Implemented all 8 items from `docs/FUTURE_WORK_VM_ONBOARDING.md`.
+
+#### Changes Made
+
+1. **`scripts/deploy-and-bootstrap.sh`** (new) — one-shot machine setup wrapper. Runs deploy then prompts whether to run workstation bootstrap. Interactive by default; `--bootstrap`/`--no-bootstrap` for scripted use. Nothing installed silently.
+
+2. **`bootstrap-workstation.sh` ready-state check** — added `check_ready_state` function that runs after install/auth guidance, checks `--version` for each selected CLI, prints a clear installed/not-found summary, and writes the result to the machine setup log.
+
+3. **`bootstrap-project.sh` auto-sync** — now automatically runs `sync-claude-adapters.sh --project` and `sync-codex-skills.sh` (global only for fresh projects; project-scoped when `--with-local-skills` used) immediately after scaffold creation. No separate manual sync commands needed.
+
+4. **`bootstrap-project.sh` interactive CONOPS** — after scaffold creation, prompts "Would you like to fill in the project definition now?" with 4 guided questions (mission, audience, deliverable, constraints). Writes a richer first-pass CONOPS.md. `--define`/`--no-define` flags for advanced use. Falls back to non-interactive if stdin is not a tty.
+
+5. **`factory-export.sh --mode clean|backup`** — interactive mode selection by default. `clean` (default) strips HANDOFF.md and TECH_DEBT.md with stubs and excludes `runtime/`; all skills, teams, adapters, scripts, and workflow docs preserved. `backup` keeps everything. MANIFEST.json records `export_mode`.
+
+6. **`docs/VM_OPERATOR_RUNBOOK.md`** (new) — dedicated Debian VM walkthrough: archive choice, unpack, one-shot wrapper, manual fallback, auth pitfalls, verify commands, ready-state checklist, refresh rule.
+
+7. **`scripts/verify-agent-forge.py`** — updated to require `deploy-and-bootstrap.sh` (executable) and `VM_OPERATOR_RUNBOOK.md` in coverage.
+
+8. **Docs updated** — FACTORY_SUITCASE.md, WORKSTATION_BOOTSTRAP.md, PORTABILITY.md, TECH_DEBT.md all revised to reflect the new human-first flow.
+
+#### Tests Run
+
+- All 4 modified shell scripts: `bash -n` syntax check — PASS
+- `factory-export.sh --mode clean` to isolated `/tmp` — PASS (stubs correct, runtime/ absent, skills preserved, MANIFEST includes export_mode)
+- `factory-export.sh --mode backup` — PASS (full HANDOFF.md preserved)
+- `deploy-and-bootstrap.sh --no-bootstrap` against isolated temp root — PASS
+- `bootstrap-project.sh --no-define` against live source — PASS (Claude sync OK, Codex global sync OK, no spurious warnings)
+- `verify-agent-forge.py` — 155 OK, 0 FAIL
+
 ## Current State
 
-- **Registry:** v4, 22 skills (up from 17 after prep pass added context-engineer, evidence-packager, quality-gate + 2 more)
+- **Registry:** v4, 22 skills
 - **Teams:** 7 teams, all with escalation rules
-- **Verification:** includes suitcase export/deploy surfaces in addition to the existing skill and governance checks
-- **Bootstrap:** workstation bootstrap now covers Debian/Ubuntu and macOS (MacPorts) for hosted CLI setup
-- **Skills:** All 17 canonical SKILL.md files have context_cost and model_tier metadata
-- **Docs:** factory now includes a dedicated suitcase/export/deploy runbook
-- **Suitcase status:** export and isolated deploy smoke test passed; Debian VM proof still pending
+- **Verification:** 155 checks, 0 failures
+- **Skills:** All SKILL.md files have context_cost and model_tier metadata
+- **Operator UX:** one-shot wrapper, auto-sync bootstrap, interactive CONOPS, clean/backup export, VM runbook — all implemented
+- **Suitcase status:** smoke-tested in isolated temp roots; real Debian VM proof still pending
 
 ## Remaining Weaknesses
 
-1. **No automated eval harness** — Quality-gate is a manual skill invocation, not a CI/CD pipeline. Industry practice is automated evals on every change. Low priority for a one-person corp.
-2. **Bootstrap script untested for edge cases** — `bootstrap-project.sh --existing` and `--with-local-skills` paths haven't been exercised with real projects.
-3. **No suitcase VM proof yet** — Export and deploy flows are smoke-tested in temp roots, but they still need a real Debian VM validation pass.
-4. **No real workstation proof yet** — The bootstrap logic is implemented, but it still needs validation on a fresh Debian VM and a real macOS workstation.
-5. **No Codex-side validation** — All verification has been Claude-side. Codex skill discovery and runtime behavior haven't been independently confirmed this session.
-6. **Team manifests are conceptual** — No automated team orchestration exists. Teams work by operator selection and manual handoff. This is intentional but limits weaker-model autonomy.
-7. **Content freshness** — Domain skills (finance, legal, procurement) embed rate/threshold data that will drift annually. The "verify before citing" mandate handles this at query time but doesn't prevent stale defaults from anchoring weaker models.
+1. **No automated eval harness** — Quality-gate is a manual skill invocation. Low priority for a one-person corp.
+2. **No real Debian VM proof** — Export/deploy/bootstrap flows are smoke-tested in temp roots but have not been run from a real human operator perspective on a fresh VM.
+3. **No real macOS proof** — MacPorts bootstrap path exists but is untested.
+4. **`bootstrap-project.sh --existing` and `--with-local-skills`** — paths have not been exercised with real projects.
+5. **No Codex-side validation** — All verification is Claude-side. Codex skill discovery and runtime behavior haven't been independently confirmed.
+6. **Team manifests are conceptual** — No automated team orchestration. Teams work by operator selection and manual handoff.
+7. **Content freshness** — Domain skills embed rate/threshold data that will drift annually.
+8. **`deploy-factory.sh` "Next steps" still lists manual sync commands** — now redundant since `bootstrap-project.sh` auto-syncs, but not harmful.
 
 ## Manual Follow-Up Items
 
-1. Run the first real Debian VM deployment using the validated suitcase flow
-2. Run `bootstrap-workstation.sh` on the Debian VM and complete authentication for the selected hosted CLIs
-3. Bootstrap `reddit-archive` from the deployed suitcase instead of assembling it manually
-4. Exercise `bootstrap-project.sh` against that new project to validate the bootstrap path
-5. Consider a Codex validation pass to confirm skill discovery works from that side
-6. Use the artifact chain strictly during the Reddit pilot: evidence pack -> implementation brief -> scorecard -> handoff
+1. Run a real Debian VM proof: unpack suitcase, run `deploy-and-bootstrap.sh`, authenticate, bootstrap a project, verify
+2. Exercise `bootstrap-project.sh --existing` against a real existing repo
+3. Commit the UX remediation changes in `_agent_forge`
+4. Start the first real implementation slice for `playlist-archive` using the Delivery Team model
 
 ## Final Verdict
 
-**The factory is materially stronger for future lower-tier model runs.**
+**The factory is materially stronger for both LLM agents and human operators.**
 
-The key improvements are the ones that reduce ambiguity for weaker models: worked examples in utility skills, severity-weighted quality gates, filled operator templates, and explicit escalation rules. A Sonnet-class model receiving a task brief built with these templates can execute without needing the full planning context that produced it. The framework's token discipline (selective skill delivery, compaction triggers, context_cost hints) keeps the signal-to-noise ratio high even in constrained contexts.
+LLM improvements (from previous pass): worked examples in utility skills, severity-weighted quality gates, filled operator templates, explicit escalation rules.
 
-The architecture is sound, the governance is operational, and the factory is portable. Clone `_agent_forge`, run the sync scripts, bootstrap a project — the accumulated knowledge deploys without rebuilding.
+Human operator improvements (this pass): the system now guides a founder/operator through machine setup with one obvious entry point, asks before installing anything, auto-wires adapters after project bootstrap, and offers to capture the project definition immediately. A non-technical operator can set up a new machine by running one script and answering a few prompts.
