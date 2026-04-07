@@ -8,7 +8,7 @@ This file records the most important shortcuts and restart hooks from the April 
 - `factory` is still a thin CLI repo. It has not yet absorbed the broader "agent factory" capability discussed during planning.
 - Bootstrap coverage is only proven for the default new-project path. `bootstrap-project.sh --existing` and `--with-local-skills` still need deliberate exercise.
 - The Governance Team is operationalized, but the Bootstrap Team and Delivery Team are still defined as canonical team manifests rather than full native role artifacts.
-- `playlist-archive` is governed and bootstrapped, but no downloader implementation exists yet.
+- `playlist-archive` has a working Spotify+YouTube downloader (`archive.py`, `install.sh`, 5 commits). Verify current feature gaps and whether further implementation slices are needed before treating it as pending work.
 - `RoboNaaz` is still effectively pre-commit as a repo. It needs a deliberate first-commit hygiene pass rather than opportunistic commits.
 - `jarvis`, `ZorroClaw`, and `factory` each have mixed local changes. They need repo-by-repo review before any commit decisions.
 - `bootstrap-project.sh` intentionally emits starter `TODO` placeholders into new stub docs. That is acceptable, but the template text may need tightening once more projects are bootstrapped.
@@ -24,7 +24,7 @@ This file records the most important shortcuts and restart hooks from the April 
 
 1. Run `python3 ~/Projects/_agent_forge/scripts/verify-agent-forge.py` to confirm workspace health.
 2. Do repo-by-repo commit hygiene for `_agent_forge`, `jarvis`, `ZorroForge/factory`.
-3. Start the first real implementation slice for `playlist-archive`, using the Delivery Team model.
+3. Review `playlist-archive` current state — working downloader already exists; identify any actual remaining gaps before scoping further work.
 
 ## Notes For The Next Session
 

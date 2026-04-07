@@ -118,7 +118,7 @@ Implemented all 8 items from `docs/FUTURE_WORK_VM_ONBOARDING.md`.
 1. Run a real Debian VM proof: unpack suitcase, run `deploy-and-bootstrap.sh`, authenticate, bootstrap a project, verify
 2. Exercise `bootstrap-project.sh --existing` against a real existing repo
 3. Commit the UX remediation changes in `_agent_forge`
-4. Start the first real implementation slice for `playlist-archive` using the Delivery Team model
+4. Review `playlist-archive` — working Spotify+YouTube downloader already exists (archive.py, install.sh). Assess current gaps rather than treating it as unstarted.
 
 ## Final Verdict
 
