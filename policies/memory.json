@@ -1,0 +1,51 @@
+{
+  "version": 1,
+  "description": "Canonical session-state layer. Renderers translate sections into per-project MEMORY.md and .forge_state/ surfaces reachable by every host. Append-first by default; active_tasks is the only rewriteable section. Secrets are denied at write time by the memory-archivist skill.",
+  "sections": [
+    {
+      "id": "build_commands",
+      "name": "Build Commands",
+      "append_only": true,
+      "host_writers": ["claude", "codex", "gemini"],
+      "host_readers": ["claude", "codex", "gemini"],
+      "description": "Verified shell commands that work in this repo (test runners, lint, build, deploy)."
+    },
+    {
+      "id": "project_quirks",
+      "name": "Project Quirks",
+      "append_only": true,
+      "host_writers": ["claude", "codex", "gemini"],
+      "host_readers": ["claude", "codex", "gemini"],
+      "description": "Non-obvious behaviors, traps, host-specific or environment-specific gotchas."
+    },
+    {
+      "id": "active_tasks",
+      "name": "Active Tasks",
+      "append_only": false,
+      "host_writers": ["claude", "codex", "gemini"],
+      "host_readers": ["claude", "codex", "gemini"],
+      "description": "Short-lived in-flight work; rewriteable as state changes. The only non-append-only section."
+    },
+    {
+      "id": "recent_decisions",
+      "name": "Recent Decisions",
+      "append_only": true,
+      "host_writers": ["claude", "codex", "gemini"],
+      "host_readers": ["claude", "codex", "gemini"],
+      "description": "Choices made this session that should propagate to other hosts but are not yet doctrine."
+    },
+    {
+      "id": "known_failures",
+      "name": "Known Failures",
+      "append_only": true,
+      "host_writers": ["claude", "codex", "gemini"],
+      "host_readers": ["claude", "codex", "gemini"],
+      "description": "Current blockers, host quirks, reproducer notes, or workarounds awaiting promotion to LESSONS_LEARNED.md."
+    }
+  ],
+  "retention": {
+    "max_entries_per_section": 50,
+    "warn_at": 40
+  },
+  "secrets_policy": "deny"
+}

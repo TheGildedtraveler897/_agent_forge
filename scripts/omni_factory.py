@@ -19,6 +19,7 @@ PROJECTS_ROOT = ROOT.parent
 PROJECTS_CATALOG_PATH = ROOT / "projects.json"
 GLOBAL_MCP_PATH = ROOT / "global-mcp.json"
 HOOKS_PATH = ROOT / "policies" / "hooks.json"
+MEMORY_POLICY_PATH = ROOT / "policies" / "memory.json"
 REGISTRY_PATH = ROOT / "registry.json"
 RUNTIME_DIR = ROOT / "runtime"
 MANAGED_STATE_PATH = RUNTIME_DIR / "managed-state.json"
@@ -501,6 +502,8 @@ def render_project_gemini_md(project_root: Path) -> str:
         "docs/CONOPS.md",
         "docs/HANDOFF.md",
     ]
+    if _memory_sections() and (project_root / "MEMORY.md").exists():
+        imports.append("MEMORY.md")
     lines = [MARKDOWN_MANAGED_COMMENT, "", "# Agent Forge Gemini Context", ""]
     lines.extend(f"@{item}" for item in imports)
     lines.append("")
@@ -652,6 +655,104 @@ def gemini_hook_payload() -> dict[str, list[dict[str, Any]]]:
             entry["description"] = hook["description"]
         grouped.setdefault(native_event, []).append(entry)
     return grouped
+
+
+def _memory_sections() -> list[dict[str, Any]]:
+    if not MEMORY_POLICY_PATH.exists():
+        return []
+    payload = load_json(MEMORY_POLICY_PATH)
+    return list(payload.get("sections") or [])
+
+
+def _memory_policy() -> dict[str, Any]:
+    if not MEMORY_POLICY_PATH.exists():
+        return {}
+    return load_json(MEMORY_POLICY_PATH)
+
+
+def render_memory_md(project_root: Path) -> str:
+    sections = _memory_sections()
+    lines = [
+        MARKDOWN_MANAGED_COMMENT,
+        "",
+        "# Project Memory",
+        "",
+        f"Universal cross-host session-state layer for `{project_root.name}`. "
+        "Renderers translate `policies/memory.json` into this file and the sibling `.forge_state/` directory.",
+        "",
+        "Append-first by default. Use the `memory-archivist` skill to add entries; never edit anchor lines by hand. "
+        "Secrets, credentials, and machine-local residue are denied at write time per `policies/memory.json`.",
+        "",
+    ]
+    for section in sections:
+        section_id = section["id"]
+        name = section.get("name") or section_id
+        description = section.get("description") or ""
+        append_only = section.get("append_only", True)
+        lines.append(f"## {name}")
+        lines.append("")
+        lines.append(f"<!-- section:{section_id} -->")
+        if description:
+            lines.append(f"_{description}_")
+        if not append_only:
+            lines.append("")
+            lines.append("_Rewriteable section — entries reflect current state, not history._")
+        lines.append("")
+        lines.append("<!-- entries:start -->")
+        lines.append("<!-- entries:end -->")
+        lines.append("")
+    return "\n".join(lines)
+
+
+def render_forge_state_readme() -> str:
+    return "\n".join(
+        [
+            MARKDOWN_MANAGED_COMMENT,
+            "",
+            "# .forge_state",
+            "",
+            "Local working state for the universal memory layer. Companion to the project's `MEMORY.md`.",
+            "",
+            "- `manifest.json` — schema version, section list, and last-updated timestamp.",
+            "- `archivist.log` — append-only audit trail produced by the `memory-archivist` skill.",
+            "",
+            "This directory is factory-managed. Do not edit `manifest.json` by hand; use the `memory-archivist` skill or re-run `python3 scripts/omni_factory.py sync-claude --project <name>` (or `sync-codex` / `sync-gemini`).",
+            "",
+        ]
+    )
+
+
+def render_forge_state_manifest(project_root: Path) -> str:
+    policy = _memory_policy()
+    manifest = {
+        "version": policy.get("version", 1),
+        "project": project_root.name,
+        "sections": [
+            {
+                "id": s["id"],
+                "name": s.get("name") or s["id"],
+                "append_only": s.get("append_only", True),
+            }
+            for s in _memory_sections()
+        ],
+        "retention": policy.get("retention", {}),
+        "secrets_policy": policy.get("secrets_policy", "deny"),
+        "last_updated": utc_now(),
+    }
+    return json.dumps(manifest, indent=2, sort_keys=True) + "\n"
+
+
+def sync_memory(project_root: Path, state: dict[str, Any]) -> None:
+    """Write MEMORY.md and .forge_state/ for a single governed project. Idempotent."""
+    if not _memory_sections():
+        return
+    memory_path = project_root / "MEMORY.md"
+    if memory_path.exists() and not is_managed_path(state, memory_path):
+        return
+    write_managed_text(memory_path, render_memory_md(project_root), "memory-md", state)
+    forge_dir = project_root / ".forge_state"
+    write_managed_text(forge_dir / "README.md", render_forge_state_readme(), "forge-state-readme", state)
+    write_managed_text(forge_dir / "manifest.json", render_forge_state_manifest(project_root), "forge-state-manifest", state)
 
 
 def render_claude_project_mcp(project_name: str) -> str | None:
@@ -884,6 +985,7 @@ def sync_claude(project_name: str | None, projects_root: Path, claude_home: Path
         sync_symlink_dir(project_root / ".claude" / "skills", desired_skills)
 
         state = load_managed_state()
+        sync_memory(project_root, state)
         mcp_payload = render_claude_project_mcp(project_name)
         mcp_path = project_root / ".mcp.json"
         if mcp_payload:
@@ -934,6 +1036,7 @@ def sync_codex(project_name: str | None, projects_root: Path, codex_home: Path, 
     sync_managed_dir(project_root / ".codex" / "agents", desired_agents, CODEX_AGENT_MARKER)
 
     state = load_managed_state()
+    sync_memory(project_root, state)
     config_path = project_root / ".codex" / "config.toml"
     write_managed_text(config_path, render_codex_config(project_name, project_root, relevant_capabilities), "codex-project-config", state)
 
@@ -1035,6 +1138,7 @@ def sync_gemini(project_name: str | None, projects_root: Path, gemini_home: Path
     sync_managed_dir(project_root / ".gemini" / "agents", project_agents, MARKDOWN_MANAGED_COMMENT)
 
     state = load_managed_state()
+    sync_memory(project_root, state)
     write_managed_text(project_root / "GEMINI.md", render_project_gemini_md(project_root), "gemini-project-context", state)
     write_managed_text(project_root / ".gemini" / "settings.json", render_gemini_settings(project_name), "gemini-project-settings", state)
     save_managed_state(state)
@@ -1140,6 +1244,44 @@ def verify() -> int:
                         fail(f"hooks.json '{hook.get('id')}' command script missing: {resolved}")
                     else:
                         ok(f"Hook script present: {hook.get('id')} -> {resolved.relative_to(Path.home()) if resolved.is_relative_to(Path.home()) else resolved}")
+
+    if MEMORY_POLICY_PATH.exists():
+        try:
+            memory_payload = load_json(MEMORY_POLICY_PATH)
+        except Exception as exc:
+            fail(f"policies/memory.json does not parse: {exc}")
+        else:
+            ok("policies/memory.json parses")
+            section_ids = [s.get("id") for s in (memory_payload.get("sections") or [])]
+            if not section_ids:
+                fail("policies/memory.json has no sections")
+            for project in load_projects():
+                project_root = project.root
+                memory_md = project_root / "MEMORY.md"
+                if not memory_md.exists():
+                    fail(f"Memory surface missing: {memory_md.relative_to(PROJECTS_ROOT)}")
+                    continue
+                body = memory_md.read_text()
+                missing_anchors = [sid for sid in section_ids if f"<!-- section:{sid} -->" not in body]
+                if missing_anchors:
+                    fail(f"Memory surface missing anchors {missing_anchors}: {memory_md.relative_to(PROJECTS_ROOT)}")
+                else:
+                    ok(f"Memory surface present: {memory_md.relative_to(PROJECTS_ROOT)}")
+                manifest_path = project_root / ".forge_state" / "manifest.json"
+                if not manifest_path.exists():
+                    fail(f"Forge state manifest missing: {manifest_path.relative_to(PROJECTS_ROOT)}")
+                    continue
+                try:
+                    manifest = load_json(manifest_path)
+                except Exception as exc:
+                    fail(f"Forge state manifest does not parse: {manifest_path.relative_to(PROJECTS_ROOT)}: {exc}")
+                    continue
+                for key in ("version", "sections", "last_updated"):
+                    if key not in manifest:
+                        fail(f"Forge state manifest missing key '{key}': {manifest_path.relative_to(PROJECTS_ROOT)}")
+                        break
+                else:
+                    ok(f"Forge state manifest valid: {manifest_path.relative_to(PROJECTS_ROOT)}")
 
     return status
 

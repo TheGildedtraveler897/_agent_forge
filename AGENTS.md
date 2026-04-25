@@ -8,7 +8,8 @@ This workspace is the canonical source of truth for portable multi-agent governa
 2. `docs/CONOPS.md`
 3. `docs/HANDOFF.md`
 4. `docs/LESSONS_LEARNED.md` when the task touches prior failures, workarounds, portability traps, or host-integration drift
-5. The relevant canonical `skills/**/SKILL.md` files and team manifests
+5. `<project>/MEMORY.md` when working under a governed project — it is the universal cross-host session-state layer (build commands, project quirks, active tasks, recent decisions, known failures). Append-only via the `memory-archivist` skill; never edit anchor lines by hand.
+6. The relevant canonical `skills/**/SKILL.md` files and team manifests
 
 ## Purpose
 
