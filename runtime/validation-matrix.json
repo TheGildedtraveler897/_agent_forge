@@ -1,0 +1,173 @@
+{
+  "rows": [
+    {
+      "fixture": "~/.claude/agents",
+      "host": "claude",
+      "id": "claude_user_agents",
+      "pass": null,
+      "scope": "user",
+      "surface": "user-agents"
+    },
+    {
+      "fixture": "~/.claude/commands",
+      "host": "claude",
+      "id": "claude_user_commands",
+      "pass": null,
+      "scope": "user",
+      "surface": "user-commands"
+    },
+    {
+      "fixture": "<project>/.claude/skills",
+      "host": "claude",
+      "id": "claude_project_skills",
+      "pass": null,
+      "scope": "project",
+      "surface": "project-skills"
+    },
+    {
+      "fixture": "<project>/.mcp.json",
+      "host": "claude",
+      "id": "claude_project_mcp",
+      "pass": null,
+      "scope": "project",
+      "surface": "project-mcp"
+    },
+    {
+      "fixture": "<project>/.agents/skills",
+      "host": "codex",
+      "id": "codex_project_skills",
+      "pass": null,
+      "scope": "project",
+      "surface": "project-skills"
+    },
+    {
+      "fixture": "<project>/.codex/agents",
+      "host": "codex",
+      "id": "codex_custom_agents",
+      "pass": null,
+      "scope": "project",
+      "surface": "custom-agents"
+    },
+    {
+      "fixture": "<project>/.codex/config.toml",
+      "host": "codex",
+      "id": "codex_project_config",
+      "pass": null,
+      "scope": "project",
+      "surface": "project-config"
+    },
+    {
+      "fixture": "codex exec --json --output-schema",
+      "host": "codex",
+      "id": "codex_runtime_validation",
+      "pass": null,
+      "scope": "project",
+      "surface": "runtime-exec"
+    },
+    {
+      "fixture": "~/.gemini/skills",
+      "host": "gemini",
+      "id": "gemini_user_skills",
+      "pass": null,
+      "scope": "user",
+      "surface": "user-skills"
+    },
+    {
+      "fixture": "~/.gemini/commands",
+      "host": "gemini",
+      "id": "gemini_user_commands",
+      "pass": null,
+      "scope": "user",
+      "surface": "user-commands"
+    },
+    {
+      "fixture": "~/.gemini/agents",
+      "host": "gemini",
+      "id": "gemini_user_agents",
+      "pass": null,
+      "scope": "user",
+      "surface": "user-agents"
+    },
+    {
+      "fixture": "<project>/.gemini/skills",
+      "host": "gemini",
+      "id": "gemini_project_skills",
+      "pass": null,
+      "scope": "project",
+      "surface": "project-skills"
+    },
+    {
+      "fixture": "<project>/GEMINI.md",
+      "host": "gemini",
+      "id": "gemini_project_context",
+      "pass": null,
+      "scope": "project",
+      "surface": "project-context"
+    },
+    {
+      "fixture": "<project>/.gemini/settings.json",
+      "host": "gemini",
+      "id": "gemini_project_settings",
+      "pass": null,
+      "scope": "project",
+      "surface": "project-settings"
+    },
+    {
+      "fixture": "bootstrap-project --name",
+      "host": "factory",
+      "id": "bootstrap_new_project",
+      "pass": null,
+      "scope": "project",
+      "surface": "bootstrap"
+    },
+    {
+      "fixture": "bootstrap-project --existing",
+      "host": "factory",
+      "id": "bootstrap_existing_project",
+      "pass": null,
+      "scope": "project",
+      "surface": "bootstrap"
+    },
+    {
+      "fixture": "bootstrap-workstation Debian",
+      "host": "factory",
+      "id": "workstation_bootstrap_debian",
+      "pass": null,
+      "scope": "machine",
+      "surface": "workstation-bootstrap"
+    },
+    {
+      "fixture": "bootstrap-workstation macOS",
+      "host": "factory",
+      "id": "workstation_bootstrap_macos",
+      "pass": null,
+      "scope": "machine",
+      "surface": "workstation-bootstrap"
+    }
+  ],
+  "triad_runtime": {
+    "jarvis": {
+      "artifact_path": "runtime/validation/triad/20260425-032717",
+      "last_run": "20260425-032717",
+      "overall_pass": true,
+      "per_host": {
+        "claude": {
+          "hook_pass": true,
+          "method": "cli",
+          "pass": true
+        },
+        "codex": {
+          "hook_pass": true,
+          "method": "filesystem",
+          "pass": true
+        },
+        "gemini": {
+          "hook_pass": true,
+          "method": "cli",
+          "pass": true
+        }
+      }
+    }
+  },
+  "version": 1
+}

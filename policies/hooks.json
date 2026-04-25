@@ -1,0 +1,19 @@
+{
+  "version": 2,
+  "description": "Canonical hook inventory. Renderers translate each record into the host's native format. Events use snake_case (pre_tool_use, post_tool_use, pre_commit, post_edit, session_start, stop). A record in 'shared' applies to every host listed in its 'targets' array; host-specific arrays carry hooks that only make sense on one host.",
+  "shared": [
+    {
+      "id": "pre-tool-execution-guardian",
+      "description": "Universal pre-tool guardrail. Blocks destructive invocations such as --no-verify, force-push-to-main, and wildcard home deletion. Opt out per-session with AGENT_FORGE_GUARDIAN=off.",
+      "event": "pre_tool_use",
+      "matcher": "Bash",
+      "command": "bash ~/Projects/_agent_forge/skills/global/telemetry-guardian/guardian.sh",
+      "targets": ["claude", "codex", "gemini"],
+      "timeout_ms": 5000,
+      "status_message": "telemetry-guardian vetting tool invocation"
+    }
+  ],
+  "claude": [],
+  "codex": [],
+  "gemini": []
+}
