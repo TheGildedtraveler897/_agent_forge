@@ -31,13 +31,14 @@ A detailed synthesis of the most advanced features currently available across th
 ## Architectural Upgrades: The Universal State Layer
 Concrete, blueprint-level proposals for upgrading the `omni_factory.py` engine to support these advanced features while **ensuring 100% cross-pollination between Claude, Codex, and Gemini**.
 
-**1. The Cross-Agent Memory Exchange (The `MEMORY.md` Standard)**
+**1. The Cross-Agent Memory Exchange (The `MEMORY.md` Standard)** — ✅ Shipped 2026-04-25
 *   **The Problem:** Claude uses "Routines", Codex uses "Subagents", Gemini uses "Agent-as-a-Tool". If they store knowledge natively, they silo.
 *   **The Blueprint:** We establish `MEMORY.md` (and a `.forge_state/` directory) as the **Universal State Layer**. 
 *   **The Implementation:** Update `omni_factory.py` to enforce that *all* agents read and write to `MEMORY.md`. 
     *   When Claude's Auto-Memory learns a build command, it hooks into `MEMORY.md`. 
     *   When Gemini boots up the next day, its pre-action hook parses `MEMORY.md` and injects it into the prompt.
     *   *Result:* Gemini directly benefits from Claude's overnight work. They share a single brain.
+*   **Status:** `policies/memory.json` v1 schema is authoritative (five sections, retention 50/warn-at-40, secrets-deny). `scripts/omni_factory.py` carries `sync_memory()` invoked from all three host syncs. Six governed projects each have `MEMORY.md` + `.forge_state/`. `AGENTS.md` Read Order entry #5 names `MEMORY.md` for every host. Triad validator's `memory_surface_for` now gates overall pass. Evidence: `runtime/validation/triad/20260425-174222/`.
 
 **2. Unified Hook Lifecycle (Cross-CLI Guardrails)** — ✅ Shipped 2026-04-24
 *   **Blueprint:** Create a `hooks.json` schema in the factory that compiles down to the native hook formats of each CLI (Gemini's `hooksConfig`, Claude's pre/post-action shell scripts, Codex's config hooks).
@@ -59,8 +60,9 @@ Concrete, blueprint-level proposals for upgrading the `omni_factory.py` engine t
 ## Capability Backlog
 A prioritized list of new skills and teams we must build next to maximize our leverage over the LLMs.
 
-**1. `memory-archivist` (Background Agent)**
+**1. `memory-archivist` (Background Agent)** — ✅ Shipped 2026-04-25
 *   **Spec:** A continuous background skill that monitors session diffs and tool usage. It distills facts, project quirks, and build commands, appending them to `MEMORY.md`. It translates Claude's "Routines" and Codex's "Chronicle" outputs into the universal markdown format.
+*   **Status:** Lives at `skills/global/memory-archivist/` with `SKILL.md` (workflow class, all-host targets) and `archivist.py` providing `append` / `validate` / `summary` subcommands. Append-first by default; `active_tasks` rewriteable; secrets-deny patterns reject API keys, private keys, and credential-shaped strings. Audit log at `<project>/.forge_state/archivist.log`. Wired into `teams/improvement-team.json` alongside `sprint-harvester` (harvester = durable doctrine candidates; archivist = session-scoped state).
 
 **2. `router-overseer` (Agent-as-a-Tool Dispatcher)**
 *   **Spec:** A master routing agent that doesn't write code. Instead, it analyzes the user's prompt and dispatches sub-agents (e.g., `legal-counsel`, `infra-architect`) in parallel, merging their outputs into a cohesive response that is written back to the Universal State Layer.

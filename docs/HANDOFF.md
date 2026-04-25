@@ -1,8 +1,26 @@
 # Agent Forge Handoff
 
-Last updated: 2026-04-24
+Last updated: 2026-04-25
 
 ## What Changed
+
+### Universal State Layer + Memory Archivist (2026-04-25, Claude)
+
+Pathfinder Roadmap Architectural Upgrade #1 paired with Capability Backlog #1, shipped together and validated end-to-end through the triad runtime gate.
+
+#### Changes Made
+
+1. **`policies/memory.json` v1 authored** — five sections (`build_commands`, `project_quirks`, `active_tasks` [rewriteable], `recent_decisions`, `known_failures`), retention 50/warn-at-40, `secrets_policy: deny`.
+2. **Three omni-factory renderers shipped** in `scripts/omni_factory.py`: `render_memory_md()`, `render_forge_state_readme()`, `render_forge_state_manifest()`, plus `sync_memory()` invoked from `sync_claude` / `sync_codex` / `sync_gemini`. `render_project_gemini_md` extended to `@import MEMORY.md`.
+3. **18 host-native surfaces written** — six governed projects each gain `<project>/MEMORY.md` + `<project>/.forge_state/{README.md,manifest.json}`.
+4. **`AGENTS.md` Read Order extended** with a fifth entry naming `<project>/MEMORY.md` as the universal cross-host session-state file. Single edit covers all three hosts via the AGENTS chain.
+5. **`memory-archivist` capability shipped** at `skills/global/memory-archivist/` with `SKILL.md` (workflow class, all-host targets) and `archivist.py` providing `append`, `validate`, `summary` subcommands. Secrets-deny patterns reject API keys / private keys / credential-shaped strings. Audit log at `<project>/.forge_state/archivist.log`. Live unit-tested: append OK (exit 0), validate OK (exit 0), secrets-deny rejected `API_KEY=...` with exit 2.
+6. **Verifier extended** — `verify()` parses `policies/memory.json`, confirms every governed project has `MEMORY.md` with all section anchors and a well-formed `.forge_state/manifest.json`.
+7. **Triad validator extended** — `memory_surface_for(host, project_root)` parallels `hook_surface_for`. Overall pass now requires skill + hook + memory. `host_sandbox_blocked()` marker list expanded with Codex's newer error strings (`needs access to create user namespaces`, `shell tool is blocked by the sandbox`, etc.) so sandbox-blocked Codex still escalates to `filesystem-escalated` evidence.
+8. **`teams/improvement-team.json` updated** — `memory-archivist` wired alongside `sprint-harvester` in all three host mappings; harvester captures durable doctrine candidates, archivist captures session-scoped state.
+9. **Final E2E green** — `verify-agent-forge.py` EXIT=0 with new memory checks reporting OK; `validate-triad-runtime.py --project jarvis` EXIT=0 with `overall_pass: true`, all three hosts `pass: true` `hook_pass: true` `memory_pass: true`, expected count **28** (was 27). Codex auto-escalated to `filesystem-escalated` after sandbox-marker list was updated.
+
+Evidence artifact: `runtime/validation/triad/20260425-174222/summary.json`.
 
 ### Unified Hook Lifecycle + Telemetry Guardian (2026-04-24, Claude)
 

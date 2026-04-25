@@ -29,6 +29,13 @@
       "inputs": ["improvement plan", "repo diff", "validation artifacts", "handoff"],
       "outputs": ["lesson ledger append block", "promotion candidates"],
       "stop_condition": "Durable lessons are captured in the ledger without silently rewriting doctrine."
+    },
+    {
+      "name": "memory-archivist",
+      "responsibility": "Capture session-scoped state (verified build commands, project quirks, in-flight tasks, recent decisions, known failures) into the project's MEMORY.md so the next host or session inherits it.",
+      "inputs": ["session context", "verified facts", "host signal", "improvement plan"],
+      "outputs": ["MEMORY.md append entries", "archivist audit log"],
+      "stop_condition": "Session-scoped state has been captured into MEMORY.md without overlap into the durable lesson ledger."
     }
   ],
   "collapse_condition": "Findings are few and the fix is obvious — a single worker can prioritize and apply the improvement directly.",
@@ -46,6 +53,7 @@
       "quality-gate",
       "context-engineer",
       "sprint-harvester",
+      "memory-archivist",
       "root-cause-analyst",
       "skill-author"
     ]
@@ -56,6 +64,7 @@
       "quality-gate",
       "context-engineer",
       "sprint-harvester",
+      "memory-archivist",
       "root-cause-analyst",
       "skill-author"
     ]
@@ -66,6 +75,7 @@
       "quality-gate",
       "context-engineer",
       "sprint-harvester",
+      "memory-archivist",
       "root-cause-analyst",
       "skill-author"
     ]

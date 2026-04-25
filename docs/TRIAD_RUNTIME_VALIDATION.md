@@ -80,6 +80,21 @@ After enumerating skills for a host, the validator runs `hook_surface_for(host, 
 
 If the guardian record is missing from any host's surface, that host's `pass` becomes `false` and overall pass is `false`. This catches the silent-rot failure mode where `policies/hooks.json` is updated but a renderer was not re-run for that project.
 
+### Memory surface check
+
+After hook-surface, the validator runs `memory_surface_for(host, project_root)` to confirm the universal state layer is reachable:
+
+- Reads `<project>/MEMORY.md`, confirms every section anchor from `policies/memory.json` (`<!-- section:<id> -->`) is present.
+- Reads `<project>/.forge_state/manifest.json`, confirms it has `version`, `sections`, `last_updated`.
+- For Gemini, additionally confirms `<project>/GEMINI.md` `@imports` `MEMORY.md`.
+- For Claude and Codex, confirms `AGENTS.md` (which both auto-load) names `MEMORY.md` in its Read Order.
+
+If any check fails, that host's `pass` becomes `false` and overall pass is `false`. Per-host matrix entries gain a `memory_pass` field alongside `hook_pass`. Expected skill count is now **28** (memory-archivist added on top of the prior 27).
+
+### Codex sandbox-block detection
+
+Codex's CLI emits different error strings depending on release. The validator's `host_sandbox_blocked()` keeps a curated allow-list of phrases that signal "Codex couldn't run its shell tool because of bubblewrap restrictions, but the surfaces on disk are correct" — for example `bwrap: loopback: Failed RTM_NEWADDR`, `needs access to create user namespaces`, `shell tool failed before command execution`, `shell tool is blocked by the sandbox`. When any of those is detected, the validator escalates to filesystem inspection and records `method: filesystem-escalated`. If Codex changes its error wording in a future release and the marker list is not updated, the validator will report `cli`/`missing=N/N` even though all surfaces exist — the fix is to add the new marker, not weaken the validator.
+
 ### Artifact shape
 
 ```
@@ -110,9 +125,9 @@ runtime/validation/triad/<stamp>/
       "last_run": "YYYYMMDD-HHMMSS",
       "overall_pass": true,
       "per_host": {
-        "claude": {"pass": true, "hook_pass": true, "method": "cli"},
-        "codex":  {"pass": true, "hook_pass": true, "method": "filesystem-escalated"},
-        "gemini": {"pass": true, "hook_pass": true, "method": "cli"}
+        "claude": {"pass": true, "hook_pass": true, "memory_pass": true, "method": "cli"},
+        "codex":  {"pass": true, "hook_pass": true, "memory_pass": true, "method": "filesystem-escalated"},
+        "gemini": {"pass": true, "hook_pass": true, "memory_pass": true, "method": "cli"}
       },
       "artifact_path": "runtime/validation/triad/<stamp>"
     }

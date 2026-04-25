@@ -463,6 +463,45 @@
       }
     },
     {
+      "name": "memory-archivist",
+      "display_name": "memory-archivist",
+      "scope": "global",
+      "project": null,
+      "capability_class": "workflow",
+      "canonical_skill": "skills/global/memory-archivist/SKILL.md",
+      "targets": [
+        "claude",
+        "codex",
+        "gemini"
+      ],
+      "delivery_projects": [
+        "jarvis",
+        "RoboNaaz",
+        "ZorroClaw",
+        "homelab",
+        "factory",
+        "playlist-archive"
+      ],
+      "claude": {
+        "mode": "command",
+        "generated": true,
+        "command_name": "memory-archivist",
+        "agent_name": null
+      },
+      "gemini": {
+        "mode": "command",
+        "generated": true,
+        "command_name": "memory-archivist",
+        "agent_name": null
+      },
+      "codex": {
+        "generated": true,
+        "global_skill": true,
+        "project_skill": true,
+        "custom_agent": false
+      }
+    },
+    {
       "name": "multi-agent-governor",
       "display_name": "multi-agent-governor",
       "scope": "global",
@@ -1135,7 +1174,8 @@
         "gap-prioritizer",
         "remediation-designer",
         "doctrine-updater",
-        "sprint-harvester"
+        "sprint-harvester",
+        "memory-archivist"
       ]
     },
     {

@@ -165,3 +165,45 @@ Global user-home hook surfaces (`~/.claude/settings.json`, `~/.gemini/settings.j
 ### Seeded hook: `pre-tool-execution-guardian`
 
 The factory ships one standard hook: the `telemetry-guardian` pre-tool veto. It calls `skills/global/telemetry-guardian/guardian.sh`, which reads the tool invocation on stdin, matches against a short deny list (`--no-verify`, force-push to protected branches, wildcard home deletion, unscoped `terraform destroy`, whole-disk `dd`, recursive 777 on home), and exits 1 to block or 0 to allow. Set `AGENT_FORGE_GUARDIAN=off` to bypass for a single session; bypasses are logged to `~/.agent-forge/guardian.log`.
+
+## Universal State Layer
+
+`policies/memory.json` is the canonical authoring surface for the cross-host session-state layer. The renderers compile its sections into a per-project `MEMORY.md` plus a sibling `.forge_state/` directory, so Claude Auto-Memory, Codex Chronicle, and Gemini Memory v2 all read and write the same brain.
+
+### Schema
+
+```json
+{
+  "version": 1,
+  "sections": [{ "id": "...", "name": "...", "append_only": true|false, "host_writers": [...], "host_readers": [...], "description": "..." }],
+  "retention":      { "max_entries_per_section": 50, "warn_at": 40 },
+  "secrets_policy": "deny"
+}
+```
+
+Section ids are stable; renaming is a breaking change because section anchors (`<!-- section:<id> -->`) are addressed by id from the `memory-archivist` skill.
+
+### Rendered surfaces
+
+Per sync, the factory writes:
+
+- `<project>/MEMORY.md` — managed markdown with one H2 per section, an HTML anchor comment, and `<!-- entries:start -->` / `<!-- entries:end -->` markers the archivist appends between.
+- `<project>/.forge_state/README.md` — short explanation of the directory.
+- `<project>/.forge_state/manifest.json` — `version`, project name, sections (id/name/append_only), retention, secrets_policy, `last_updated`.
+- `<project>/.forge_state/archivist.log` — append-only audit trail produced when the archivist runs.
+
+### Host reachability
+
+- **Claude / Codex:** the repo-root `AGENTS.md` Read Order names `<project>/MEMORY.md` as the universal session-state file. Both hosts already follow `AGENTS.md` (Claude via `CLAUDE.md` imports, Codex auto-loads `AGENTS.md`).
+- **Gemini:** generated `<project>/GEMINI.md` adds `@MEMORY.md` to its import chain. Gemini loads it natively.
+
+### Adding or removing a section
+
+1. Edit `policies/memory.json`. Bump `version` if the change is breaking.
+2. Re-run `sync-claude` / `sync-codex` / `sync-gemini` for every governed project.
+3. Re-run `verify-agent-forge.py` — it now confirms every governed project's `MEMORY.md` carries every section anchor and that `.forge_state/manifest.json` is well-formed.
+4. Re-run `validate-triad-runtime.py` — `memory_surface_for(host, project_root)` will fail for any project whose anchors don't match the new schema.
+
+### `memory-archivist` skill
+
+The companion capability that exercises the layer. Three subcommands: `append` (timestamped, one entry per call, secrets-deny on write), `validate` (confirms anchors and manifest are well-formed), `summary` (per-section counts and retention warnings). See `skills/global/memory-archivist/SKILL.md` for the contract; live invocation is `python3 ~/Projects/_agent_forge/skills/global/memory-archivist/archivist.py append --project <root> --section <id> --entry "<text>" --source claude|codex|gemini`.

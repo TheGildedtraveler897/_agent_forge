@@ -86,6 +86,10 @@ def host_sandbox_blocked(text: str) -> bool:
     markers = (
         "bwrap: loopback: Failed RTM_NEWADDR",
         "Operation not permitted",
+        "needs access to create user namespaces",
+        "shell tool failed before command execution",
+        "shell tool is blocked by the sandbox",
+        "sandbox network setup path",
     )
     return any(m in text for m in markers)
 
@@ -254,13 +258,89 @@ def hook_surface_for(host: str, project_root: Path) -> dict:
     }
 
 
+def _memory_section_ids() -> list[str]:
+    policy_path = ROOT / "policies" / "memory.json"
+    if not policy_path.exists():
+        return []
+    try:
+        payload = json.loads(policy_path.read_text())
+    except Exception:
+        return []
+    return [s.get("id") for s in (payload.get("sections") or []) if s.get("id")]
+
+
+def memory_surface_for(host: str, project_root: Path) -> dict:
+    """Confirm the universal state layer is reachable from this host's surface.
+
+    All three hosts share the same project-level MEMORY.md, but each must
+    have a path to discover it:
+      - claude: AGENTS.md Read Order line (covers via the AGENTS chain).
+      - codex: AGENTS.md is auto-loaded; same coverage.
+      - gemini: <project>/GEMINI.md must list MEMORY.md as an @import.
+    """
+    expected_sections = _memory_section_ids()
+    if not expected_sections:
+        return {"pass": True, "reason": "memory policy not active"}
+
+    memory_md = project_root / "MEMORY.md"
+    if not memory_md.exists():
+        return {"pass": False, "path": str(memory_md), "reason": "MEMORY.md missing"}
+    body = memory_md.read_text()
+    sections_present = [sid for sid in expected_sections if f"<!-- section:{sid} -->" in body]
+    sections_missing = [sid for sid in expected_sections if sid not in sections_present]
+
+    manifest_path = project_root / ".forge_state" / "manifest.json"
+    manifest_pass = False
+    if manifest_path.exists():
+        try:
+            manifest = json.loads(manifest_path.read_text())
+            manifest_pass = all(k in manifest for k in ("version", "sections", "last_updated"))
+        except Exception:
+            manifest_pass = False
+
+    host_link_pass = True
+    host_link_reason = ""
+    if host == "gemini":
+        gemini_md = project_root / "GEMINI.md"
+        if not gemini_md.exists():
+            host_link_pass = False
+            host_link_reason = "GEMINI.md missing"
+        elif "@MEMORY.md" not in gemini_md.read_text():
+            host_link_pass = False
+            host_link_reason = "GEMINI.md does not @import MEMORY.md"
+    else:
+        agents_md = ROOT / "AGENTS.md"
+        if "MEMORY.md" not in agents_md.read_text():
+            host_link_pass = False
+            host_link_reason = "AGENTS.md missing MEMORY.md Read Order entry"
+
+    overall_pass = (not sections_missing) and manifest_pass and host_link_pass
+    return {
+        "pass": overall_pass,
+        "path": str(memory_md),
+        "sections_present": sections_present,
+        "sections_missing": sections_missing,
+        "manifest_pass": manifest_pass,
+        "host_link_pass": host_link_pass,
+        "host_link_reason": host_link_reason,
+    }
+
+
 def update_matrix(project_name: str, summary: dict) -> None:
     matrix = json.loads(MATRIX_PATH.read_text()) if MATRIX_PATH.exists() else {}
     triad = matrix.setdefault("triad_runtime", {})
     triad[project_name] = {
         "last_run": summary["timestamp"],
         "overall_pass": summary["pass"],
-        "per_host": {h: {"pass": r["pass"], "method": r["method"], "hook_pass": r.get("hook_surface", {}).get("pass", False)} for h, r in summary["results"].items()},
+        "per_host": {
+            h: {
+                "pass": r["pass"],
+                "method": r["method"],
+                "hook_pass": r.get("hook_surface", {}).get("pass", False),
+                "memory_pass": r.get("memory_surface", {}).get("pass", False),
+            }
+            for h, r in summary["results"].items()
+        },
         "artifact_path": summary["artifact_path"],
     }
     MATRIX_PATH.parent.mkdir(parents=True, exist_ok=True)
@@ -299,10 +379,16 @@ def main() -> int:
         if not hook_res["pass"]:
             res["pass"] = False
             res.setdefault("missing", []).append(f"hook-surface:{hook_res.get('reason','guardian not present')}")
+        memory_res = memory_surface_for(host, project_root)
+        res["memory_surface"] = memory_res
+        if not memory_res["pass"]:
+            res["pass"] = False
+            res.setdefault("missing", []).append(f"memory-surface:{memory_res.get('reason') or memory_res.get('host_link_reason') or 'memory layer not reachable'}")
         (evidence_dir / "result.json").write_text(json.dumps(res, indent=2) + "\n")
         status = "PASS" if res["pass"] else "FAIL"
         hook_tag = "hook+" if hook_res["pass"] else "hook-"
-        print(f"[{status}] {host:7s} method={res['method']:22s} missing={len(res['missing'])}/{res['expected_count']}  {hook_tag}")
+        mem_tag = "mem+" if memory_res["pass"] else "mem-"
+        print(f"[{status}] {host:7s} method={res['method']:22s} missing={len(res['missing'])}/{res['expected_count']}  {hook_tag} {mem_tag}")
         results[host] = res
 
     overall = all(r["pass"] for r in results.values()) if results else False
