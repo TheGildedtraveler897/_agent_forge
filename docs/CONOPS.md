@@ -1,5 +1,5 @@
 # Agent Forge CONOPS
-Last updated: 2026-04-23
+Last updated: 2026-04-25
 
 ## Mission
 
@@ -16,6 +16,7 @@ The old model spread truth across `SKILL.md`, `registry.json`, and hand-authored
 - Teams are authored in `teams/*.json`.
 - MCP servers are authored in `global-mcp.json`.
 - Hook policy is authored in `policies/hooks.json`.
+- Universal cross-host memory layer (sections, retention, secrets policy) is authored in `policies/memory.json`. Renderers translate it into `<project>/MEMORY.md` and `<project>/.forge_state/` for every governed project.
 - `registry.json` is generated compatibility output, not an authoring surface.
 
 ## Capability Model

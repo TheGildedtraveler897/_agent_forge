@@ -90,6 +90,13 @@ When a project-local capability becomes reusable:
 - team manifests
 - sync/bootstrap/export/deploy/validation scripts
 - `docs/LESSONS_LEARNED.md`
+- `policies/hooks.json` and `policies/memory.json` (canonical schema definitions)
+- `runtime/validation-matrix.json` (the coverage ledger; survives across runs)
+
+What gets re-rendered into governed projects on first sync, not carried directly:
+
+- `<project>/.claude/`, `<project>/.codex/`, `<project>/.gemini/` host-native surfaces
+- `<project>/MEMORY.md` and `<project>/.forge_state/` (universal state layer)
 
 ## Never Carry
 

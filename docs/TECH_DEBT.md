@@ -1,27 +1,35 @@
 # TECH_DEBT
 
-This file records the most important remaining gaps after the omni-factory Phase 3 standardization pass.
+This file records the most important remaining gaps as of 2026-04-25, after the universal state layer + memory-archivist sprint shipped.
+
+## Recently Resolved (no longer debt)
+
+- **Claude runtime validator** — shipped 2026-04-24 as part of `scripts/validate-triad-runtime.py`. Probes the live `claude` CLI; falls back to filesystem on failure.
+- **Gemini runtime validator** — same triad-validator script also probes the live `gemini` CLI.
+- **Universal pre-tool guardrail** — `telemetry-guardian` shipped 2026-04-24 with `policies/hooks.json` v2 + three host renderers; live deny list covering `--no-verify`, force-push to protected branches, wildcard home deletion, unscoped `terraform destroy`, whole-disk `dd`, recursive 777.
+- **Universal cross-host memory layer** — `MEMORY.md` + `.forge_state/` shipped 2026-04-25 with `policies/memory.json` schema + `memory-archivist` skill + `memory_surface_for` triad gate.
+- **Codex sandbox-marker drift** — `host_sandbox_blocked()` in the triad validator now recognizes the newer Codex error strings (`needs access to create user namespaces`, `shell tool failed before command execution`, etc.) so sandbox-blocked Codex runs still escalate to filesystem-escalated evidence.
 
 ## Open Debt
 
-- No real shared MCP server has been added to `global-mcp.json`, so cross-host MCP injection is still structurally wired but operationally unproven.
-- No automated Claude runtime validator exists yet.
-- No automated Gemini runtime validator exists yet.
-- The Codex runtime validator now performs live execution, but it still does not prove every generated command or agent invocation path.
-- On this machine, Codex runtime inspection can be blocked by `bwrap: loopback: Failed RTM_NEWADDR: Operation not permitted`, which prevents the live probe from confirming generated surfaces even when they exist on disk.
+- No real shared MCP server has been added to `global-mcp.json`, so cross-host MCP injection is still structurally wired but operationally unproven (Architectural Upgrade #3 in `docs/PATHFINDER_ROADMAP.md`).
+- The Codex runtime validator performs live execution, but it still does not prove every generated command or agent invocation path; it confirms enumeration, not invocation correctness.
+- On this machine, Codex runtime inspection is regularly blocked by `bwrap` namespace restrictions; the validator escalates to filesystem-escalated evidence per documented doctrine, but a sandbox-friendly Codex probe would be cleaner.
 - `bootstrap-project.sh --existing` and `--with-local-skills` still need deliberate live exercise.
 - Debian and macOS suitcase proofs are still pending with real operators, not just local smoke tests.
-- Team manifests remain conceptual; there is no executable orchestration layer yet.
-- Several domain skills contain time-sensitive knowledge and should be refreshed periodically.
+- Team manifests remain conceptual; there is no executable orchestration layer yet (deferred deliberately — the Pathfinder roadmap `crew-director` capability is the future home for this).
+- Several domain skills (`legal-counsel`, `corporate-controller`, `infra-architect`, `brand-guardian`) contain time-sensitive knowledge and should be refreshed periodically.
+- The remote weekly-watchdog routine (see § Pending Remote Routine below) is still blocked on `_agent_forge` having no git remote.
 
 ## Follow-On Work
 
-1. Run real Claude and Gemini runtime proofs using `docs/TRIAD_RUNTIME_VALIDATION.md`.
-2. Resolve or work around the local Codex `bwrap` sandbox failure, then rerun the strict Codex probe.
-3. Add the first real shared MCP server and validate all three host renderers.
-4. Exercise `bootstrap-project.sh --existing` on a real existing repo.
-5. Exercise the suitcase path on a fresh Debian VM and a fresh macOS machine.
+1. Add the first real shared MCP server and validate all three host renderers (paves the way for Architectural Upgrade #3, MCP namespace prefixing).
+2. Resolve or work around the local Codex `bwrap` sandbox failure for cleaner runtime proof.
+3. Exercise `bootstrap-project.sh --existing` on a real existing repo.
+4. Exercise the suitcase path on a fresh Debian VM and a fresh macOS machine.
+5. Push `_agent_forge` to a GitHub remote so the weekly watchdog routine can be scheduled.
 6. Promote or supersede ledger entries in `docs/LESSONS_LEARNED.md` before they turn into a second backlog.
+7. Pick up the next Pathfinder pair (likely Architectural #4 + Capability #4: continuous-evolution / anti-rot loop + `routine-auditor`).
 
 ## Notes For The Next Session
 

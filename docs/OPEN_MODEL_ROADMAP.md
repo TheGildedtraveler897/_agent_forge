@@ -56,13 +56,13 @@ Best for:
 
 ## Phase 2 Implementation Shape
 
-Expected additions later:
+These are **planned, not yet implemented**. None of the paths below currently exist in the repo; they are the expected shape of Phase 2 once it begins:
 
-- `scripts/bootstrap-open-models.sh`
-- runtime/provider config docs
-- optional model pull helpers
-- common environment variables for local vs remote providers
-- provider selection guidance for different task classes
+- `scripts/bootstrap-open-models.sh` (planned)
+- runtime/provider config docs (planned)
+- optional model pull helpers (planned)
+- common environment variables for local vs remote providers (planned)
+- provider selection guidance for different task classes (planned)
 
 ## Known Research Findings
 

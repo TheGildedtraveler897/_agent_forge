@@ -58,7 +58,7 @@ Use a team when:
 Claude:
 
 - boot file: `CLAUDE.md`
-- generated surfaces: `.claude/agents`, `.claude/commands`, `.claude/skills`, `.mcp.json`
+- generated surfaces: `.claude/agents`, `.claude/commands`, `.claude/skills`, `.claude/settings.json` (hooks), `.mcp.json`
 
 Codex:
 
@@ -68,7 +68,12 @@ Codex:
 Gemini:
 
 - boot file: `GEMINI.md`
-- generated surfaces: `.gemini/agents`, `.gemini/commands`, `.gemini/skills`, `.gemini/settings.json`
+- generated surfaces: `.gemini/agents`, `.gemini/commands`, `.gemini/skills`, `.gemini/settings.json` (hooks + MCP)
+
+Cross-host (one file per governed project, reachable from all three hosts via the AGENTS chain or a Gemini `@import`):
+
+- `MEMORY.md` — universal session-state layer with sections defined in `policies/memory.json`.
+- `.forge_state/` — companion directory with `README.md`, `manifest.json`, and the `archivist.log` audit trail.
 
 ## Core Teams
 

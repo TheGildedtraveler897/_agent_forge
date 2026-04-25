@@ -1,5 +1,7 @@
 # Operator Templates
 
+> **Note on examples:** Each template below is followed by a worked example. The worked examples — including any script names like `scripts/download-youtube.sh` — are **illustrative**, not real shipping artifacts in this repo. They show what a fully-filled template should look like; do not copy the example commands expecting them to run.
+
 ## Task Brief
 
 ```md

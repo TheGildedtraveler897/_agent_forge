@@ -14,14 +14,13 @@ Use this team when:
 
 Use:
 - `/multi-agent-governor` as the main entry
-- `governor-auditor` for repo-governance inspection
-- `portability-reviewer` for suitcase-doctrine and agent-agnostic path review
-- `remediation-planner` for ordered follow-up actions
+- `/portability-audit` for suitcase-doctrine and agent-agnostic path review
+- `/doctrine-review` for hidden-risk and over-engineering checks
 - `docs/TRIAD_RUNTIME_VALIDATION.md` when the goal is a full workspace validation or remediation run
 
 Recommended flow:
 1. Run `/multi-agent-governor` for a top-level audit.
-2. If findings are broad or mixed, use the three governance subagents to split the work.
+2. If findings are broad or mixed, run `/portability-audit` and `/doctrine-review` in parallel to split the work.
 3. Consolidate into one remediation checklist.
 
 ### Codex pattern

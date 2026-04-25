@@ -16,11 +16,15 @@ Primary artifacts:
 
 - `skills/global/multi-agent-governor/`
 - `skills/global/sprint-harvester/`
+- `skills/global/memory-archivist/`
 - `scripts/omni_factory.py`
 - `scripts/verify-agent-forge.py`
+- `scripts/validate-triad-runtime.py`
 - `projects.json`
 - `global-mcp.json`
 - `policies/hooks.json`
+- `policies/memory.json`
+- `runtime/validation-matrix.json`
 - `docs/LESSONS_LEARNED.md`
 
 Default behavior:
@@ -46,12 +50,16 @@ Default bootstrap footprint:
 - `AGENTS.md`
 - `CLAUDE.md`
 - `GEMINI.md`
+- `MEMORY.md`
+- `.forge_state/README.md`
+- `.forge_state/manifest.json`
 - `docs/CONOPS.md`
 - `docs/HANDOFF.md`
 - `.claude/CLAUDE.md`
 - `.claude/agents/`
 - `.claude/commands/`
 - `.claude/skills/`
+- `.claude/settings.json`
 - `.gemini/agents/`
 - `.gemini/commands/`
 - `.gemini/skills/`
@@ -59,16 +67,20 @@ Default bootstrap footprint:
 - `.agents/skills/`
 - `.codex/agents/`
 - `.codex/config.toml`
+- `.codex/hooks.json`
 - `.mcp.json`
 
 ## 3. Skill Delivery Governance
 
-The factory now has three governed host families:
+The factory now has three governed host families plus a cross-host layer:
 
 - Claude:
 - `~/.claude/agents/`
 - `~/.claude/commands/`
+- `<project>/.claude/agents/`
+- `<project>/.claude/commands/`
 - `<project>/.claude/skills/`
+- `<project>/.claude/settings.json`
 - `<project>/.mcp.json`
 
 - Codex:
@@ -76,6 +88,7 @@ The factory now has three governed host families:
 - `<project>/.agents/skills/`
 - `<project>/.codex/agents/`
 - `<project>/.codex/config.toml`
+- `<project>/.codex/hooks.json`
 
 - Gemini:
 - `~/.gemini/commands/`
@@ -86,6 +99,11 @@ The factory now has three governed host families:
 - `<project>/.gemini/agents/`
 - `<project>/.gemini/skills/`
 - `<project>/.gemini/settings.json`
+
+- Cross-host (one file per governed project, reachable from all three hosts):
+- `<project>/MEMORY.md`
+- `<project>/.forge_state/README.md`
+- `<project>/.forge_state/manifest.json`
 
 Rules:
 
@@ -104,6 +122,7 @@ Always edit canonical sources in `_agent_forge`.
 - governed project catalog -> `projects.json`
 - MCP inventory -> `global-mcp.json`
 - hook policy -> `policies/hooks.json`
+- memory section schema -> `policies/memory.json`
 - deterministic setup logic -> `scripts/`
 
 Tool-home directories and per-project host outputs are delivery targets only.
