@@ -22,6 +22,13 @@
       "inputs": ["improvement plan", "relevant docs"],
       "outputs": ["doctrine/doc update checklist"],
       "stop_condition": "The next run benefits from the learning instead of repeating the same mistake."
+    },
+    {
+      "name": "sprint-harvester",
+      "responsibility": "Convert validated sprint lessons into normalized knowledge-anchor entries and promotion candidates.",
+      "inputs": ["improvement plan", "repo diff", "validation artifacts", "handoff"],
+      "outputs": ["lesson ledger append block", "promotion candidates"],
+      "stop_condition": "Durable lessons are captured in the ledger without silently rewriting doctrine."
     }
   ],
   "collapse_condition": "Findings are few and the fix is obvious — a single worker can prioritize and apply the improvement directly.",
@@ -29,20 +36,38 @@
   "handoff_artifacts": [
     "prioritized gap list",
     "improvement plan",
-    "doctrine/doc update checklist"
+    "doctrine/doc update checklist",
+    "lesson ledger append block",
+    "promotion candidates"
   ],
   "claude_mapping": {
     "primitives": ["slash commands", "subagents when improvement threads split cleanly"],
     "preferred_entries": [
       "quality-gate",
-      "context-engineer"
+      "context-engineer",
+      "sprint-harvester",
+      "root-cause-analyst",
+      "skill-author"
     ]
   },
   "codex_mapping": {
     "primitives": ["skills", "delegated runtime agents when the write surfaces are disjoint"],
     "preferred_entries": [
       "quality-gate",
-      "context-engineer"
+      "context-engineer",
+      "sprint-harvester",
+      "root-cause-analyst",
+      "skill-author"
+    ]
+  },
+  "gemini_mapping": {
+    "primitives": ["commands", "skills", "subagents when improvement threads split cleanly"],
+    "preferred_entries": [
+      "quality-gate",
+      "context-engineer",
+      "sprint-harvester",
+      "root-cause-analyst",
+      "skill-author"
     ]
   }
 }

@@ -3,6 +3,10 @@ name: portability-auditor
 description: Audit a repo, script set, or configuration for portability risks such as hardcoded paths, machine-specific assumptions, missing env indirection, and fragile host-specific behavior. Use when the user wants a suitcase-doctrine check or wants fixes for portability drift.
 context_cost: light
 model_tier: any
+capability_class: workflow
+delivery_projects: ["jarvis"]
+claude_command_name: portability-audit
+gemini_command_name: portability-audit
 ---
 
 # Portability Auditor

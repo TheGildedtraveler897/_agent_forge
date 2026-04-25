@@ -23,20 +23,24 @@ Usage: bootstrap-project.sh --name PROJECT_NAME [--path RELATIVE_PATH] [--existi
 Bootstrap a governed project under ~/Projects with Agent Forge contracts:
   - AGENTS.md
   - CLAUDE.md
+  - GEMINI.md
   - docs/CONOPS.md
   - docs/HANDOFF.md
   - .claude/CLAUDE.md symlink
   - .claude/agents, .claude/commands, and .claude/skills directories
+  - .gemini/agents, .gemini/commands, .gemini/skills, and .gemini/settings.json
+  - .agents/skills
+  - .codex/agents, .codex/config.toml, and .codex/hooks.json
 
-After scaffold creation the script automatically syncs Claude adapters and
-Codex skills, then offers an interactive project-definition flow (unless
+After scaffold creation the script automatically syncs Claude, Codex, and
+Gemini surfaces, then offers an interactive project-definition flow (unless
 --no-define is passed or stdin is not a terminal).
 
 Options:
   --name PROJECT_NAME      Project display/name token used for docs
   --path RELATIVE_PATH     Relative path under ~/Projects (defaults to PROJECT_NAME)
   --existing               Standardize an existing project instead of creating a new top-level directory
-  --with-local-skills      Create local skill source and Claude adapter directories under _agent_forge
+  --with-local-skills      Create local skill source directories under _agent_forge
   --define                 Always run the interactive project-definition flow (skip the prompt)
   --no-define              Never run the interactive project-definition flow
   -h, --help               Show this message
@@ -124,7 +128,16 @@ elif [[ ! -d "${TARGET_ROOT}" ]]; then
   exit 1
 fi
 
-mkdir -p "${TARGET_ROOT}/docs" "${TARGET_ROOT}/.claude" "${TARGET_ROOT}/.claude/agents" "${TARGET_ROOT}/.claude/commands" "${TARGET_ROOT}/.claude/skills"
+mkdir -p \
+  "${TARGET_ROOT}/docs" \
+  "${TARGET_ROOT}/.claude/agents" \
+  "${TARGET_ROOT}/.claude/commands" \
+  "${TARGET_ROOT}/.claude/skills" \
+  "${TARGET_ROOT}/.gemini/agents" \
+  "${TARGET_ROOT}/.gemini/commands" \
+  "${TARGET_ROOT}/.gemini/skills" \
+  "${TARGET_ROOT}/.agents/skills" \
+  "${TARGET_ROOT}/.codex/agents"
 
 cat > "${TARGET_ROOT}/AGENTS.md" <<EOF
 # ${PROJECT_NAME} Agent Contract
@@ -171,7 +184,18 @@ Claude: use [\`AGENTS.md\`](${TARGET_ROOT}/AGENTS.md) as the shared project cont
 - Keep this file thin.
 - Put shared workflow changes in \`AGENTS.md\`, not here.
 - Add project-local Claude subagents or commands under \`.claude/\` only when the project genuinely needs them.
-- Rich Claude skill delivery in \`.claude/skills/\` is governed from \`_agent_forge/registry.json\`.
+- Rich Claude skill delivery in \`.claude/skills/\` is governed from canonical \`SKILL.md\` metadata in \`_agent_forge/skills/\`.
+EOF
+
+cat > "${TARGET_ROOT}/GEMINI.md" <<EOF
+<!-- Managed by Agent Forge bootstrap. The sync script will replace this stub. -->
+
+# ${PROJECT_NAME} Gemini Context
+
+@${ROOT_AGENTS_REL}
+@AGENTS.md
+@docs/CONOPS.md
+@docs/HANDOFF.md
 EOF
 
 cat > "${TARGET_ROOT}/docs/CONOPS.md" <<EOF
@@ -186,6 +210,7 @@ TODO: describe the project mission, audience, and system role.
 
 - Governance scaffold bootstrapped from Agent Forge
 - Durable architecture description still needs to be filled in
+- Omni-factory host surfaces scaffolded for Claude, Codex, and Gemini
 
 ## Architecture
 
@@ -218,43 +243,42 @@ ln -sfn "${ROOT_CLAUDE_REL}" "${TARGET_ROOT}/.claude/CLAUDE.md"
 
 if [[ "${WITH_LOCAL_SKILLS}" == "1" ]]; then
   mkdir -p "${AGENT_FORGE_ROOT}/skills/projects/${PROJECT_NAME}"
-  mkdir -p "${AGENT_FORGE_ROOT}/claude/projects/${PROJECT_NAME}/agents"
-  mkdir -p "${AGENT_FORGE_ROOT}/claude/projects/${PROJECT_NAME}/commands"
 fi
 
 echo "Bootstrapped project at ${TARGET_ROOT}"
 echo
 
-# ── Auto-sync adapters and skills ─────────────────────────────────────────────
+# ── Auto-sync generated host surfaces ─────────────────────────────────────────
 
-echo "── Syncing Claude adapters and Codex skills ─────────────────────────────────"
+echo "── Syncing Claude, Codex, and Gemini surfaces ───────────────────────────────"
 
 SYNC_CLAUDE_OK=0
 SYNC_CODEX_OK=0
+SYNC_GEMINI_OK=0
 
 if "${AGENT_FORGE_ROOT}/scripts/sync-claude-adapters.sh" --project "${PROJECT_PATH}"; then
   SYNC_CLAUDE_OK=1
 fi
 
-# Only pass --project to sync-codex-skills when local skill sources actually
-# exist (i.e., when --with-local-skills was used).  A fresh project with no
-# project-local skills directory would cause the script to exit with an error.
-CODEX_SYNC_ARGS=()
-if [[ "${WITH_LOCAL_SKILLS}" == "1" ]]; then
-  CODEX_SYNC_ARGS+=("--project" "${PROJECT_PATH}")
-fi
+CODEX_SYNC_ARGS=("--project" "${PROJECT_PATH}")
 
 if "${AGENT_FORGE_ROOT}/scripts/sync-codex-skills.sh" "${CODEX_SYNC_ARGS[@]+"${CODEX_SYNC_ARGS[@]}"}"; then
   SYNC_CODEX_OK=1
 fi
 
-if [[ "${SYNC_CLAUDE_OK}" -eq 1 && "${SYNC_CODEX_OK}" -eq 1 ]]; then
-  echo "  Adapters and skills synced."
+if "${AGENT_FORGE_ROOT}/scripts/sync-gemini-adapters.sh" --project "${PROJECT_PATH}"; then
+  SYNC_GEMINI_OK=1
+fi
+
+if [[ "${SYNC_CLAUDE_OK}" -eq 1 && "${SYNC_CODEX_OK}" -eq 1 && "${SYNC_GEMINI_OK}" -eq 1 ]]; then
+  echo "  Host surfaces synced."
 else
   [[ "${SYNC_CLAUDE_OK}" -eq 0 ]] && echo "  Warning: Claude adapter sync failed — run manually:"
   [[ "${SYNC_CLAUDE_OK}" -eq 0 ]] && echo "    ${AGENT_FORGE_ROOT}/scripts/sync-claude-adapters.sh --project ${PROJECT_PATH}"
-  [[ "${SYNC_CODEX_OK}"  -eq 0 ]] && echo "  Warning: Codex skill sync failed — run manually:"
-  [[ "${SYNC_CODEX_OK}"  -eq 0 ]] && echo "    ${AGENT_FORGE_ROOT}/scripts/sync-codex-skills.sh"
+  [[ "${SYNC_CODEX_OK}"  -eq 0 ]] && echo "  Warning: Codex sync failed — run manually:"
+  [[ "${SYNC_CODEX_OK}"  -eq 0 ]] && echo "    ${AGENT_FORGE_ROOT}/scripts/sync-codex-skills.sh --project ${PROJECT_PATH}"
+  [[ "${SYNC_GEMINI_OK}" -eq 0 ]] && echo "  Warning: Gemini sync failed — run manually:"
+  [[ "${SYNC_GEMINI_OK}" -eq 0 ]] && echo "    ${AGENT_FORGE_ROOT}/scripts/sync-gemini-adapters.sh --project ${PROJECT_PATH}"
 fi
 
 echo

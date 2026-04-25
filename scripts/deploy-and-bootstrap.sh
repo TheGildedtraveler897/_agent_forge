@@ -20,7 +20,7 @@ One-shot wrapper that deploys the Agent Forge factory onto this machine and
 then optionally runs workstation bootstrap.
 
   Step 1 — deploy-factory.sh    Copy _agent_forge into ~/Projects and sync
-                                 Claude/Codex adapters. No packages installed.
+                                 Claude/Codex/Gemini surfaces. No packages installed.
 
   Step 2 — bootstrap-workstation.sh  (you choose whether to run this)
                                  Install development dependencies and selected
@@ -95,7 +95,7 @@ echo
 # ── Step 1: Deploy factory ────────────────────────────────────────────────────
 
 echo "── Step 1 of 2: Deploy factory ─────────────────────────────────────────────"
-echo "Copies _agent_forge into ${PROJECTS_ROOT} and syncs Claude / Codex adapters."
+echo "Copies _agent_forge into ${PROJECTS_ROOT} and syncs Claude / Codex / Gemini surfaces."
 echo "No packages are installed in this step."
 echo
 

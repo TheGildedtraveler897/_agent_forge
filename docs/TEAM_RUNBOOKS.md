@@ -17,7 +17,7 @@ Use:
 - `governor-auditor` for repo-governance inspection
 - `portability-reviewer` for suitcase-doctrine and agent-agnostic path review
 - `remediation-planner` for ordered follow-up actions
-- `docs/CLAUDE_VALIDATION_RUN.md` when the goal is a full workspace validation or remediation run
+- `docs/TRIAD_RUNTIME_VALIDATION.md` when the goal is a full workspace validation or remediation run
 
 Recommended flow:
 1. Run `/multi-agent-governor` for a top-level audit.
@@ -181,14 +181,16 @@ Collapse to single worker when: findings are few and the fix is obvious.
 Use:
 - `/quality-gate` to score current state
 - `/context-engineer` to compact improvement plan into a handoff
+- `/sprint-harvester` to capture durable lessons before they are promoted into doctrine
 - Edit tools directly for doc/skill/manifest updates
 
 Recommended flow:
 1. Rank findings by leverage and repeatability.
 2. Design the smallest remediation set that addresses the highest-leverage gaps.
 3. Apply improvements to skills, teams, or docs.
-4. Re-run quality-gate to verify improvements didn't introduce new issues.
-5. Update HANDOFF.md.
+4. Harvest durable lessons into `docs/LESSONS_LEARNED.md`.
+5. Re-run quality-gate to verify improvements didn't introduce new issues.
+6. Update HANDOFF.md.
 
 ### Codex pattern
 

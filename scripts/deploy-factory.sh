@@ -7,12 +7,13 @@ PACKAGE_ROOT="$(cd "${SOURCE_FACTORY_ROOT}/.." && pwd)"
 PROJECTS_ROOT="${HOME}/Projects"
 CLAUDE_HOME="${HOME}/.claude"
 CODEX_HOME="${HOME}/.codex"
+GEMINI_HOME="${HOME}/.gemini"
 OVERWRITE_ROOT_DOCS="0"
 REPLACE_FACTORY="0"
 
 usage() {
   cat <<'EOF'
-Usage: deploy-factory.sh [--projects-root DIR] [--claude-home DIR] [--codex-home DIR] [--overwrite-root-docs] [--replace-factory]
+Usage: deploy-factory.sh [--projects-root DIR] [--claude-home DIR] [--codex-home DIR] [--gemini-home DIR] [--overwrite-root-docs] [--replace-factory]
 
 Deploy an exported Agent Forge suitcase onto a fresh machine or test root.
 
@@ -20,6 +21,7 @@ Options:
   --projects-root DIR    Target Projects root (default: ~/Projects)
   --claude-home DIR      Target Claude home (default: ~/.claude)
   --codex-home DIR       Target Codex home (default: ~/.codex)
+  --gemini-home DIR      Target Gemini home (default: ~/.gemini)
   --overwrite-root-docs  Replace shared root docs if they already exist
   --replace-factory      Replace an existing target _agent_forge snapshot
   -h, --help             Show this message
@@ -38,6 +40,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --codex-home)
       CODEX_HOME="${2:?missing codex home}"
+      shift 2
+      ;;
+    --gemini-home)
+      GEMINI_HOME="${2:?missing gemini home}"
       shift 2
       ;;
     --overwrite-root-docs)
@@ -108,14 +114,18 @@ copy_file_if_needed "${SHARED_ROOT_SOURCE}/docs/port_ledger.md" "${PROJECTS_ROOT
   --claude-home "${CLAUDE_HOME}"
 
 "${TARGET_FACTORY_ROOT}/scripts/sync-codex-skills.sh" \
-  --target "${CODEX_HOME}/skills"
+  --target "${HOME}/.agents/skills"
+
+"${TARGET_FACTORY_ROOT}/scripts/sync-gemini-adapters.sh" \
+  --gemini-home "${GEMINI_HOME}"
 
 echo "Agent Forge deployed to ${TARGET_FACTORY_ROOT}"
 echo "Claude home: ${CLAUDE_HOME}"
 echo "Codex home: ${CODEX_HOME}"
+echo "Gemini home: ${GEMINI_HOME}"
 echo "Next steps:"
 echo "  1. cd ${TARGET_FACTORY_ROOT}"
 echo "  2. ./scripts/bootstrap-workstation.sh"
 echo "  3. Complete authentication for the selected hosted CLIs"
 echo "  4. ./scripts/bootstrap-project.sh --name <your-project>"
-echo "     (bootstrap-project.sh auto-syncs Claude adapters and Codex skills)"
+echo "     (bootstrap-project.sh auto-syncs Claude, Codex, and Gemini surfaces)"

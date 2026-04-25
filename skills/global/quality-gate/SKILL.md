@@ -3,6 +3,7 @@ name: quality-gate
 description: Score plans, handoffs, and outputs against clarity, verification, doctrine, and context-efficiency checks. Use after planning or execution to decide whether a result is ready to hand off or ship.
 context_cost: light
 model_tier: any
+capability_class: workflow
 ---
 
 # Quality Gate

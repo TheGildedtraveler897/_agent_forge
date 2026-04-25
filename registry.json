@@ -1,5 +1,11 @@
 {
-  "version": 4,
+  "version": 5,
+  "generated_from": {
+    "projects": "projects.json",
+    "capabilities": "skills/**/SKILL.md",
+    "teams": "teams/*.json",
+    "mcp": "global-mcp.json"
+  },
   "governed_projects": [
     {
       "name": "jarvis",
@@ -72,354 +78,1029 @@
   ],
   "skills": [
     {
-      "name": "multi-agent-governor",
+      "name": "branch-finisher",
+      "display_name": "branch-finisher",
       "scope": "global",
       "project": null,
-      "canonical_skill": "skills/global/multi-agent-governor/SKILL.md",
-      "targets": ["codex", "claude"],
+      "capability_class": "workflow",
+      "canonical_skill": "skills/global/branch-finisher/SKILL.md",
+      "targets": [
+        "claude",
+        "codex",
+        "gemini"
+      ],
+      "delivery_projects": [
+        "jarvis",
+        "RoboNaaz",
+        "ZorroClaw",
+        "homelab",
+        "factory",
+        "playlist-archive"
+      ],
       "claude": {
         "mode": "command",
-        "path": "claude/global/commands/multi-agent-governor.md",
-        "command_name": "multi-agent-governor"
+        "generated": true,
+        "command_name": "branch-finisher",
+        "agent_name": null
       },
-      "claude_skill": {
-        "projects": ["jarvis"]
+      "gemini": {
+        "mode": "command",
+        "generated": true,
+        "command_name": "branch-finisher",
+        "agent_name": null
       },
       "codex": {
-        "path": "skills/global/multi-agent-governor"
+        "generated": true,
+        "global_skill": true,
+        "project_skill": true,
+        "custom_agent": false
       }
     },
     {
-      "name": "project-bootstrap",
+      "name": "brand-guardian",
+      "display_name": "brand-guardian",
       "scope": "global",
       "project": null,
-      "canonical_skill": "skills/global/project-bootstrap/SKILL.md",
-      "targets": ["codex", "claude"],
+      "capability_class": "expert",
+      "canonical_skill": "skills/global/brand-guardian/SKILL.md",
+      "targets": [
+        "claude",
+        "codex",
+        "gemini"
+      ],
+      "delivery_projects": [
+        "jarvis",
+        "RoboNaaz",
+        "ZorroClaw",
+        "homelab",
+        "factory",
+        "playlist-archive"
+      ],
       "claude": {
-        "mode": "command",
-        "path": "claude/global/commands/project-bootstrap.md",
-        "command_name": "project-bootstrap"
+        "mode": "subagent",
+        "generated": true,
+        "command_name": null,
+        "agent_name": "brand-guardian"
       },
-      "claude_skill": {
-        "projects": ["jarvis"]
+      "gemini": {
+        "mode": "subagent",
+        "generated": true,
+        "command_name": null,
+        "agent_name": "brand-guardian"
       },
       "codex": {
-        "path": "skills/global/project-bootstrap"
-      }
-    },
-    {
-      "name": "portability-auditor",
-      "scope": "global",
-      "project": null,
-      "canonical_skill": "skills/global/portability-auditor/SKILL.md",
-      "targets": ["codex", "claude"],
-      "claude": {
-        "mode": "command",
-        "path": "claude/global/commands/portability-audit.md",
-        "command_name": "portability-audit"
-      },
-      "claude_skill": {
-        "projects": ["jarvis"]
-      },
-      "codex": {
-        "path": "skills/global/portability-auditor"
+        "generated": true,
+        "global_skill": true,
+        "project_skill": true,
+        "custom_agent": true
       }
     },
     {
       "name": "code-review-doctrine",
+      "display_name": "code-review-doctrine",
       "scope": "global",
       "project": null,
+      "capability_class": "workflow",
       "canonical_skill": "skills/global/code-review-doctrine/SKILL.md",
-      "targets": ["codex", "claude"],
+      "targets": [
+        "claude",
+        "codex",
+        "gemini"
+      ],
+      "delivery_projects": [
+        "jarvis"
+      ],
       "claude": {
         "mode": "command",
-        "path": "claude/global/commands/doctrine-review.md",
-        "command_name": "doctrine-review"
+        "generated": true,
+        "command_name": "doctrine-review",
+        "agent_name": null
       },
-      "claude_skill": {
-        "projects": ["jarvis"]
-      },
-      "codex": {
-        "path": "skills/global/code-review-doctrine"
-      }
-    },
-    {
-      "name": "zorroforge-infra",
-      "scope": "global",
-      "project": null,
-      "canonical_skill": "skills/global/zorroforge-infra/SKILL.md",
-      "targets": ["codex", "claude"],
-      "claude": {
-        "mode": "subagent",
-        "path": "claude/global/agents/zorroforge-infra.md",
-        "agent_name": "zorroforge-infra"
-      },
-      "claude_skill": {
-        "projects": ["jarvis"]
+      "gemini": {
+        "mode": "command",
+        "generated": true,
+        "command_name": "doctrine-review",
+        "agent_name": null
       },
       "codex": {
-        "path": "skills/global/zorroforge-infra"
+        "generated": true,
+        "global_skill": true,
+        "project_skill": true,
+        "custom_agent": false
       }
     },
     {
-      "name": "zorroforge-finance",
+      "name": "company-onboarder",
+      "display_name": "company-onboarder",
       "scope": "global",
       "project": null,
-      "canonical_skill": "skills/global/zorroforge-finance/SKILL.md",
-      "targets": ["codex", "claude"],
+      "capability_class": "workflow",
+      "canonical_skill": "skills/global/company-onboarder/SKILL.md",
+      "targets": [
+        "claude",
+        "codex",
+        "gemini"
+      ],
+      "delivery_projects": [
+        "jarvis",
+        "RoboNaaz",
+        "ZorroClaw",
+        "homelab",
+        "factory",
+        "playlist-archive"
+      ],
       "claude": {
-        "mode": "subagent",
-        "path": "claude/global/agents/zorroforge-finance.md",
-        "agent_name": "zorroforge-finance"
+        "mode": "command",
+        "generated": true,
+        "command_name": "init-company",
+        "agent_name": null
       },
-      "claude_skill": {
-        "projects": ["jarvis"]
+      "gemini": {
+        "mode": "command",
+        "generated": true,
+        "command_name": "init-company",
+        "agent_name": null
       },
       "codex": {
-        "path": "skills/global/zorroforge-finance"
-      }
-    },
-    {
-      "name": "zorroforge-brand",
-      "scope": "global",
-      "project": null,
-      "canonical_skill": "skills/global/zorroforge-brand/SKILL.md",
-      "targets": ["codex", "claude"],
-      "claude": {
-        "mode": "subagent",
-        "path": "claude/global/agents/zorroforge-brand.md",
-        "agent_name": "zorroforge-brand"
-      },
-      "claude_skill": {
-        "projects": ["jarvis"]
-      },
-      "codex": {
-        "path": "skills/global/zorroforge-brand"
-      }
-    },
-    {
-      "name": "zorroforge-legal",
-      "scope": "global",
-      "project": null,
-      "canonical_skill": "skills/global/zorroforge-legal/SKILL.md",
-      "targets": ["codex", "claude"],
-      "claude": {
-        "mode": "subagent",
-        "path": "claude/global/agents/zorroforge-legal.md",
-        "agent_name": "zorroforge-legal"
-      },
-      "claude_skill": {
-        "projects": ["jarvis"]
-      },
-      "codex": {
-        "path": "skills/global/zorroforge-legal"
-      }
-    },
-    {
-      "name": "zorroforge-procurement",
-      "scope": "global",
-      "project": null,
-      "canonical_skill": "skills/global/zorroforge-procurement/SKILL.md",
-      "targets": ["codex", "claude"],
-      "claude": {
-        "mode": "subagent",
-        "path": "claude/global/agents/zorroforge-procurement.md",
-        "agent_name": "zorroforge-procurement"
-      },
-      "claude_skill": {
-        "projects": ["jarvis"]
-      },
-      "codex": {
-        "path": "skills/global/zorroforge-procurement"
-      }
-    },
-    {
-      "name": "governor-auditor",
-      "scope": "global",
-      "project": null,
-      "canonical_skill": "skills/global/multi-agent-governor/SKILL.md",
-      "targets": ["claude"],
-      "claude": {
-        "mode": "subagent",
-        "path": "claude/global/agents/governor-auditor.md",
-        "agent_name": "governor-auditor"
-      }
-    },
-    {
-      "name": "portability-reviewer",
-      "scope": "global",
-      "project": null,
-      "canonical_skill": "skills/global/portability-auditor/SKILL.md",
-      "targets": ["claude"],
-      "claude": {
-        "mode": "subagent",
-        "path": "claude/global/agents/portability-reviewer.md",
-        "agent_name": "portability-reviewer"
-      }
-    },
-    {
-      "name": "remediation-planner",
-      "scope": "global",
-      "project": null,
-      "canonical_skill": "skills/global/multi-agent-governor/SKILL.md",
-      "targets": ["claude"],
-      "claude": {
-        "mode": "subagent",
-        "path": "claude/global/agents/remediation-planner.md",
-        "agent_name": "remediation-planner"
+        "generated": true,
+        "global_skill": true,
+        "project_skill": true,
+        "custom_agent": false
       }
     },
     {
       "name": "context-engineer",
+      "display_name": "context-engineer",
       "scope": "global",
       "project": null,
+      "capability_class": "workflow",
       "canonical_skill": "skills/global/context-engineer/SKILL.md",
-      "targets": ["codex", "claude"],
+      "targets": [
+        "claude",
+        "codex",
+        "gemini"
+      ],
+      "delivery_projects": [
+        "jarvis",
+        "RoboNaaz",
+        "ZorroClaw",
+        "homelab",
+        "factory",
+        "playlist-archive"
+      ],
       "claude": {
         "mode": "command",
-        "path": "claude/global/commands/context-engineer.md",
-        "command_name": "context-engineer"
+        "generated": true,
+        "command_name": "context-engineer",
+        "agent_name": null
+      },
+      "gemini": {
+        "mode": "command",
+        "generated": true,
+        "command_name": "context-engineer",
+        "agent_name": null
       },
       "codex": {
-        "path": "skills/global/context-engineer"
+        "generated": true,
+        "global_skill": true,
+        "project_skill": true,
+        "custom_agent": false
+      }
+    },
+    {
+      "name": "corporate-controller",
+      "display_name": "corporate-controller",
+      "scope": "global",
+      "project": null,
+      "capability_class": "expert",
+      "canonical_skill": "skills/global/corporate-controller/SKILL.md",
+      "targets": [
+        "claude",
+        "codex",
+        "gemini"
+      ],
+      "delivery_projects": [
+        "jarvis",
+        "RoboNaaz",
+        "ZorroClaw",
+        "homelab",
+        "factory",
+        "playlist-archive"
+      ],
+      "claude": {
+        "mode": "subagent",
+        "generated": true,
+        "command_name": null,
+        "agent_name": "corporate-controller"
+      },
+      "gemini": {
+        "mode": "subagent",
+        "generated": true,
+        "command_name": null,
+        "agent_name": "corporate-controller"
+      },
+      "codex": {
+        "generated": true,
+        "global_skill": true,
+        "project_skill": true,
+        "custom_agent": true
       }
     },
     {
       "name": "evidence-packager",
+      "display_name": "evidence-packager",
       "scope": "global",
       "project": null,
+      "capability_class": "workflow",
       "canonical_skill": "skills/global/evidence-packager/SKILL.md",
-      "targets": ["codex", "claude"],
+      "targets": [
+        "claude",
+        "codex",
+        "gemini"
+      ],
+      "delivery_projects": [
+        "jarvis",
+        "RoboNaaz",
+        "ZorroClaw",
+        "homelab",
+        "factory",
+        "playlist-archive"
+      ],
       "claude": {
         "mode": "command",
-        "path": "claude/global/commands/evidence-packager.md",
-        "command_name": "evidence-packager"
+        "generated": true,
+        "command_name": "evidence-packager",
+        "agent_name": null
+      },
+      "gemini": {
+        "mode": "command",
+        "generated": true,
+        "command_name": "evidence-packager",
+        "agent_name": null
       },
       "codex": {
-        "path": "skills/global/evidence-packager"
+        "generated": true,
+        "global_skill": true,
+        "project_skill": true,
+        "custom_agent": false
+      }
+    },
+    {
+      "name": "execution-planner",
+      "display_name": "execution-planner",
+      "scope": "global",
+      "project": null,
+      "capability_class": "workflow",
+      "canonical_skill": "skills/global/execution-planner/SKILL.md",
+      "targets": [
+        "claude",
+        "codex",
+        "gemini"
+      ],
+      "delivery_projects": [
+        "jarvis",
+        "RoboNaaz",
+        "ZorroClaw",
+        "homelab",
+        "factory",
+        "playlist-archive"
+      ],
+      "claude": {
+        "mode": "command",
+        "generated": true,
+        "command_name": "execution-planner",
+        "agent_name": null
+      },
+      "gemini": {
+        "mode": "command",
+        "generated": true,
+        "command_name": "execution-planner",
+        "agent_name": null
+      },
+      "codex": {
+        "generated": true,
+        "global_skill": true,
+        "project_skill": true,
+        "custom_agent": false
+      }
+    },
+    {
+      "name": "infra-architect",
+      "display_name": "infra-architect",
+      "scope": "global",
+      "project": null,
+      "capability_class": "expert",
+      "canonical_skill": "skills/global/infra-architect/SKILL.md",
+      "targets": [
+        "claude",
+        "codex",
+        "gemini"
+      ],
+      "delivery_projects": [
+        "jarvis",
+        "RoboNaaz",
+        "ZorroClaw",
+        "homelab",
+        "factory",
+        "playlist-archive"
+      ],
+      "claude": {
+        "mode": "subagent",
+        "generated": true,
+        "command_name": null,
+        "agent_name": "infra-architect"
+      },
+      "gemini": {
+        "mode": "subagent",
+        "generated": true,
+        "command_name": null,
+        "agent_name": "infra-architect"
+      },
+      "codex": {
+        "generated": true,
+        "global_skill": true,
+        "project_skill": true,
+        "custom_agent": true
+      }
+    },
+    {
+      "name": "legal-counsel",
+      "display_name": "legal-counsel",
+      "scope": "global",
+      "project": null,
+      "capability_class": "expert",
+      "canonical_skill": "skills/global/legal-counsel/SKILL.md",
+      "targets": [
+        "claude",
+        "codex",
+        "gemini"
+      ],
+      "delivery_projects": [
+        "jarvis",
+        "RoboNaaz",
+        "ZorroClaw",
+        "homelab",
+        "factory",
+        "playlist-archive"
+      ],
+      "claude": {
+        "mode": "subagent",
+        "generated": true,
+        "command_name": null,
+        "agent_name": "legal-counsel"
+      },
+      "gemini": {
+        "mode": "subagent",
+        "generated": true,
+        "command_name": null,
+        "agent_name": "legal-counsel"
+      },
+      "codex": {
+        "generated": true,
+        "global_skill": true,
+        "project_skill": true,
+        "custom_agent": true
+      }
+    },
+    {
+      "name": "multi-agent-governor",
+      "display_name": "multi-agent-governor",
+      "scope": "global",
+      "project": null,
+      "capability_class": "workflow",
+      "canonical_skill": "skills/global/multi-agent-governor/SKILL.md",
+      "targets": [
+        "claude",
+        "codex",
+        "gemini"
+      ],
+      "delivery_projects": [
+        "jarvis"
+      ],
+      "claude": {
+        "mode": "command",
+        "generated": true,
+        "command_name": "multi-agent-governor",
+        "agent_name": null
+      },
+      "gemini": {
+        "mode": "command",
+        "generated": true,
+        "command_name": "multi-agent-governor",
+        "agent_name": null
+      },
+      "codex": {
+        "generated": true,
+        "global_skill": true,
+        "project_skill": true,
+        "custom_agent": false
+      }
+    },
+    {
+      "name": "portability-auditor",
+      "display_name": "portability-auditor",
+      "scope": "global",
+      "project": null,
+      "capability_class": "workflow",
+      "canonical_skill": "skills/global/portability-auditor/SKILL.md",
+      "targets": [
+        "claude",
+        "codex",
+        "gemini"
+      ],
+      "delivery_projects": [
+        "jarvis"
+      ],
+      "claude": {
+        "mode": "command",
+        "generated": true,
+        "command_name": "portability-audit",
+        "agent_name": null
+      },
+      "gemini": {
+        "mode": "command",
+        "generated": true,
+        "command_name": "portability-audit",
+        "agent_name": null
+      },
+      "codex": {
+        "generated": true,
+        "global_skill": true,
+        "project_skill": true,
+        "custom_agent": false
+      }
+    },
+    {
+      "name": "project-bootstrap",
+      "display_name": "project-bootstrap",
+      "scope": "global",
+      "project": null,
+      "capability_class": "workflow",
+      "canonical_skill": "skills/global/project-bootstrap/SKILL.md",
+      "targets": [
+        "claude",
+        "codex",
+        "gemini"
+      ],
+      "delivery_projects": [
+        "jarvis"
+      ],
+      "claude": {
+        "mode": "command",
+        "generated": true,
+        "command_name": "project-bootstrap",
+        "agent_name": null
+      },
+      "gemini": {
+        "mode": "command",
+        "generated": true,
+        "command_name": "project-bootstrap",
+        "agent_name": null
+      },
+      "codex": {
+        "generated": true,
+        "global_skill": true,
+        "project_skill": true,
+        "custom_agent": false
       }
     },
     {
       "name": "quality-gate",
+      "display_name": "quality-gate",
       "scope": "global",
       "project": null,
+      "capability_class": "workflow",
       "canonical_skill": "skills/global/quality-gate/SKILL.md",
-      "targets": ["codex", "claude"],
+      "targets": [
+        "claude",
+        "codex",
+        "gemini"
+      ],
+      "delivery_projects": [
+        "jarvis",
+        "RoboNaaz",
+        "ZorroClaw",
+        "homelab",
+        "factory",
+        "playlist-archive"
+      ],
       "claude": {
         "mode": "command",
-        "path": "claude/global/commands/quality-gate.md",
-        "command_name": "quality-gate"
+        "generated": true,
+        "command_name": "quality-gate",
+        "agent_name": null
+      },
+      "gemini": {
+        "mode": "command",
+        "generated": true,
+        "command_name": "quality-gate",
+        "agent_name": null
       },
       "codex": {
-        "path": "skills/global/quality-gate"
+        "generated": true,
+        "global_skill": true,
+        "project_skill": true,
+        "custom_agent": false
       }
     },
     {
-      "name": "jarvis-system",
-      "scope": "project-local",
-      "project": "jarvis",
-      "canonical_skill": "skills/projects/jarvis/jarvis-system/SKILL.md",
-      "targets": ["codex", "claude"],
+      "name": "root-cause-analyst",
+      "display_name": "root-cause-analyst",
+      "scope": "global",
+      "project": null,
+      "capability_class": "workflow",
+      "canonical_skill": "skills/global/root-cause-analyst/SKILL.md",
+      "targets": [
+        "claude",
+        "codex",
+        "gemini"
+      ],
+      "delivery_projects": [
+        "jarvis",
+        "RoboNaaz",
+        "ZorroClaw",
+        "homelab",
+        "factory",
+        "playlist-archive"
+      ],
+      "claude": {
+        "mode": "command",
+        "generated": true,
+        "command_name": "root-cause-analyst",
+        "agent_name": null
+      },
+      "gemini": {
+        "mode": "command",
+        "generated": true,
+        "command_name": "root-cause-analyst",
+        "agent_name": null
+      },
+      "codex": {
+        "generated": true,
+        "global_skill": true,
+        "project_skill": true,
+        "custom_agent": false
+      }
+    },
+    {
+      "name": "skill-author",
+      "display_name": "skill-author",
+      "scope": "global",
+      "project": null,
+      "capability_class": "workflow",
+      "canonical_skill": "skills/global/skill-author/SKILL.md",
+      "targets": [
+        "claude",
+        "codex",
+        "gemini"
+      ],
+      "delivery_projects": [
+        "jarvis",
+        "RoboNaaz",
+        "ZorroClaw",
+        "homelab",
+        "factory",
+        "playlist-archive"
+      ],
+      "claude": {
+        "mode": "command",
+        "generated": true,
+        "command_name": "skill-author",
+        "agent_name": null
+      },
+      "gemini": {
+        "mode": "command",
+        "generated": true,
+        "command_name": "skill-author",
+        "agent_name": null
+      },
+      "codex": {
+        "generated": true,
+        "global_skill": true,
+        "project_skill": true,
+        "custom_agent": false
+      }
+    },
+    {
+      "name": "spec-architect",
+      "display_name": "spec-architect",
+      "scope": "global",
+      "project": null,
+      "capability_class": "workflow",
+      "canonical_skill": "skills/global/spec-architect/SKILL.md",
+      "targets": [
+        "claude",
+        "codex",
+        "gemini"
+      ],
+      "delivery_projects": [
+        "jarvis",
+        "RoboNaaz",
+        "ZorroClaw",
+        "homelab",
+        "factory",
+        "playlist-archive"
+      ],
+      "claude": {
+        "mode": "command",
+        "generated": true,
+        "command_name": "spec-architect",
+        "agent_name": null
+      },
+      "gemini": {
+        "mode": "command",
+        "generated": true,
+        "command_name": "spec-architect",
+        "agent_name": null
+      },
+      "codex": {
+        "generated": true,
+        "global_skill": true,
+        "project_skill": true,
+        "custom_agent": false
+      }
+    },
+    {
+      "name": "sprint-harvester",
+      "display_name": "sprint-harvester",
+      "scope": "global",
+      "project": null,
+      "capability_class": "workflow",
+      "canonical_skill": "skills/global/sprint-harvester/SKILL.md",
+      "targets": [
+        "claude",
+        "codex",
+        "gemini"
+      ],
+      "delivery_projects": [
+        "jarvis",
+        "RoboNaaz",
+        "ZorroClaw",
+        "homelab",
+        "factory",
+        "playlist-archive"
+      ],
+      "claude": {
+        "mode": "command",
+        "generated": true,
+        "command_name": "sprint-harvester",
+        "agent_name": null
+      },
+      "gemini": {
+        "mode": "command",
+        "generated": true,
+        "command_name": "sprint-harvester",
+        "agent_name": null
+      },
+      "codex": {
+        "generated": true,
+        "global_skill": true,
+        "project_skill": true,
+        "custom_agent": false
+      }
+    },
+    {
+      "name": "subagent-dispatcher",
+      "display_name": "subagent-dispatcher",
+      "scope": "global",
+      "project": null,
+      "capability_class": "workflow",
+      "canonical_skill": "skills/global/subagent-dispatcher/SKILL.md",
+      "targets": [
+        "claude",
+        "codex",
+        "gemini"
+      ],
+      "delivery_projects": [
+        "jarvis",
+        "RoboNaaz",
+        "ZorroClaw",
+        "homelab",
+        "factory",
+        "playlist-archive"
+      ],
+      "claude": {
+        "mode": "command",
+        "generated": true,
+        "command_name": "subagent-dispatcher",
+        "agent_name": null
+      },
+      "gemini": {
+        "mode": "command",
+        "generated": true,
+        "command_name": "subagent-dispatcher",
+        "agent_name": null
+      },
+      "codex": {
+        "generated": true,
+        "global_skill": true,
+        "project_skill": true,
+        "custom_agent": false
+      }
+    },
+    {
+      "name": "tdd-engineer",
+      "display_name": "tdd-engineer",
+      "scope": "global",
+      "project": null,
+      "capability_class": "workflow",
+      "canonical_skill": "skills/global/tdd-engineer/SKILL.md",
+      "targets": [
+        "claude",
+        "codex",
+        "gemini"
+      ],
+      "delivery_projects": [
+        "jarvis",
+        "RoboNaaz",
+        "ZorroClaw",
+        "homelab",
+        "factory",
+        "playlist-archive"
+      ],
+      "claude": {
+        "mode": "command",
+        "generated": true,
+        "command_name": "tdd-engineer",
+        "agent_name": null
+      },
+      "gemini": {
+        "mode": "command",
+        "generated": true,
+        "command_name": "tdd-engineer",
+        "agent_name": null
+      },
+      "codex": {
+        "generated": true,
+        "global_skill": true,
+        "project_skill": true,
+        "custom_agent": false
+      }
+    },
+    {
+      "name": "telemetry-guardian",
+      "display_name": "telemetry-guardian",
+      "scope": "global",
+      "project": null,
+      "capability_class": "expert",
+      "canonical_skill": "skills/global/telemetry-guardian/SKILL.md",
+      "targets": [
+        "claude",
+        "codex",
+        "gemini"
+      ],
+      "delivery_projects": [
+        "jarvis",
+        "RoboNaaz",
+        "ZorroClaw",
+        "homelab",
+        "factory",
+        "playlist-archive"
+      ],
       "claude": {
         "mode": "subagent",
-        "path": "claude/projects/jarvis/agents/jarvis-system.md",
-        "agent_name": "jarvis-system"
+        "generated": true,
+        "command_name": null,
+        "agent_name": "telemetry-guardian"
       },
-      "claude_skill": {
-        "projects": ["jarvis"]
-      },
-      "codex": {
-        "path": "skills/projects/jarvis/jarvis-system"
-      }
-    },
-    {
-      "name": "jarvis-coder",
-      "scope": "project-local",
-      "project": "jarvis",
-      "canonical_skill": "skills/projects/jarvis/jarvis-coder/SKILL.md",
-      "targets": ["codex", "claude"],
-      "claude": {
+      "gemini": {
         "mode": "subagent",
-        "path": "claude/projects/jarvis/agents/jarvis-coder.md",
-        "agent_name": "jarvis-coder"
-      },
-      "claude_skill": {
-        "projects": ["jarvis"]
+        "generated": true,
+        "command_name": null,
+        "agent_name": "telemetry-guardian"
       },
       "codex": {
-        "path": "skills/projects/jarvis/jarvis-coder"
+        "generated": true,
+        "global_skill": true,
+        "project_skill": true,
+        "custom_agent": true
       }
     },
     {
-      "name": "jarvis-healthcheck",
-      "scope": "project-local",
-      "project": "jarvis",
-      "canonical_skill": "skills/projects/jarvis/jarvis-healthcheck/SKILL.md",
-      "targets": ["codex", "claude"],
+      "name": "verification-gate",
+      "display_name": "verification-gate",
+      "scope": "global",
+      "project": null,
+      "capability_class": "workflow",
+      "canonical_skill": "skills/global/verification-gate/SKILL.md",
+      "targets": [
+        "claude",
+        "codex",
+        "gemini"
+      ],
+      "delivery_projects": [
+        "jarvis",
+        "RoboNaaz",
+        "ZorroClaw",
+        "homelab",
+        "factory",
+        "playlist-archive"
+      ],
       "claude": {
         "mode": "command",
-        "path": "claude/projects/jarvis/commands/jarvis-healthcheck.md",
-        "command_name": "jarvis-healthcheck"
+        "generated": true,
+        "command_name": "verification-gate",
+        "agent_name": null
       },
-      "claude_skill": {
-        "projects": ["jarvis"]
-      },
-      "codex": {
-        "path": "skills/projects/jarvis/jarvis-healthcheck"
-      }
-    },
-    {
-      "name": "jarvis-reviewer",
-      "scope": "project-local",
-      "project": "jarvis",
-      "canonical_skill": "skills/projects/jarvis/jarvis-reviewer/SKILL.md",
-      "targets": ["codex", "claude"],
-      "claude": {
+      "gemini": {
         "mode": "command",
-        "path": "claude/projects/jarvis/commands/jarvis-reviewer.md",
-        "command_name": "jarvis-reviewer"
-      },
-      "claude_skill": {
-        "projects": ["jarvis"]
+        "generated": true,
+        "command_name": "verification-gate",
+        "agent_name": null
       },
       "codex": {
-        "path": "skills/projects/jarvis/jarvis-reviewer"
+        "generated": true,
+        "global_skill": true,
+        "project_skill": true,
+        "custom_agent": false
       }
     },
     {
       "name": "jarvis-audit",
+      "display_name": "jarvis-audit",
       "scope": "project-local",
       "project": "jarvis",
+      "capability_class": "workflow",
       "canonical_skill": "skills/projects/jarvis/jarvis-audit/SKILL.md",
-      "targets": ["codex", "claude"],
+      "targets": [
+        "claude",
+        "codex",
+        "gemini"
+      ],
+      "delivery_projects": [
+        "jarvis"
+      ],
       "claude": {
         "mode": "command",
-        "path": "claude/projects/jarvis/commands/jarvis-audit.md",
-        "command_name": "jarvis-audit"
+        "generated": true,
+        "command_name": "jarvis-audit",
+        "agent_name": null
       },
-      "claude_skill": {
-        "projects": ["jarvis"]
+      "gemini": {
+        "mode": "command",
+        "generated": true,
+        "command_name": "jarvis-audit",
+        "agent_name": null
       },
       "codex": {
-        "path": "skills/projects/jarvis/jarvis-audit"
+        "generated": true,
+        "global_skill": false,
+        "project_skill": true,
+        "custom_agent": false
+      }
+    },
+    {
+      "name": "jarvis-coder",
+      "display_name": "jarvis-coder",
+      "scope": "project-local",
+      "project": "jarvis",
+      "capability_class": "expert",
+      "canonical_skill": "skills/projects/jarvis/jarvis-coder/SKILL.md",
+      "targets": [
+        "claude",
+        "codex",
+        "gemini"
+      ],
+      "delivery_projects": [
+        "jarvis"
+      ],
+      "claude": {
+        "mode": "subagent",
+        "generated": true,
+        "command_name": null,
+        "agent_name": "jarvis-coder"
+      },
+      "gemini": {
+        "mode": "subagent",
+        "generated": true,
+        "command_name": null,
+        "agent_name": "jarvis-coder"
+      },
+      "codex": {
+        "generated": true,
+        "global_skill": false,
+        "project_skill": true,
+        "custom_agent": true
+      }
+    },
+    {
+      "name": "jarvis-healthcheck",
+      "display_name": "jarvis-healthcheck",
+      "scope": "project-local",
+      "project": "jarvis",
+      "capability_class": "workflow",
+      "canonical_skill": "skills/projects/jarvis/jarvis-healthcheck/SKILL.md",
+      "targets": [
+        "claude",
+        "codex",
+        "gemini"
+      ],
+      "delivery_projects": [
+        "jarvis"
+      ],
+      "claude": {
+        "mode": "command",
+        "generated": true,
+        "command_name": "jarvis-healthcheck",
+        "agent_name": null
+      },
+      "gemini": {
+        "mode": "command",
+        "generated": true,
+        "command_name": "jarvis-healthcheck",
+        "agent_name": null
+      },
+      "codex": {
+        "generated": true,
+        "global_skill": false,
+        "project_skill": true,
+        "custom_agent": false
+      }
+    },
+    {
+      "name": "jarvis-reviewer",
+      "display_name": "jarvis-reviewer",
+      "scope": "project-local",
+      "project": "jarvis",
+      "capability_class": "workflow",
+      "canonical_skill": "skills/projects/jarvis/jarvis-reviewer/SKILL.md",
+      "targets": [
+        "claude",
+        "codex",
+        "gemini"
+      ],
+      "delivery_projects": [
+        "jarvis"
+      ],
+      "claude": {
+        "mode": "command",
+        "generated": true,
+        "command_name": "jarvis-reviewer",
+        "agent_name": null
+      },
+      "gemini": {
+        "mode": "command",
+        "generated": true,
+        "command_name": "jarvis-reviewer",
+        "agent_name": null
+      },
+      "codex": {
+        "generated": true,
+        "global_skill": false,
+        "project_skill": true,
+        "custom_agent": false
+      }
+    },
+    {
+      "name": "jarvis-system",
+      "display_name": "jarvis-system",
+      "scope": "project-local",
+      "project": "jarvis",
+      "capability_class": "expert",
+      "canonical_skill": "skills/projects/jarvis/jarvis-system/SKILL.md",
+      "targets": [
+        "claude",
+        "codex",
+        "gemini"
+      ],
+      "delivery_projects": [
+        "jarvis"
+      ],
+      "claude": {
+        "mode": "subagent",
+        "generated": true,
+        "command_name": null,
+        "agent_name": "jarvis-system"
+      },
+      "gemini": {
+        "mode": "subagent",
+        "generated": true,
+        "command_name": null,
+        "agent_name": "jarvis-system"
+      },
+      "codex": {
+        "generated": true,
+        "global_skill": false,
+        "project_skill": true,
+        "custom_agent": true
       }
     }
   ],
   "teams": [
     {
-      "name": "governance-team",
-      "canonical_manifest": "teams/governance-team.json",
-      "purpose": "Keep repos aligned with Agent Forge governance, portability, and adapter wiring.",
+      "name": "assessment-team",
+      "canonical_manifest": "teams/assessment-team.json",
+      "purpose": "Verification-first team for checking whether an outcome is correct, complete, and worth keeping.",
       "roles": [
-        "governor-auditor",
-        "portability-reviewer",
-        "remediation-planner"
+        "result-auditor",
+        "regression-reviewer",
+        "scorecard-writer"
       ]
     },
     {
       "name": "bootstrap-team",
       "canonical_manifest": "teams/bootstrap-team.json",
-      "purpose": "Create or standardize governed projects and verify the output.",
+      "purpose": "Deterministic project spin-up team for governed repos.",
       "roles": [
         "scaffold-planner",
         "bootstrap-executor",
@@ -429,7 +1110,7 @@
     {
       "name": "delivery-team",
       "canonical_manifest": "teams/delivery-team.json",
-      "purpose": "Plan, build, and review work in governed repos without collapsing into a single god agent.",
+      "purpose": "Default project work pattern separating planning, implementation, and review.",
       "roles": [
         "architect-planner",
         "builder-implementer",
@@ -437,19 +1118,30 @@
       ]
     },
     {
-      "name": "research-team",
-      "canonical_manifest": "teams/research-team.json",
-      "purpose": "Gather sources, triage evidence, and hand off a compact evidence pack instead of raw context sprawl.",
+      "name": "governance-team",
+      "canonical_manifest": "teams/governance-team.json",
+      "purpose": "Audit-first team for keeping governed repos aligned with Agent Forge contracts and portability rules.",
       "roles": [
-        "research-scout",
-        "source-triager",
-        "evidence-packager"
+        "governor-auditor",
+        "portability-reviewer",
+        "remediation-planner"
+      ]
+    },
+    {
+      "name": "improvement-team",
+      "canonical_manifest": "teams/improvement-team.json",
+      "purpose": "Follow-on team for converting findings into prioritized improvements, doctrine updates, and cleaner next runs.",
+      "roles": [
+        "gap-prioritizer",
+        "remediation-designer",
+        "doctrine-updater",
+        "sprint-harvester"
       ]
     },
     {
       "name": "planning-team",
       "canonical_manifest": "teams/planning-team.json",
-      "purpose": "Turn evidence and repo truth into decision-complete implementation briefs.",
+      "purpose": "Decision-complete planning team for turning evidence and repo truth into implementation briefs.",
       "roles": [
         "goal-clarifier",
         "plan-author",
@@ -457,23 +1149,13 @@
       ]
     },
     {
-      "name": "assessment-team",
-      "canonical_manifest": "teams/assessment-team.json",
-      "purpose": "Check outcomes for regressions, quality gaps, and evidence that the goal was actually met.",
+      "name": "research-team",
+      "canonical_manifest": "teams/research-team.json",
+      "purpose": "Research-first team for broad, source-heavy, or ambiguous problems that need evidence before planning.",
       "roles": [
-        "result-auditor",
-        "regression-reviewer",
-        "scorecard-writer"
-      ]
-    },
-    {
-      "name": "improvement-team",
-      "canonical_manifest": "teams/improvement-team.json",
-      "purpose": "Convert findings into prioritized improvements, doctrine updates, and the next clean iteration plan.",
-      "roles": [
-        "gap-prioritizer",
-        "remediation-designer",
-        "doctrine-updater"
+        "research-scout",
+        "source-triager",
+        "evidence-packager"
       ]
     }
   ]

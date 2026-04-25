@@ -3,6 +3,7 @@ name: context-engineer
 description: Compact broad tasks into the smallest artifact set that still preserves truth. Use when a session is growing, a handoff is needed, or a premium-model pass should leave behind cheaper-model-ready briefs.
 context_cost: light
 model_tier: any
+capability_class: workflow
 ---
 
 # Context Engineer

@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Agent Forge Eval Scorecard",
+  "type": "object",
+  "required": [
+    "artifact",
+    "host",
+    "timestamp",
+    "scores",
+    "decision"
+  ],
+  "properties": {
+    "artifact": {
+      "type": "string"
+    },
+    "host": {
+      "type": "string",
+      "enum": [
+        "claude",
+        "codex",
+        "gemini",
+        "factory"
+      ]
+    },
+    "timestamp": {
+      "type": "string"
+    },
+    "scores": {
+      "type": "object",
+      "required": [
+        "instruction_load",
+        "capability_discovery",
+        "runtime_safety",
+        "mcp_readiness",
+        "portability",
+        "doctrine_alignment",
+        "operator_usability"
+      ],
+      "properties": {
+        "instruction_load": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5
+        },
+        "capability_discovery": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5
+        },
+        "runtime_safety": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5
+        },
+        "mcp_readiness": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5
+        },
+        "portability": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5
+        },
+        "doctrine_alignment": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5
+        },
+        "operator_usability": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 5
+        }
+      },
+      "additionalProperties": false
+    },
+    "decision": {
+      "type": "string",
+      "enum": [
+        "keep",
+        "revise",
+        "reject"
+      ]
+    },
+    "notes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": false
+}

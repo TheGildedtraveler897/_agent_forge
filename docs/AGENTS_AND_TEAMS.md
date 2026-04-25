@@ -1,210 +1,122 @@
 # Agents, Skills, And Teams
 
-This document defines the canonical Agent Forge model for reusable skills, specialized agents, and starter agent teams.
+This document defines the current omni-factory model for reusable capabilities, specialized agents, and starter teams.
 
-## 1. Skills
+## Skills
 
-Skills are reusable knowledge and workflow packs.
-
-Properties:
-- low-cost and composable
-- durable and portable
-- often tool-agnostic
-- live canonically under `skills/`
+Skills are canonical capability packs stored under `skills/`.
 
 Use a skill when:
-- the work is mostly procedural
-- the same audit or build logic repeats across repos
-- you want the knowledge portable across Claude, Codex, and future tools
 
-Examples:
-- `multi-agent-governor`
-- `project-bootstrap`
-- `portability-auditor`
-
-## 2. Agents
-
-Agents are specialized workers with bounded scope, separate context, and tool access.
+- the work is procedural or repeatable
+- the capability should stay portable across hosts
+- the same workflow repeats across repos
 
 Properties:
-- narrower than a general assistant
-- often role-based rather than workflow-based
-- good for work that benefits from separation of concerns or distinct context windows
 
-Agent Forge mapping:
-- Claude native: subagents
-- Codex native: delegated runtime agents, often guided by skills
+- one folder, one `SKILL.md`
+- metadata in frontmatter
+- durable instructions in the body
+- host delivery generated outward from canonical metadata
+
+## Agents
+
+Agents are specialized workers with bounded scope and separate context.
 
 Use an agent when:
-- the job benefits from distinct responsibility and context
-- the role needs a clear stopping condition and handoff artifact
-- you do not want one worker doing planning, implementation, and review all at once
 
-## 3. Agent Teams
+- the role needs a narrow responsibility
+- the work benefits from a separate context window
+- the stopping condition and handoff artifact should stay explicit
 
-Agent teams are named multi-agent patterns with explicit role boundaries and handoff rules.
+Host mapping:
 
-Properties:
-- usually 2-4 roles
-- role ownership is explicit
-- handoff artifacts are defined
-- stop conditions are defined
-- portable concept first, tool-specific implementation second
+- Claude: generated subagents
+- Codex: generated custom agents plus skills
+- Gemini: generated subagents plus commands and skills
+
+## Teams
+
+Teams are named multi-agent patterns with explicit role boundaries, collapse rules, escalation rules, and handoff artifacts.
 
 Use a team when:
-- one skill is not enough
-- one agent would become a “god agent”
-- you need explicit planning, execution, and verification phases
 
-## 4. Design Rules
+- one capability is not enough
+- one worker would become a god agent
+- planning, execution, review, or improvement should stay separate
 
-All teams in Agent Forge follow these rules:
+## Design Rules
 
 - specialists stay narrow
+- canonical truth stays in repo docs and `_agent_forge`
+- generated host surfaces are never hand-edited
 - use handoff artifacts over hidden memory
-- keep governance audit-first
-- separate planning from implementation when risk is material
-- keep canonical truth in repo docs and `_agent_forge`, not tool-home folders
-- do not automate swarms before the roles are understandable by a human
+- treat lesson harvesting as a first-class follow-on step
 
-## 5. Claude And Codex Mapping
+## Host Mapping
 
-### Claude
+Claude:
 
-- skills are canonical `SKILL.md` files and may also be delivered into project `.claude/skills/`
-- agents are subagents in `.claude/agents/` or `~/.claude/agents/`
-- utility workflows are slash commands in `.claude/commands/` or `~/.claude/commands/`
-- rich Skill-tool delivery is explicitly scoped per project through `registry.json`
-- hooks enforce session or tool rules, but are not the team model
+- boot file: `CLAUDE.md`
+- generated surfaces: `.claude/agents`, `.claude/commands`, `.claude/skills`, `.mcp.json`
 
-### Codex
+Codex:
 
-- skills are native entries under `~/.codex/skills/`
-- agents are delegated runtime workers
-- teams are orchestrated patterns that combine delegated workers with skill-guided behavior
+- boot file: `AGENTS.md`
+- generated surfaces: `.agents/skills`, `.codex/agents`, `.codex/config.toml`, `.codex/hooks.json`
 
-## 6. Core Teams
+Gemini:
 
-### Governance Team
+- boot file: `GEMINI.md`
+- generated surfaces: `.gemini/agents`, `.gemini/commands`, `.gemini/skills`, `.gemini/settings.json`
 
-Purpose:
-- keep projects aligned with Agent Forge contracts and portability rules
+## Core Teams
 
-Roles:
-- governor-auditor
-- portability-reviewer
-- remediation-planner
+Governance Team:
 
-Handoff artifacts:
-- findings report
-- remediation checklist
+- purpose: audit drift in canonical sources and generated host surfaces
+- handoff artifacts: findings report, remediation checklist
 
-### Bootstrap Team
+Bootstrap Team:
 
-Purpose:
-- create or standardize governed projects correctly
+- purpose: create or standardize governed projects correctly
+- handoff artifacts: scaffold summary, verification result, follow-up checklist
 
-Roles:
-- scaffold-planner
-- bootstrap-executor
-- post-bootstrap-verifier
+Delivery Team:
 
-Handoff artifacts:
-- project scaffold summary
-- verification result
-- follow-up checklist
+- purpose: do product work without collapsing planning, build, and review into one role
+- handoff artifacts: implementation plan, code/result summary, findings or test report
 
-### Delivery Team
+Research Team:
 
-Purpose:
-- do actual product work in a repo without collapsing planning, building, and review into one role
+- purpose: gather evidence without flooding downstream workers
+- handoff artifacts: evidence pack, source table, unresolved questions
 
-Roles:
-- architect-planner
-- builder-implementer
-- reviewer-tester
+Planning Team:
 
-Handoff artifacts:
-- implementation plan
-- code/result summary
-- findings or test result report
+- purpose: convert evidence into decision-complete briefs
+- handoff artifacts: implementation brief, assumptions list, acceptance criteria
 
-### Research Team
+Assessment Team:
 
-Purpose:
-- gather evidence without flooding downstream workers with raw context
+- purpose: decide whether a result is correct and worth keeping
+- handoff artifacts: findings report, scorecard, keep/revise/reject recommendation
 
-Roles:
-- research-scout
-- source-triager
-- evidence-packager
+Improvement Team:
 
-Handoff artifacts:
-- evidence pack
-- source table
-- unresolved questions list
+- purpose: prioritize follow-on improvements, update doctrine, and harvest durable lessons
+- handoff artifacts: prioritized improvement list, remediation plan, doctrine/doc checklist, lesson ledger append block, promotion candidates
 
-### Planning Team
+## Context Discipline
 
-Purpose:
-- turn evidence and repo truth into decision-complete implementation briefs
-
-Roles:
-- goal-clarifier
-- plan-author
-- execution-briefer
-
-Handoff artifacts:
-- implementation brief
-- assumptions list
-- acceptance criteria
-
-### Assessment Team
-
-Purpose:
-- determine whether a result is correct, complete, and worth keeping
-
-Roles:
-- result-auditor
-- regression-reviewer
-- scorecard-writer
-
-Handoff artifacts:
-- findings report
-- scorecard
-- release or rollback recommendation
-
-### Improvement Team
-
-Purpose:
-- convert findings into a tighter next iteration instead of another vague brainstorm
-
-Roles:
-- gap-prioritizer
-- remediation-designer
-- doctrine-updater
-
-Handoff artifacts:
-- prioritized improvement list
-- remediation plan
-- doctrine/doc update checklist
-
-## 7. Context Discipline
-
-Agent Forge optimizes for reusable capability, not maximal prompt size.
-
-Rules:
 - prefer handoff artifacts over replaying full chat history
-- keep rich skills project-scoped when possible
-- use teams to split context only when role boundaries are real
-- compact long sessions into evidence packs, briefs, and scorecards
+- keep project-local delivery selective
+- split context only when role boundaries are real
+- harvest durable lessons into `docs/LESSONS_LEARNED.md` instead of re-deriving them next sprint
 
-## 8. What We Are Not Doing Yet
+## What We Are Not Doing Yet
 
-Not yet in scope:
 - fully automated swarms
-- persistent autonomous teams running unsupervised
-- deep orchestration engines
-- tool-specific team runtimes beyond the current starter model
-
-The current goal is a portable conceptual and governance-safe system first.
+- persistent unsupervised teams
+- deep orchestration runtimes
+- equal-depth automated runtime validators for every host

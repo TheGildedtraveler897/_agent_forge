@@ -3,6 +3,8 @@ name: project-bootstrap
 description: Bootstrap a new project under ~/Projects with Agent Forge governance files, portable adapters, and sync-friendly multi-agent structure. Use when creating a new governed repo or standardizing an early-stage project to the shared contract.
 context_cost: light
 model_tier: any
+capability_class: workflow
+delivery_projects: ["jarvis"]
 ---
 
 # Project Bootstrap

@@ -21,3 +21,7 @@ __pycache__/
 
 # Generated portable factory bundles
 exports/
+
+# Local runtime and sync state
+runtime/*
+!runtime/validation-matrix.json

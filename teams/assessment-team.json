@@ -4,10 +4,10 @@
   "roles": [
     {
       "name": "result-auditor",
-      "responsibility": "Compare the outcome against the stated goal and acceptance criteria.",
-      "inputs": ["result", "acceptance criteria", "brief"],
-      "outputs": ["goal-fit findings"],
-      "stop_condition": "It is clear whether the result satisfies the original goal."
+      "responsibility": "Compare the outcome against the stated goal and acceptance criteria. Gate completion claims through verification-gate and refuse hedging language.",
+      "inputs": ["result", "acceptance criteria", "brief", "fresh verification output"],
+      "outputs": ["goal-fit findings", "verification attestation"],
+      "stop_condition": "No hedging language present; fresh evidence attached; every acceptance criterion mapped to an output line."
     },
     {
       "name": "regression-reviewer",
@@ -34,15 +34,28 @@
   "claude_mapping": {
     "primitives": ["slash commands", "subagents when review surfaces should stay separate"],
     "preferred_entries": [
+      "verification-gate",
       "quality-gate",
-      "doctrine-review"
+      "doctrine-review",
+      "root-cause-analyst"
     ]
   },
   "codex_mapping": {
     "primitives": ["skills", "delegated runtime reviewers when useful"],
     "preferred_entries": [
+      "verification-gate",
       "quality-gate",
-      "code-review-doctrine"
+      "code-review-doctrine",
+      "root-cause-analyst"
+    ]
+  },
+  "gemini_mapping": {
+    "primitives": ["commands", "skills", "subagents when review surfaces should stay separate"],
+    "preferred_entries": [
+      "verification-gate",
+      "quality-gate",
+      "code-review-doctrine",
+      "root-cause-analyst"
     ]
   }
 }

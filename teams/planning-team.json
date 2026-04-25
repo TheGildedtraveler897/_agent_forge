@@ -11,10 +11,10 @@
     },
     {
       "name": "plan-author",
-      "responsibility": "Write the minimum decision-complete plan needed for execution safety.",
-      "inputs": ["clarified objective", "constraints list", "repo state"],
-      "outputs": ["implementation brief"],
-      "stop_condition": "An executor does not need to make major product or architecture decisions."
+      "responsibility": "Write the minimum decision-complete plan needed for execution safety. Invoke spec-architect first when the scope is not yet a reviewed spec.",
+      "inputs": ["clarified objective", "constraints list", "repo state", "approved spec when present"],
+      "outputs": ["implementation brief", "micro-task plan"],
+      "stop_condition": "An approved spec exists and the plan has file-exact, verification-complete micro-tasks with no placeholders."
     },
     {
       "name": "execution-briefer",
@@ -27,6 +27,8 @@
   "collapse_condition": "Requirements are already clear, scope is small, and a single worker can write the brief directly from repo state.",
   "escalate_condition": "Requirements are ambiguous, multiple stakeholders or constraints compete, or the plan must survive handoff to a cheaper model.",
   "handoff_artifacts": [
+    "approved spec doc (docs/specs/*)",
+    "micro-task plan (docs/plans/*)",
     "implementation brief",
     "executor brief",
     "acceptance criteria"
@@ -34,6 +36,8 @@
   "claude_mapping": {
     "primitives": ["slash commands", "subagents when planning surface is large"],
     "preferred_entries": [
+      "spec-architect",
+      "execution-planner",
       "context-engineer",
       "quality-gate"
     ]
@@ -41,6 +45,17 @@
   "codex_mapping": {
     "primitives": ["skills", "delegated runtime agents when role separation matters"],
     "preferred_entries": [
+      "spec-architect",
+      "execution-planner",
+      "context-engineer",
+      "quality-gate"
+    ]
+  },
+  "gemini_mapping": {
+    "primitives": ["commands", "skills", "subagents when planning surface is large"],
+    "preferred_entries": [
+      "spec-architect",
+      "execution-planner",
       "context-engineer",
       "quality-gate"
     ]

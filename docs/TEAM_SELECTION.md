@@ -8,24 +8,25 @@ If the task is normal repo work with known requirements, use `delivery-team`.
 
 ## Choose By Problem Shape
 
-- `governance-team`: adapter drift, missing docs, registry mismatch, portability concerns
-- `bootstrap-team`: new project or older repo standardization
-- `research-team`: broad or conflicting source gathering is needed before acting
+- `governance-team`: host-surface drift, missing docs, portability concerns, stale generated outputs
+- `bootstrap-team`: new governed project or older repo standardization
+- `research-team`: broad or conflicting source gathering before action
 - `planning-team`: requirements are still soft and an executor needs a decision-complete brief
 - `delivery-team`: implementation should stay separate from planning and review
-- `assessment-team`: work is done but quality, regressions, or acceptance still need proof
-- `improvement-team`: findings already exist and now need prioritization plus doctrine/process updates
+- `assessment-team`: work is done but quality or regressions still need proof
+- `improvement-team`: findings already exist and now need prioritization, doctrine updates, and lesson harvesting
 
 ## Escalation Rules
 
-- Start with one team, not a swarm.
-- Add a second team only when the first one would otherwise hold too much unrelated context.
-- Use handoff artifacts, not hidden chat memory, when moving between teams.
+- start with one team, not a swarm
+- add a second team only when the first would otherwise hold too much unrelated context
+- move between teams with explicit handoff artifacts, not hidden memory
 
-## Rich Skill Delivery
+## Selective Capability Delivery
 
-Project `.claude/skills/` should stay selective:
+Project-local host surfaces should stay selective:
 
-- include skills that are repeatedly useful in that project
-- keep globally available agents and commands thin
-- avoid adding project skill delivery just because a skill exists
+- include project-local capabilities only when the repo genuinely needs them
+- keep global user-home overlays thin
+- avoid adding delivery targets just because a capability exists
+- use `docs/LESSONS_LEARNED.md` to record durable lessons before promoting them into always-loaded doctrine

@@ -1,24 +1,57 @@
-# Portable Skill Notes
+# Portable Governance Notes
 
 ## Canonical Model
 
-- The repo copy under `_agent_forge` is the only maintained source of truth.
-- Tool-native directories are adapters or mirrors.
-- Global skills should avoid repo-specific paths, commands, and names unless they are genuinely part of the skill's domain.
+- `_agent_forge` is the only maintained source of truth for shared capabilities, teams, MCP servers, hooks, and validation doctrine.
+- Host-native directories are generated delivery targets, not authoring surfaces.
+- Global capabilities must avoid repo-specific paths, machine-specific assumptions, and one-user workflow trivia.
 
-## Current Tooling
+## Native Boot Files
 
-- Codex native skills live under `~/.codex/skills/`
-- Claude native specialization uses:
-  - `~/.claude/agents/` and `.claude/agents/` for subagents
-  - `~/.claude/commands/` and `.claude/commands/` for custom slash commands
+Keep these names native because hosts load them automatically:
+
+- Claude Code: `CLAUDE.md`
+- Codex: `AGENTS.md`
+- Gemini CLI: `GEMINI.md`
+
+Secondary docs can use host-agnostic names without losing indexing advantages.
+
+## Governed Delivery Surfaces
+
+Claude:
+
+- `~/.claude/agents/`
+- `~/.claude/commands/`
+- `<project>/.claude/agents/`
+- `<project>/.claude/commands/`
+- `<project>/.claude/skills/`
+- `<project>/.mcp.json`
+
+Codex:
+
+- `~/.agents/skills/`
+- `<project>/.agents/skills/`
+- `<project>/.codex/agents/`
+- `<project>/.codex/config.toml`
+- `<project>/.codex/hooks.json`
+
+Gemini:
+
+- `~/.gemini/agents/`
+- `~/.gemini/commands/`
+- `~/.gemini/skills/`
+- `~/.gemini/GEMINI.md`
+- `<project>/GEMINI.md`
+- `<project>/.gemini/agents/`
+- `<project>/.gemini/commands/`
+- `<project>/.gemini/skills/`
+- `<project>/.gemini/settings.json`
 
 ## Suitcase Snapshot Model
 
 - This machine remains the canonical factory development lab.
-- Portable deployments are snapshot exports, not live replicas.
-- When the factory improves here, rebuild the suitcase export and redeploy it elsewhere.
-- Never treat a remote suitcase copy as the canonical source of truth.
+- Portable deployments are suitcase snapshots, not live mirrors.
+- Rebuild the suitcase after improving the factory here; do not patch remote snapshots by hand unless that machine becomes canonical.
 
 Use:
 
@@ -26,89 +59,42 @@ Use:
 ./scripts/factory-export.sh
 ```
 
-You are asked to choose an export mode:
-
-- **`clean`** — factory capability only; session history replaced with stubs. Use for new machines / new companies.
-- **`backup`** — preserves current-state notes and session history. Use for personal backups.
-
-Pass `--mode clean` or `--mode backup` to skip the interactive prompt.
-
-The export produces:
-
-- an unpacked suitcase directory
-- a `.tar.gz` archive
-- a `.zip` archive
-- a `MANIFEST.json` describing what was included (including `export_mode`)
-
-Deploy on a target machine with the one-shot wrapper:
+Deploy on a target machine with:
 
 ```bash
 cd <unpacked-bundle>
 ./_agent_forge/scripts/deploy-and-bootstrap.sh
 ```
 
-This wrapper runs `deploy-factory.sh` (no packages) and then asks whether to run `bootstrap-workstation.sh` (installs CLIs). Nothing is installed silently.
+## Knowledge Anchor Portability
 
-Portable deployment has two layers:
-
-1. **Factory deploy** — copy `_agent_forge`, doctrine docs, and tool-native delivery surfaces
-2. **Workstation bootstrap** — install the hosted coding CLIs and walk the operator through authentication
-
-The wrapper chains them with a prompt between steps. See `docs/VM_OPERATOR_RUNBOOK.md` for the full Debian VM walkthrough.
-
-Validated on 2026-04-05 (suitcase + deploy) and 2026-04-06 (clean/backup export modes + deploy-and-bootstrap wrapper + bootstrap-project auto-sync) with isolated smoke tests.
-
-Smoke-test coverage:
-- `factory-export.sh --mode clean` — HANDOFF/TECH_DEBT replaced with stubs; runtime/ excluded; skills preserved
-- `factory-export.sh --mode backup` — current state preserved intact
-- `deploy-and-bootstrap.sh --no-bootstrap` — deploy succeeds, bootstrap skipped cleanly
-- `bootstrap-project.sh --no-define` — scaffold created, Claude adapter sync succeeds, Codex global sync succeeds
+- Durable lessons live in `docs/LESSONS_LEARNED.md`.
+- Harvested entries must stay normalized and append-first.
+- Never carry machine-local residue, secrets, or one-off session trivia into the lesson ledger.
+- Promote lessons into doctrine only after they prove durable and broadly useful.
 
 ## Migration Rule
 
-When a project-local skill becomes reusable:
+When a project-local capability becomes reusable:
 
-1. Copy it into `skills/global/`
-2. Remove repo-specific assumptions
-3. Tighten the description so it triggers only on the right requests
-4. Sync it to any tool-native locations that need it
-
-## Auto-Improvement Rule
-
-Future auto-research or auto-improvement workflows should patch the canonical skill files here, never the copies under tool-home directories.
-
-## Hybrid Claude Model
-
-Use Claude adapters with this split:
-
-- subagents for expert-role skills
-- slash commands for utility or procedural workflows
-
-The canonical adapter sources live under `_agent_forge/claude/` and are synced into tool-native locations as symlinks.
-
-## Governance Defaults
-
-Projects governed by Agent Forge should carry a minimum portable contract set:
-
-- `AGENTS.md`
-- `CLAUDE.md`
-- `docs/CONOPS.md`
-- `docs/HANDOFF.md`
-- `.claude/CLAUDE.md`
-
-Additional `.claude/agents/` and `.claude/commands/` entries are only required when the project actually has local Claude-native adapters.
+1. Copy it into `skills/global/`.
+2. Remove repo-specific assumptions.
+3. Tighten the trigger description.
+4. Re-sync the generated host surfaces.
 
 ## Safe To Carry
 
 - `_agent_forge/` canonical source
 - shared root doctrine docs
+- host-agnostic runbooks
 - team manifests
-- sync/bootstrap/export/deploy/workstation scripts
-- portable handoff and operator docs
+- sync/bootstrap/export/deploy/validation scripts
+- `docs/LESSONS_LEARNED.md`
 
 ## Never Carry
 
 - project repositories unless explicitly approved
 - `.env` files or credentials
-- runtime data, caches, or machine-local settings
-- generated archives from other machines as a substitute for the canonical repo
+- runtime caches or machine-local settings
+- validation artifacts as a substitute for canonical docs
+- remote suitcase snapshots as a substitute for the canonical repo

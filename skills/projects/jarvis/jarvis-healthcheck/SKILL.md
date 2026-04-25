@@ -3,6 +3,7 @@ name: jarvis-healthcheck
 description: Full-stack health diagnostic for Jarvis. Runs 6 layers covering CLI tools, Python env, Ollama runtime, global symlink, doctrine integrity, and a live boot smoke test. Produces a HEALTHY/DEGRADED/DOWN verdict and escalates to other skills for fixes.
 context_cost: heavy
 model_tier: sonnet
+capability_class: workflow
 ---
 
 # jarvis-healthcheck

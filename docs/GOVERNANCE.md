@@ -1,22 +1,27 @@
 # Agent Forge Governance
 
-This document defines the layers that keep projects aligned with the shared multi-agent architecture.
+This document defines the layers that keep projects aligned with the shared omni-factory architecture.
 
 ## 1. Governance Audit
 
 Purpose:
 
 - inspect governed projects for drift
-- confirm required files exist
-- confirm Claude and Codex native delivery still point to canonical `_agent_forge` sources
+- confirm canonical sources are internally coherent
+- confirm generated Claude, Codex, and Gemini delivery surfaces can be rebuilt deterministically
 - confirm projects remain portable and agent-agnostic
+- confirm harvested lessons are recorded in the knowledge anchor before doctrine is promoted
 
 Primary artifacts:
 
 - `skills/global/multi-agent-governor/`
-- `claude/global/commands/multi-agent-governor.md`
+- `skills/global/sprint-harvester/`
+- `scripts/omni_factory.py`
 - `scripts/verify-agent-forge.py`
-- `registry.json`
+- `projects.json`
+- `global-mcp.json`
+- `policies/hooks.json`
+- `docs/LESSONS_LEARNED.md`
 
 Default behavior:
 
@@ -34,45 +39,74 @@ Purpose:
 Primary artifacts:
 
 - `skills/global/project-bootstrap/`
-- `claude/global/commands/project-bootstrap.md`
 - `scripts/bootstrap-project.sh`
 
 Default bootstrap footprint:
 
 - `AGENTS.md`
 - `CLAUDE.md`
+- `GEMINI.md`
 - `docs/CONOPS.md`
 - `docs/HANDOFF.md`
 - `.claude/CLAUDE.md`
 - `.claude/agents/`
 - `.claude/commands/`
 - `.claude/skills/`
+- `.gemini/agents/`
+- `.gemini/commands/`
+- `.gemini/skills/`
+- `.gemini/settings.json`
+- `.agents/skills/`
+- `.codex/agents/`
+- `.codex/config.toml`
+- `.mcp.json`
 
 ## 3. Skill Delivery Governance
 
-Claude now has three governed delivery surfaces:
+The factory now has three governed host families:
 
+- Claude:
 - `~/.claude/agents/`
 - `~/.claude/commands/`
 - `<project>/.claude/skills/`
+- `<project>/.mcp.json`
+
+- Codex:
+- `~/.agents/skills/`
+- `<project>/.agents/skills/`
+- `<project>/.codex/agents/`
+- `<project>/.codex/config.toml`
+
+- Gemini:
+- `~/.gemini/commands/`
+- `~/.gemini/agents/`
+- `~/.gemini/skills/`
+- `<project>/GEMINI.md`
+- `<project>/.gemini/commands/`
+- `<project>/.gemini/agents/`
+- `<project>/.gemini/skills/`
+- `<project>/.gemini/settings.json`
 
 Rules:
 
-- user-level agents and commands are global delivery surfaces
-- project `.claude/skills/` is selective, not automatic
-- the registry is the source of truth for which rich skills belong in which project
-- delivery targets are symlinks only
+- host-native delivery surfaces are generated from canonical metadata
+- project skill delivery is selective, not automatic
+- `registry.json` is compatibility output, not a source of truth
+- user-home surfaces are convenience overlays; project-local governed surfaces take precedence
+- host boot files keep native names (`CLAUDE.md`, `AGENTS.md`, `GEMINI.md`)
+- harvested lessons land in `docs/LESSONS_LEARNED.md` before any doctrine promotion
 
 ## 4. Canonical Versus Generated
 
 Always edit canonical sources in `_agent_forge`.
 
 - skills -> `skills/`
-- Claude adapters -> `claude/`
-- governance expectations -> `registry.json`
+- governed project catalog -> `projects.json`
+- MCP inventory -> `global-mcp.json`
+- hook policy -> `policies/hooks.json`
 - deterministic setup logic -> `scripts/`
 
-Tool-home directories and per-project `.claude/` outputs are delivery targets only.
+Tool-home directories and per-project host outputs are delivery targets only.
 
 ## 5. Agents And Teams
 
@@ -90,6 +124,17 @@ Primary artifacts:
 - `docs/OPERATOR_TEMPLATES.md`
 - `docs/EVALUATION.md`
 - `teams/*.json`
-- `registry.json` team entries
+- generated `registry.json` team entries
 
 Teams remain conceptual and portable first. Deep swarm automation is intentionally deferred.
+
+## 6. Knowledge Harvesting
+
+Agent Forge treats anti-entropy as governance work, not as an informal note-taking habit.
+
+Rules:
+
+- end-of-sprint lessons are harvested into `docs/LESSONS_LEARNED.md`
+- normalized entries capture evidence, architectural decision, and promotion target
+- doctrine promotion is explicit and separate from harvesting
+- lessons that become obsolete should be marked `superseded`, not silently deleted

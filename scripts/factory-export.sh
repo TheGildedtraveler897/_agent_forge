@@ -35,7 +35,7 @@ Export modes (interactive by default — you are asked if --mode is not passed):
           accumulated notes. Use this for personal backups of your live factory.
 
 Contents (both modes):
-  - canonical _agent_forge source (skills, teams, adapters, scripts, docs)
+  - canonical _agent_forge source (skills, teams, governance docs, scripts, generated-host logic)
   - shared root doctrine docs
   - manifest and operator README
   - compressed .tar.gz and .zip archives
@@ -107,11 +107,12 @@ echo "Building suitcase (mode: ${EXPORT_MODE})..."
 tar -C "${WORKSPACE_ROOT}" \
   --exclude='./_agent_forge/.git' \
   --exclude='./_agent_forge/exports' \
-  --exclude='./_agent_forge/runtime' \
+  --exclude='./_agent_forge/runtime/managed-state.json' \
+  --exclude='./_agent_forge/runtime/validation' \
   -cf - _agent_forge | tar -C "${EXPORT_DIR}" -xf -
 
 # ── Clean-mode: strip source-environment-specific residue ────────────────────
-# Skills, teams, adapters, scripts, and workflow docs are always preserved.
+# Skills, teams, governance docs, scripts, and workflow docs are always preserved.
 # Only session-specific notes (HANDOFF, TECH_DEBT) are replaced with stubs.
 if [[ "${EXPORT_MODE}" == "clean" ]]; then
   EXPORTED_FACTORY="${EXPORT_DIR}/_agent_forge"
@@ -146,8 +147,10 @@ This is a clean factory export. No accumulated debt carried over from the source
 - Do not initialize git at the `~/Projects` root level.
 STUB
 
-  # Remove any leftover machine-setup runtime logs if somehow included
-  rm -rf "${EXPORTED_FACTORY}/runtime"
+  # Remove any leftover machine-setup runtime logs if somehow included while
+  # keeping the tracked validation matrix as doctrine.
+  rm -f "${EXPORTED_FACTORY}/runtime/managed-state.json"
+  rm -rf "${EXPORTED_FACTORY}/runtime/validation"
 fi
 
 cp "${WORKSPACE_ROOT}/AGENTS.md" "${EXPORT_DIR}/shared-root/AGENTS.md"
@@ -209,7 +212,7 @@ What this does:
 
 - installs \`_agent_forge\` into \`~/Projects\`
 - copies shared doctrine docs into \`~/Projects\`
-- syncs Claude and Codex factory surfaces
+- syncs Claude, Codex, and Gemini factory surfaces
 
 What this does not do:
 
@@ -240,7 +243,7 @@ cd ~/Projects/_agent_forge
 ./scripts/bootstrap-project.sh --name <your-project>
 \`\`\`
 
-The script automatically syncs Claude adapters and Codex skills and offers
+The script automatically syncs Claude, Codex, and Gemini surfaces and offers
 an interactive project-definition flow. No separate sync commands needed.
 
 Only run project bootstrap after the workstation bootstrap and authentication steps are complete.
@@ -291,7 +294,7 @@ manifest = {
 if export_mode == "clean":
     manifest["clean_mode_note"] = (
         "HANDOFF.md and TECH_DEBT.md replaced with clean stubs. "
-        "All skills, teams, adapters, and workflow docs preserved."
+        "All skills, teams, governance docs, and workflow docs preserved."
     )
 with open(manifest_path, "w", encoding="utf-8") as fh:
     json.dump(manifest, fh, indent=2)

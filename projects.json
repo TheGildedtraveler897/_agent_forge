@@ -1,0 +1,73 @@
+{
+  "version": 1,
+  "governed_projects": [
+    {
+      "name": "jarvis",
+      "root": "jarvis",
+      "required_files": [
+        "AGENTS.md",
+        "CLAUDE.md",
+        "docs/CONOPS.md",
+        "docs/HANDOFF.md",
+        ".claude/CLAUDE.md",
+        ".claude/agents/jarvis-system.md",
+        ".claude/agents/jarvis-coder.md",
+        ".claude/commands/jarvis-healthcheck.md",
+        ".claude/commands/jarvis-reviewer.md",
+        ".claude/commands/jarvis-audit.md"
+      ]
+    },
+    {
+      "name": "RoboNaaz",
+      "root": "RoboNaaz",
+      "required_files": [
+        "AGENTS.md",
+        "CLAUDE.md",
+        "docs/CONOPS.md",
+        "docs/HANDOFF.md",
+        ".claude/CLAUDE.md"
+      ]
+    },
+    {
+      "name": "ZorroClaw",
+      "root": "ZorroClaw",
+      "required_files": [
+        "AGENTS.md",
+        "docs/CONOPS.md",
+        "docs/HANDOFF.md",
+        ".claude/CLAUDE.md"
+      ]
+    },
+    {
+      "name": "homelab",
+      "root": "homelab",
+      "required_files": [
+        "AGENTS.md",
+        "AI_GUIDE.md",
+        "docs/HANDOFF.md",
+        ".claude/CLAUDE.md"
+      ]
+    },
+    {
+      "name": "factory",
+      "root": "ZorroForge/factory",
+      "required_files": [
+        "AGENTS.md",
+        "README.md",
+        "docs/HANDOFF.md",
+        ".claude/CLAUDE.md"
+      ]
+    },
+    {
+      "name": "playlist-archive",
+      "root": "playlist-archive",
+      "required_files": [
+        "AGENTS.md",
+        "CLAUDE.md",
+        "docs/CONOPS.md",
+        "docs/HANDOFF.md",
+        ".claude/CLAUDE.md"
+      ]
+    }
+  ]
+}

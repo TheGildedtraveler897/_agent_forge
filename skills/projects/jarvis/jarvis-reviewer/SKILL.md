@@ -3,6 +3,7 @@ name: jarvis-reviewer
 description: Pre-commit code reviewer. Runs git diff and flags doctrine violations before any commit.
 context_cost: medium
 model_tier: any
+capability_class: workflow
 ---
 
 # jarvis-reviewer

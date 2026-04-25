@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "defaults": {
+    "startup_timeout_ms": 20000,
+    "tool_timeout_ms": 60000,
+    "required": false,
+    "trust_server": false,
+    "parallel_safe": false
+  },
+  "servers": {}
+}
