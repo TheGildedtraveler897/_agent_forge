@@ -4,6 +4,10 @@ Last updated: 2026-04-25
 
 ## What Changed
 
+### Workflow Discipline Post-Mortem: Stalled Tool-Result Delivery (2026-04-25, Claude)
+
+Two silent stalls during the universal state layer sprint were traced to harness-level tool-result delivery failures on compound bash commands, not actual hangs. Captured as `2026-04-25 - Compound Bash Calls Cause Silent Tool-Result Delivery Stalls` in `docs/LESSONS_LEARNED.md`. Two short rules added to `AGENTS.md`: prefer narrow tool calls, and treat `[Tool result missing due to internal error]` as a re-grounding signal rather than a retry signal. New `Operator Tips` section in `AGENTS.md` names the >5-minute silent-stall heuristic so operators know how to unblock cheaply.
+
 ### Universal State Layer + Memory Archivist (2026-04-25, Claude)
 
 Pathfinder Roadmap Architectural Upgrade #1 paired with Capability Backlog #1, shipped together and validated end-to-end through the triad runtime gate.

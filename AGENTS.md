@@ -50,6 +50,12 @@ This workspace is the canonical source of truth for portable multi-agent governa
 - If Codex is the active host, treat `docs/LESSONS_LEARNED.md` as required supporting context when this file or a generated agent points to prior workarounds.
 - After any canonical skill, team, MCP, or hook change, run `python3 scripts/validate-triad-runtime.py --project <name>` as the final runtime gate. The structural verifier confirms files on disk; only the triad validator confirms the three host CLIs can actually enumerate and reach those skills. Sandbox-blocked Codex passes only when paired with filesystem evidence per the 2026-04-23 escalation rule.
 - Global skills default to delivery across every governed project listed in `projects.json`. Use `delivery_projects: ["*"]` to restate the default explicitly, a specific list (e.g. `["jarvis"]`) to narrow, or `delivery_projects: []` as the explicit opt-out for global-only skills.
+- Prefer narrow tool calls over heroic compound shell commands. One question per Bash invocation when inspecting state across many files or projects; reserve `&&` / `;` chains for short related steps where rolling back partial completion is fine. Compound commands with thick output (mixed stdout/stderr, large JSON, multi-section payloads) are more likely to hit harness-level tool-result delivery failures.
+- Treat `[Tool result missing due to internal error]` as a re-grounding signal, not a retry signal. The next tool call after a delivery failure must be a small read-only re-ground (`git status`, one `ls`, one `Read`) before any heavier work — never a retry of the failed compound command.
+
+## Operator Tips
+
+- If the agent's progress indicator has been moving for >5 minutes with no token consumption visible, it is almost certainly waiting on a stuck tool-result delivery, not reasoning. A short interrupt + "are you stuck?" prompt re-grounds the agent on the next turn at near-zero cost. The working tree is preserved; nothing is lost.
 
 ## Workflow Discipline Chain
 
