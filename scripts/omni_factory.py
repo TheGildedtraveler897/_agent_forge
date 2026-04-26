@@ -580,12 +580,19 @@ _EVENT_ALIASES = {
         "stop": "Stop",
     },
     "gemini": {
-        "pre_tool_use": "preToolUse",
-        "post_tool_use": "postToolUse",
-        "pre_commit": "preToolUse",
-        "post_edit": "postToolUse",
-        "session_start": "sessionStart",
-        "stop": "stop",
+        # Corrected 2026-04-25 (Sprint 1 / C1 fix). Gemini CLI v0.39 expects
+        # PascalCase event names (BeforeTool/AfterTool/SessionStart/SessionEnd),
+        # not the camelCase preToolUse/postToolUse pattern that Claude uses.
+        # The pre-fix aliases produced rendered settings whose event keys were
+        # never recognized by Gemini's hook dispatcher, so seeded hooks
+        # (including telemetry-guardian) silently never fired on Gemini.
+        # See docs/PATHFINDER_LEDGER.md §2.3 and PATHFINDER_ROADMAP.md C1.
+        "pre_tool_use": "BeforeTool",
+        "post_tool_use": "AfterTool",
+        "pre_commit": "BeforeTool",
+        "post_edit": "AfterTool",
+        "session_start": "SessionStart",
+        "stop": "SessionEnd",
     },
 }
 

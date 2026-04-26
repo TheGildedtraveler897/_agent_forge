@@ -222,8 +222,23 @@ def _expected_guardian_id() -> str:
     return "pre-tool-execution-guardian"
 
 
+# Per-host canonical event name we expect to find as a key in the rendered
+# hooks payload for the seeded pre-tool-execution-guardian. The Sprint 1
+# (2026-04-25) hardening adds an event-name check on top of the existing
+# substring command-path check, so a host-event-name drift (e.g. Gemini's
+# 2026-04 BeforeTool / AfterTool / SessionStart names vs. our older
+# preToolUse / postToolUse aliases) cannot silently pass surface validation.
+_EXPECTED_HOOK_EVENT_KEY = {
+    "claude": "PreToolUse",
+    # Codex hooks.json is keyed by snake_case canonical event ids.
+    "codex": "pre_tool_use",
+    "gemini": "BeforeTool",
+}
+
+
 def hook_surface_for(host: str, project_root: Path) -> dict:
     expected_id = _expected_guardian_id()
+    expected_event_key = _EXPECTED_HOOK_EVENT_KEY.get(host)
     try:
         if host == "claude":
             path = project_root / ".claude" / "settings.json"
@@ -232,29 +247,39 @@ def hook_surface_for(host: str, project_root: Path) -> dict:
             data = json.loads(path.read_text())
             hooks_root = data.get("hooks") or {}
             body = json.dumps(hooks_root)
+            event_keys = list(hooks_root.keys())
         elif host == "codex":
             path = project_root / ".codex" / "hooks.json"
             if not path.exists():
                 return {"pass": False, "path": str(path), "reason": "hooks.json missing"}
             data = json.loads(path.read_text())
             body = json.dumps(data)
+            event_keys = list((data.get("hooks") or {}).keys())
         elif host == "gemini":
             path = project_root / ".gemini" / "settings.json"
             if not path.exists():
                 return {"pass": False, "path": str(path), "reason": "settings.json missing"}
             data = json.loads(path.read_text())
-            body = json.dumps(data.get("hooks") or {})
+            hooks_root = data.get("hooks") or {}
+            body = json.dumps(hooks_root)
+            event_keys = list(hooks_root.keys())
         else:
             return {"pass": False, "reason": f"unknown host {host}"}
     except Exception as exc:
         return {"pass": False, "reason": f"parse error: {exc}"}
 
     guardian_present = "telemetry-guardian" in body or "guardian.sh" in body
+    event_key_present = (
+        expected_event_key is not None and expected_event_key in event_keys
+    )
     return {
-        "pass": guardian_present,
+        "pass": guardian_present and event_key_present,
         "path": str(path),
         "guardian_present": guardian_present,
         "expected_hook_id": expected_id,
+        "expected_event_key": expected_event_key,
+        "observed_event_keys": event_keys,
+        "event_key_present": event_key_present,
     }
 
 
