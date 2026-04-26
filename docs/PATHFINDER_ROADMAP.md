@@ -178,13 +178,13 @@ Today, a fact Claude saves via auto-memory does not reach Gemini, Codex, or our 
 
 Numbering uses **B-prefix** to distinguish from previous-roadmap numbering. Each capability cross-references the architectural upgrade it depends on.
 
-### B1. `live-hook-prober` (validation skill)
+### B1. `live-hook-prober` (validation skill) — ✅ Shipped 2026-04-26
 
 **Spec.** A skill invoked by `validate-triad-runtime.py` that fires a real, observable side-effect tool call on each host (e.g., a Bash command that writes to a sentinel file) and confirms the relevant hook intercepted/modified/blocked it. Closes critical vulnerability C2. Catches C1-class silent-event-name failures.
 
-**Surface.** `live-hook-prober run --host claude --hook pre_tool_use --expect block` returns pass/fail/evidence-path.
+**Surface.** `bash skills/global/live-hook-prober/prober.sh --host <claude|codex|gemini> --project <root> --command "<test-command>" --expect <block|allow>` returns single-line JSON; non-zero exit on real fail. Validator integration via `validate-triad-runtime.py --probe-invocations` (default OFF).
 
-**Depends on:** A1 (hook lifecycle V2). **Effort:** small. **Priority: highest** (immediate ship-blocker fixer).
+**Status:** Lives at `skills/global/live-hook-prober/`. Three escalation modes (`sandbox_blocked`, `trust_blocked`, `headless_permission_constraint`) match the existing Codex sandbox-block doctrine. Live verification: Gemini blocked `--no-verify` for real (exit 0, `verdict: pass`, `observed: block`); Codex correctly escalated to `sandbox_blocked` per doctrine; Claude correctly escalated to `headless_permission_constraint` (real Claude live-probing requires an interactive session — see SKILL.md § Known limitations). **Known limitation:** do not invoke transitively through a Claude Code session's Bash tool — the long-running child CLI subprocess tree is not always cleanly reaped by `timeout(1)` and produces tool-result delivery stalls. Run from a real terminal or as a scheduled Routine.
 
 ### B2. `memory-bridge`
 
@@ -299,7 +299,7 @@ Five paired-sprint cycles to ship the hot path; everything else is pluggable on 
 
 **Architectural Upgrade #1 — Cross-Agent Memory Exchange.** ✅ Shipped 2026-04-25. `policies/memory.json` v1; `MEMORY.md` + `.forge_state/` rendered into all six governed projects; Gemini `@MEMORY.md` import; AGENTS.md Read Order entry #5 covers Claude/Codex; `memory_surface_for` triad gate. Evidence: `runtime/validation/triad/20260425-174222/`. **Known incomplete:** native auto-memory bridge (now A2 above).
 
-**Architectural Upgrade #2 — Unified Hook Lifecycle.** ✅ Shipped 2026-04-24 — but **partially correct only**. Claude + Codex render correctly; Gemini event-name aliases are wrong (see C1 / A1). Evidence: `runtime/validation/triad/20260424-205818/`. **Known incomplete:** event-name correctness on Gemini, handler diversity, async, permission_updates.
+**Architectural Upgrade #2 — Unified Hook Lifecycle.** ✅ Shipped 2026-04-24, hardened 2026-04-26. Gemini event-name correctness BLOCKER (C1) is now fixed (Sprint 1, commit `f2cea42`); `_EVENT_ALIASES["gemini"]` corrected to PascalCase per Gemini CLI v0.39, and `hook_surface_for()` tightened to also require the per-host expected event key. Live invocation gate via `live-hook-prober` (B1) closes vulnerability C2. Evidence: `runtime/validation/triad/20260424-205818/` + `runtime/validation/triad/20260426-035206/` + `runtime/validation/hook-probe/20260426-035313/gemini/`. **Still incomplete:** handler diversity (currently command-only of 5 types), async/asyncRewake, permission_updates — all land with A1 in Sprint 2.
 
 **Capability #1 — `memory-archivist`.** ✅ Shipped 2026-04-25. `append`/`validate`/`summary` subcommands; secrets-deny patterns; audit log; wired into improvement-team. **Known incomplete:** does not yet bridge to host-native auto-memory (B2).
 

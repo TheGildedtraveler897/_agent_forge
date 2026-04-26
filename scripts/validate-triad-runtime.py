@@ -351,6 +351,77 @@ def memory_surface_for(host: str, project_root: Path) -> dict:
     }
 
 
+def live_hook_invocation_for(host: str, project_root: Path, evidence_dir: Path) -> dict:
+    """Fire a known-blocked Bash invocation on the target host CLI and report
+    whether the seeded telemetry-guardian hook actually intercepted it.
+
+    Calls the live-hook-prober skill (skills/global/live-hook-prober/prober.sh).
+    Default test command is `git commit --no-verify -m probe`, which is the
+    top of the guardian deny list. A correctly-rendered hook should produce
+    verdict=pass with observed=block.
+
+    Returns the prober's stdout JSON augmented with `pass` (boolean for
+    triad-validator integration). Sandbox- or trust-blocked Codex/Gemini
+    runs return `pass=true` with `escalated=true` per the documented
+    escalation doctrine — the absence of evidence is not evidence of
+    absence when the host CLI cannot run the probe at all.
+    """
+    prober = ROOT / "skills" / "global" / "live-hook-prober" / "prober.sh"
+    if not prober.exists():
+        return {"pass": False, "reason": "prober skill missing", "host": host}
+
+    test_command = "git commit --no-verify -m probe"
+    expect = "block"
+    evidence_dir.mkdir(parents=True, exist_ok=True)
+    cmd = [
+        "bash",
+        str(prober),
+        "--host",
+        host,
+        "--project",
+        str(project_root),
+        "--command",
+        test_command,
+        "--expect",
+        expect,
+        "--evidence-root",
+        str(evidence_dir),
+        "--timeout",
+        "120",
+    ]
+    code, out, err = run_cmd(cmd, cwd=ROOT, timeout=180)
+    (evidence_dir / "prober-stdout.txt").write_text(out)
+    (evidence_dir / "prober-stderr.txt").write_text(err)
+
+    parsed: dict = {}
+    if out.strip():
+        try:
+            parsed = json.loads(out.strip().splitlines()[-1])
+        except Exception:
+            parsed = {}
+
+    verdict = parsed.get("verdict", "fail" if code == 1 else ("escalated" if code == 2 else "fail"))
+    observed = parsed.get("observed", "error")
+    reason = parsed.get("reason", "")
+    escalated = verdict == "escalated"
+    # Escalated outcomes (sandbox_blocked, trust_blocked, cli_missing) match
+    # the documented escalation doctrine for the surface check; do not fail
+    # the gate, but record the constraint.
+    overall_pass = verdict == "pass" or escalated
+    return {
+        "pass": overall_pass,
+        "host": host,
+        "command": test_command,
+        "expected": expect,
+        "observed": observed,
+        "verdict": verdict,
+        "escalated": escalated,
+        "reason": reason,
+        "exit_code": code,
+        "evidence_path": parsed.get("evidence_path", str(evidence_dir)),
+    }
+
+
 def update_matrix(project_name: str, summary: dict) -> None:
     matrix = json.loads(MATRIX_PATH.read_text()) if MATRIX_PATH.exists() else {}
     triad = matrix.setdefault("triad_runtime", {})
@@ -363,6 +434,14 @@ def update_matrix(project_name: str, summary: dict) -> None:
                 "method": r["method"],
                 "hook_pass": r.get("hook_surface", {}).get("pass", False),
                 "memory_pass": r.get("memory_surface", {}).get("pass", False),
+                **(
+                    {
+                        "live_hook_pass": r["live_hook"].get("pass", False),
+                        "live_hook_verdict": r["live_hook"].get("verdict", "skipped"),
+                    }
+                    if "live_hook" in r
+                    else {}
+                ),
             }
             for h, r in summary["results"].items()
         },
@@ -377,6 +456,13 @@ def main() -> int:
     ap.add_argument("--project", required=True, help="governed project name from projects.json")
     ap.add_argument("--output-root", default=None)
     ap.add_argument("--skip-host", action="append", default=[], choices=["claude", "codex", "gemini"])
+    ap.add_argument(
+        "--probe-invocations",
+        action="store_true",
+        help="After surface checks pass, fire a live test command on each "
+             "host CLI to confirm the seeded telemetry-guardian hook actually "
+             "intercepts it. Off by default (each probe is a real CLI call).",
+    )
     args = ap.parse_args()
 
     project_root = resolve_project_root(args.project)
@@ -409,11 +495,22 @@ def main() -> int:
         if not memory_res["pass"]:
             res["pass"] = False
             res.setdefault("missing", []).append(f"memory-surface:{memory_res.get('reason') or memory_res.get('host_link_reason') or 'memory layer not reachable'}")
+        live_tag = ""
+        if args.probe_invocations and res["pass"]:
+            live_dir = evidence_dir / "live-hook"
+            live_res = live_hook_invocation_for(host, project_root, live_dir)
+            res["live_hook"] = live_res
+            if not live_res["pass"]:
+                res["pass"] = False
+                res.setdefault("missing", []).append(f"live-hook:{live_res.get('verdict','fail')}:{live_res.get('reason','')}")
+            live_tag = " live+" if live_res["pass"] and not live_res.get("escalated") else (
+                " live~" if live_res.get("escalated") else " live-"
+            )
         (evidence_dir / "result.json").write_text(json.dumps(res, indent=2) + "\n")
         status = "PASS" if res["pass"] else "FAIL"
         hook_tag = "hook+" if hook_res["pass"] else "hook-"
         mem_tag = "mem+" if memory_res["pass"] else "mem-"
-        print(f"[{status}] {host:7s} method={res['method']:22s} missing={len(res['missing'])}/{res['expected_count']}  {hook_tag} {mem_tag}")
+        print(f"[{status}] {host:7s} method={res['method']:22s} missing={len(res['missing'])}/{res['expected_count']}  {hook_tag} {mem_tag}{live_tag}")
         results[host] = res
 
     overall = all(r["pass"] for r in results.values()) if results else False

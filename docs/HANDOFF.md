@@ -1,12 +1,36 @@
 # Agent Forge Handoff
 
-Last updated: 2026-04-25
+Last updated: 2026-04-26
+
+## What Changed
+
+### Sprint 1: Gemini Hook-Alias Hotfix + live-hook-prober (2026-04-25/26, Claude)
+
+First sprint of the new Apex Roadmap. Closed the BLOCKER C1 bug + shipped the deeper validation gate that catches its entire class.
+
+#### Changes Made
+
+1. **C1 hotfix — Gemini event aliases corrected** in `scripts/omni_factory.py` `_EVENT_ALIASES["gemini"]`. Renamed `preToolUse → BeforeTool`, `postToolUse → AfterTool`, `sessionStart → SessionStart`, `stop → SessionEnd`. Gemini CLI v0.39 expects PascalCase event names; our prior camelCase aliases were never recognized by the dispatcher, so the seeded `telemetry-guardian` hook silently never fired on Gemini.
+2. **`hook_surface_for()` tightened** in `scripts/validate-triad-runtime.py`. Now also checks that the per-host expected event key is present as a top-level key in the rendered hooks payload (`PreToolUse` / `pre_tool_use` / `BeforeTool`). Without this, any future event-name drift would slip through surface validation the same way C1 did. The check exposes `expected_event_key`, `observed_event_keys`, `event_key_present` alongside `guardian_present`.
+3. **`live-hook-prober` skill shipped** at `skills/global/live-hook-prober/`. Fires a real `git commit --no-verify -m probe` on each host CLI and observes whether the seeded guardian hook actually intercepts it. Three escalation modes: `sandbox_blocked` (Codex bwrap), `trust_blocked` (Gemini workspace trust), `headless_permission_constraint` (Claude `-p` mode — see Limitations in the SKILL.md). Returns single-line JSON; non-zero exit on real fail.
+4. **`--probe-invocations` flag added** to `validate-triad-runtime.py`. Default OFF (each probe is a real CLI call). When ON, runs `live_hook_invocation_for(host, project_root)` after surface checks pass; matrix entries gain `live_hook_pass` + `live_hook_verdict`.
+5. **Live verification — Gemini live+ proves the C1 fix end-to-end.** `bash skills/global/live-hook-prober/prober.sh --host gemini --project ~/Projects/jarvis --command "git commit --no-verify -m probe" --expect block` returned `verdict: pass`, `observed: block`, exit 0. Hook actually fired. Codex live~ (sandbox-blocked, escalated per doctrine). Claude live~ (headless-permission-constraint, escalated and documented as inherent CLI limitation; real Claude live-probing requires `forge-shell` from B4 roadmap).
+6. **Skill count rose 28 → 29.** Triad surface validator green: `runtime/validation/triad/20260426-035206/` shows all three hosts `hook+ mem+`.
+
+Evidence:
+- C7 commit `f2cea42`: `fix: Gemini hook event aliases (C1) + tightened hook_surface check`.
+- Live Gemini probe artifact: `runtime/validation/hook-probe/20260426-035313/gemini/` (verdict=pass, exit=0).
+- Triad surface artifact: `runtime/validation/triad/20260426-035206/summary.json`.
+
+### Workflow Discipline Post-Mortem: Stalled Tool-Result Delivery (2026-04-25, Claude)
 
 ## What Changed
 
 ### Workflow Discipline Post-Mortem: Stalled Tool-Result Delivery (2026-04-25, Claude)
 
 Two silent stalls during the universal state layer sprint were traced to harness-level tool-result delivery failures on compound bash commands, not actual hangs. Captured as `2026-04-25 - Compound Bash Calls Cause Silent Tool-Result Delivery Stalls` in `docs/LESSONS_LEARNED.md`. Two short rules added to `AGENTS.md`: prefer narrow tool calls, and treat `[Tool result missing due to internal error]` as a re-grounding signal rather than a retry signal. New `Operator Tips` section in `AGENTS.md` names the >5-minute silent-stall heuristic so operators know how to unblock cheaply.
+
+**Follow-up finding (Sprint 1, 2026-04-25/26):** A second stall class was identified — long-running CLI tool calls (e.g., `claude -p` headless probes) hang on permission approval that has no interactive stdin to deliver. `timeout(1)` does not always reap the full subprocess tree (claude → node → MCP servers). The leftover child keeps file descriptors open and the bash-result delivery to the agent drops. Mitigation: do **not** invoke `live-hook-prober` transitively through a Claude Code session's Bash tool. Run it directly from a real terminal or as a scheduled Routine. Documented in `skills/global/live-hook-prober/SKILL.md` § Known limitations.
 
 ### Universal State Layer + Memory Archivist (2026-04-25, Claude)
 

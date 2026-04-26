@@ -135,14 +135,16 @@ Each hook record:
 
 Event names use snake_case and are translated to each host's native casing by the renderer:
 
-| Canonical event | Claude       | Codex         | Gemini        |
-|-----------------|--------------|---------------|---------------|
-| `pre_tool_use`  | `PreToolUse` | `pre_tool_use`| `preToolUse`  |
-| `post_tool_use` | `PostToolUse`| `post_tool_use`| `postToolUse`|
-| `pre_commit`    | `PreToolUse` | `pre_tool_use`| `preToolUse`  |
-| `post_edit`     | `PostToolUse`| `post_tool_use`| `postToolUse`|
-| `session_start` | `SessionStart`| `session_start`| `sessionStart`|
-| `stop`          | `Stop`       | `stop`        | `stop`        |
+| Canonical event | Claude        | Codex           | Gemini         |
+|-----------------|---------------|-----------------|----------------|
+| `pre_tool_use`  | `PreToolUse`  | `pre_tool_use`  | `BeforeTool`   |
+| `post_tool_use` | `PostToolUse` | `post_tool_use` | `AfterTool`    |
+| `pre_commit`    | `PreToolUse`  | `pre_tool_use`  | `BeforeTool`   |
+| `post_edit`     | `PostToolUse` | `post_tool_use` | `AfterTool`    |
+| `session_start` | `SessionStart`| `session_start` | `SessionStart` |
+| `stop`          | `Stop`        | `stop`          | `SessionEnd`   |
+
+**Gemini event-name correctness note (Sprint 1, 2026-04-26):** Gemini CLI v0.39 expects PascalCase event names (`BeforeTool` / `AfterTool` / `BeforeAgent` / `AfterAgent` / `BeforeModel` / `AfterModel` / `BeforeToolSelection` / `SessionStart` / `SessionEnd` / `Notification` / `PreCompress`), not the camelCase pattern Claude uses. Earlier roadmap iterations had `preToolUse` / `postToolUse` here; those were silently broken (Gemini's hook dispatcher never recognized the keys) and the triad validator's `hook_surface_for` only passed because it did a substring command-path match. Both bugs are fixed: aliases corrected and `hook_surface_for` now also requires the per-host expected event key to be a top-level key in the rendered hooks payload. Live-invocation proof: `runtime/validation/hook-probe/20260426-035313/gemini/` (Gemini blocked `--no-verify` for real, exit 0).
 
 ### Rendered surfaces
 

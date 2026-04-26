@@ -147,24 +147,30 @@
   ],
   "triad_runtime": {
     "jarvis": {
-      "artifact_path": "runtime/validation/triad/20260426-033745",
-      "last_run": "20260426-033745",
-      "overall_pass": true,
+      "artifact_path": "runtime/validation/triad/20260426-035338",
+      "last_run": "20260426-035338",
+      "overall_pass": false,
       "per_host": {
         "claude": {
           "hook_pass": true,
+          "live_hook_pass": false,
+          "live_hook_verdict": "fail",
           "memory_pass": true,
           "method": "cli",
-          "pass": true
+          "pass": false
         },
         "codex": {
           "hook_pass": true,
+          "live_hook_pass": true,
+          "live_hook_verdict": "escalated",
           "memory_pass": true,
           "method": "filesystem-escalated",
           "pass": true
         },
         "gemini": {
           "hook_pass": true,
+          "live_hook_pass": true,
+          "live_hook_verdict": "pass",
           "memory_pass": true,
           "method": "cli",
           "pass": true
