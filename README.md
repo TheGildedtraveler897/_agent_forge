@@ -341,6 +341,8 @@ python3 scripts/validate-triad-runtime.py --project <your-project> --probe-invoc
 
 Steps 4 + 6 green = factory is production-ready on this machine.
 
+**First time here and want a guided walkthrough?** Run `python3 ~/Projects/_agent_forge/skills/global/onboarding-guide/onboard.py tour` — five short sections in plain English, with experience-aware adaptations and a `--quick` 90-second summary mode. Read-only.
+
 ---
 
 ## Where to look next

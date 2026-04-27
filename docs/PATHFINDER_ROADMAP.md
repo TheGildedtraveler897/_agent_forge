@@ -109,6 +109,15 @@ Skills and agents that exercise the architectural upgrades. Cross-references eac
 | **B10** | `path-scoped-rules` | none structural | Medium | Whenever; small scope |
 | **B11** | `host-quirk-translator` | A4 + A6 | Medium | Sprint 7+ |
 | **B12** | `a2a-bridge` | A7 | Low | Defensive; defer |
+| **B13** | `onboarding-guide` | none structural | Operator-facing | ✅ Shipped 2026-04-27 (side branch `feat/onboarding-guide`) |
+
+### B13. `onboarding-guide` — ✅ Shipped 2026-04-27
+
+Operator-facing guided tour for first-time operators. Lives at `skills/global/onboarding-guide/`. Three modes via `onboard.py`: `tour` (interactive five-section walkthrough with experience-aware adaptations), `tour --quick` (non-interactive 90-second summary), `check` (machine-state report), `explain <topic>` (single-concept explainer covering 12 topics including `validation-pyramid`, `governed-project`, `suitcase`, `mcp`, `hook`, `memory`, `sandbox`, `triad-validator`, `guardian`, `factory`, `skill`, `bootstrap`).
+
+Read-only and observational. Does not modify canonical sources, host surfaces, or `bootstrap-project.sh`. Audience-tone discipline encoded in the SKILL.md (no sycophancy, no condescension, jargon-translated-on-first-use). Designed to be invoked directly by the operator after `bootstrap-project.sh`; an integration-hook seam is documented in `docs/OPERATOR_TEMPLATES.md` for a future Codex sprint to wire `bootstrap-project.sh --guided`.
+
+Lives on side branch `feat/onboarding-guide` until Codex completes Sprint 3 — then the merge to master happens cleanly.
 
 ### B1. `live-hook-prober` — ✅ Shipped 2026-04-26
 

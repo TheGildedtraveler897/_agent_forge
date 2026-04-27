@@ -473,15 +473,39 @@ def section_5_what_now(level: str, probes: list[tuple[str, str, str, str]]) -> N
     else:
         print(green("Everything is GREEN. You're ready to use the factory."))
         print()
-        print("A reasonable first task: pick one of your governed projects and have a host")
-        print("CLI try a small, low-risk operation. For example, in a terminal:")
+        print("Pick a governed project to start in:")
         print()
-        print(dim("  cd ~/Projects/<one-of-your-governed-projects>"))
-        print(dim("  claude   # or: codex   # or: gemini"))
+        projects = [p for p in _governed_projects() if (PROJECTS_ROOT / p["root"]).exists()]
+        if projects:
+            sample = projects[0]["name"]
+            sample_root = PROJECTS_ROOT / projects[0]["root"]
+            print(dim(f"  cd {sample_root}"))
+        else:
+            sample = "<your-project>"
+            print(dim(f"  cd ~/Projects/<your-project>"))
         print()
-        print("From there, ask the agent to summarize its visible skills. You should see the")
-        print("ones the factory has just shipped.")
+        print("Then run one of these in a real terminal — pick the host you have authed.")
+        print("These are low-risk reads; none of them modify your repo:")
         print()
+        # Per-host "Try this" — only show hosts on PATH.
+        if shutil.which("claude") is not None:
+            print(bold("  Claude Code"))
+            print(dim("    claude --version"))
+            print(dim('    claude -p "List the skills this project has loaded." --output-format text'))
+            print()
+        if shutil.which("codex") is not None:
+            print(bold("  OpenAI Codex"))
+            print(dim("    codex --version"))
+            print(dim("    codex /mcp verbose"))
+            print()
+        if shutil.which("gemini") is not None:
+            print(bold("  Gemini CLI"))
+            print(dim("    gemini --version"))
+            print(dim("    gemini /memory show"))
+            print()
+        if not any(shutil.which(c) for c in ("claude", "codex", "gemini")):
+            print(dim("  (No host CLIs are on PATH. Run scripts/bootstrap-workstation.sh to install them.)"))
+            print()
         print("To go deeper:")
         print(dim(f"  cat {FACTORY_ROOT}/README.md"))
         print(dim(f"  cat {FACTORY_ROOT}/docs/HANDOFF.md  # what just shipped"))
@@ -509,13 +533,56 @@ def write_audit_log(level: str, sections_completed: int) -> None:
         pass
 
 
-def cmd_tour(_args: argparse.Namespace) -> int:
+def cmd_quick_summary(probes: list[tuple[str, str, str, str]]) -> None:
+    """Non-interactive 90-second summary. Used by `tour --quick`.
+
+    Skips the experience prompt and the five expanded sections. Prints a
+    five-bullet pitch + the probe verdicts + the "what to do next" branch.
+    Intended for operators who want the gist without being marched through
+    the full guided flow.
+    """
+    print(bold("Agent Forge — quick summary"))
+    print(dim("Read-only; nothing here modifies your repo."))
+    print()
+    bullets = [
+        ("What this folder is",
+         "A single source of truth that generates the same skills, safety rules, and shared "
+         "memory for three AI coding CLIs (Claude / Codex / Gemini)."),
+        ("Why",
+         "Author one canonical file; the engine renders it into each host's native shape. "
+         "No drift, no triple maintenance."),
+        ("The seatbelt",
+         "telemetry-guardian runs before every shell command on every host and refuses "
+         "obviously dangerous patterns (--no-verify, force-push to main, rm -rf $HOME, etc.)."),
+        ("The shared brain",
+         "<project>/MEMORY.md is one file all three hosts read and write. Build commands, "
+         "project quirks, recent decisions, known failures."),
+        ("The gate",
+         "validate-triad-runtime.py asks each host's CLI 'can you see what we shipped?' — "
+         "files on disk are necessary; CLI reachability is the sufficient proof."),
+    ]
+    for title, body in bullets:
+        print(f"  - {bold(title)}: {body}")
+    print()
+    print(bold("Machine state:"))
+    for name, verdict, summary, _fix in probes:
+        print(f"  {verdict_glyph(verdict)} {name}: {summary}")
+    print()
+    section_5_what_now("s", probes)
+    print()
+    print(dim(f"For the full guided tour: python3 {Path(__file__).resolve()} tour"))
+
+
+def cmd_tour(args: argparse.Namespace) -> int:
+    probes = run_probes()
+    if getattr(args, "quick", False):
+        cmd_quick_summary(probes)
+        return 0
     print(bold("Agent Forge Onboarding Guide"))
     print(dim("Five short sections. Plain English. Read-only — nothing you do here will modify your repo."))
     print()
     print(dim(f"Factory root: {FACTORY_ROOT}"))
     level = ask_experience()
-    probes = run_probes()
 
     sections_completed = 0
     try:
@@ -637,6 +704,46 @@ EXPLAINERS = {
         "and-bootstrap.sh` is the one-shot operator path from a freshly unpacked suitcase: "
         "deploys the factory, then offers to run the workstation bootstrap."
     ),
+    "validation-pyramid": (
+        "The factory uses three nested gates of increasing depth and decreasing speed. "
+        "Level 1 — `verify-agent-forge.py` — is the cheapest: it checks file presence, JSON "
+        "parse, schema-shape, and that referenced scripts exist on disk. Run constantly. "
+        "Level 2 — `validate-triad-runtime.py` (default mode) — asks each host's CLI to "
+        "enumerate skills, then confirms the seeded telemetry-guardian hook is registered with "
+        "the host's expected event key (PreToolUse / PreToolUse / BeforeTool) and that the "
+        "MEMORY.md surface is reachable. Mandatory after every canonical change. "
+        "Level 3 — `validate-triad-runtime.py --probe-invocations` — fires a real test command "
+        "on each host CLI and observes whether the hook actually intercepts it. Slow, opt-in, "
+        "and the only level that catches host-native semantic drift (the kind that broke the "
+        "Gemini hook silently for two sprints in 2026-04). Each level is necessary; only the "
+        "third is sufficient."
+    ),
+    "governed-project": (
+        "A governed project is one declared in `projects.json` and managed by the factory. "
+        "Six are pre-wired today: jarvis, RoboNaaz, ZorroClaw, homelab, ZorroForge/factory, "
+        "playlist-archive. Adding a new one means: (1) add an entry to `projects.json` with "
+        "`name`, `root`, and `required_files`; (2) run `./scripts/bootstrap-project.sh --name "
+        "<name>`. The bootstrap creates the minimum required files, then immediately syncs the "
+        "factory's skills, hooks, MEMORY.md, and forge_state into the project's host-native "
+        "directories (`.claude/`, `.codex/`, `.agents/`, `.gemini/`). Generated surfaces are "
+        "never hand-edited; re-run sync after any canonical change. The `required_files` "
+        "declaration is what the verifier uses to confirm the project still has the minimum "
+        "footprint."
+    ),
+    "suitcase": (
+        "The 'suitcase' is the portable export of the factory you can carry to a fresh machine "
+        "or VM without copying secrets or per-machine residue. `scripts/factory-export.sh` "
+        "produces `agent-forge-suitcase-<timestamp>.tar.gz` (and `.zip`) in `exports/`. The "
+        "bundle includes `_agent_forge/` canonical sources, the sync/bootstrap/validation "
+        "scripts, and the doctrine docs — no `.env`, no auth tokens, no machine-local caches. "
+        "On the target machine, `./_agent_forge/scripts/deploy-and-bootstrap.sh` is the one-"
+        "shot path: deploys the factory into `~/Projects`, syncs the global host surfaces, and "
+        "offers to run the workstation bootstrap (which installs the three host CLIs). The "
+        "host-specific surfaces (`<project>/.claude/`, `.codex/`, `.gemini/`) and per-project "
+        "`MEMORY.md` are re-rendered on first sync; they are NOT carried in the suitcase. "
+        "This is the canonical-first doctrine in practice: ship the source of truth; let the "
+        "engine generate the host views fresh on the target."
+    ),
 }
 
 
@@ -667,6 +774,13 @@ def main() -> int:
     sub = parser.add_subparsers(dest="cmd")
 
     p_tour = sub.add_parser("tour", help="Interactive guided walkthrough (default).")
+    p_tour.add_argument(
+        "--quick",
+        action="store_true",
+        help="Skip the experience prompt and the five guided sections; print a "
+             "non-interactive 90-second summary instead. Useful for operators "
+             "who want the gist without being marched through the full tour.",
+    )
     p_tour.set_defaults(func=cmd_tour)
 
     p_check = sub.add_parser("check", help="Non-interactive machine-state report.")

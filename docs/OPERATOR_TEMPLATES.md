@@ -2,6 +2,22 @@
 
 > **Note on examples:** Each template below is followed by a worked example. The worked examples — including any script names like `scripts/download-youtube.sh` — are **illustrative**, not real shipping artifacts in this repo. They show what a fully-filled template should look like; do not copy the example commands expecting them to run.
 
+## First-Run Onboarding
+
+When a fresh operator finishes `./scripts/bootstrap-project.sh --name <name>` and isn't sure what just happened, point them at the `onboarding-guide` skill:
+
+```bash
+python3 ~/Projects/_agent_forge/skills/global/onboarding-guide/onboard.py tour
+# or, for the 90-second non-interactive summary:
+python3 ~/Projects/_agent_forge/skills/global/onboarding-guide/onboard.py tour --quick
+# or, to look up a single concept:
+python3 ~/Projects/_agent_forge/skills/global/onboarding-guide/onboard.py explain <topic>
+```
+
+Read-only and observational. Five guided sections (what the folder is, three tools / one source of truth, the seatbelt, the shared brain, what to do next). Adapts to operator experience via a one-question prompt. Plain-English translations of every agentic-vocabulary term (MCP, hook, sandbox, memory layer) on first mention.
+
+**Future integration hook (deferred to a Codex sprint):** `scripts/bootstrap-project.sh` could grow a `--guided` flag that invokes `onboard.py tour` automatically at the end of bootstrap. The skill is intentionally read-only so the integration is a one-line addition to the bootstrap script, with no risk to the suitcase doctrine. Documented here so a future operator implementing the wire-up has the seam clearly named.
+
 ## Task Brief
 
 ```md
