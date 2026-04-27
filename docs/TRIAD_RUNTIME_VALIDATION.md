@@ -66,19 +66,19 @@ For each host, if the CLI returns no parseable skill set (e.g. the CLI is not in
 - Exit code `0`
 - A new run directory appears under `runtime/validation/triad/<YYYYMMDD-HHMMSS>/`
 - `summary.json` reports `pass: true` overall
-- Per-host `result.json` reports `missing: []` **and** `hook_surface.pass: true` (guardian present in the rendered settings file)
+- Per-host `result.json` reports `missing: []` **and** `hook_surface.pass: true` (guardian present and every active hook record's native event key present in the rendered settings file)
 - `runtime/validation-matrix.json` receives an updated `triad_runtime.<project>` entry with both `pass` and `hook_pass: true` per host
-- The expected skill count tracks the canonical `registry.json` (currently 27 with `telemetry-guardian` shipped)
+- The expected skill count tracks the canonical `registry.json` (currently 30 after `onboarding-guide`)
 
 ### Hook surface check
 
-After enumerating skills for a host, the validator runs `hook_surface_for(host, project_root)` to confirm that at least one canonical hook from `policies/hooks.json` reached the rendered host-native settings file:
+After enumerating skills for a host, the validator runs `hook_surface_for(host, project_root)` to confirm that each active canonical hook from `policies/hooks.json` reached the rendered host-native settings file under the host's current native event key:
 
-- Claude → reads `<project>/.claude/settings.json`, looks for `pre-tool-execution-guardian` in the `hooks` block.
-- Codex → reads `<project>/.codex/hooks.json`, looks for the same hook id.
-- Gemini → reads `<project>/.gemini/settings.json`, looks for the same hook id under `hooks`.
+- Claude → reads `<project>/.claude/settings.json`, expects `PreToolUse` for the seeded guardian.
+- Codex → reads `<project>/.codex/hooks.json`, expects `PreToolUse` for the seeded guardian.
+- Gemini → reads `<project>/.gemini/settings.json`, expects `BeforeTool` for the seeded guardian.
 
-If the guardian record is missing from any host's surface, that host's `pass` becomes `false` and overall pass is `false`. This catches the silent-rot failure mode where `policies/hooks.json` is updated but a renderer was not re-run for that project.
+If the guardian command path is missing, or any expected native event key is absent, that host's `pass` becomes `false` and overall pass is `false`. This catches two silent-rot classes: policy updates that were never re-rendered, and host event-name drift such as Gemini `BeforeTool` or Codex `PreToolUse` casing changes.
 
 ### Memory surface check
 
@@ -89,7 +89,7 @@ After hook-surface, the validator runs `memory_surface_for(host, project_root)` 
 - For Gemini, additionally confirms `<project>/GEMINI.md` `@imports` `MEMORY.md`.
 - For Claude and Codex, confirms `AGENTS.md` (which both auto-load) names `MEMORY.md` in its Read Order.
 
-If any check fails, that host's `pass` becomes `false` and overall pass is `false`. Per-host matrix entries gain a `memory_pass` field alongside `hook_pass`. Expected skill count is now **28** (memory-archivist added on top of the prior 27).
+If any check fails, that host's `pass` becomes `false` and overall pass is `false`. Per-host matrix entries include a `memory_pass` field alongside `hook_pass`.
 
 ### Codex sandbox-block detection
 

@@ -103,11 +103,11 @@ The shell wrappers remain convenience entrypoints only.
 
 ### Schema
 
-Top-level structure (version 2):
+Top-level structure (version 3):
 
 ```json
 {
-  "version": 2,
+  "version": 3,
   "shared":  [ <hook-record>, ... ],
   "claude":  [ <hook-record>, ... ],
   "codex":   [ <hook-record>, ... ],
@@ -126,25 +126,34 @@ Each hook record:
   "description": "short human-readable purpose",
   "event": "pre_tool_use",
   "matcher": "Bash",
-  "command": "bash ~/Projects/_agent_forge/skills/global/telemetry-guardian/guardian.sh",
+  "handler": {
+    "type": "command",
+    "command": "bash ~/Projects/_agent_forge/skills/global/telemetry-guardian/guardian.sh"
+  },
   "targets": ["claude", "codex", "gemini"],
   "timeout_ms": 5000,
   "status_message": "optional short status line"
 }
 ```
 
+The v3 `handler.type` can be `command`, `http`, `mcp_tool`, `prompt`, or `agent`. Claude currently renders all five native handler types. Codex and Gemini currently render active `command` hooks only, matching their current public docs; non-command examples in `policies/hooks.json` stay disabled until a host-safe sentinel exists.
+
 Event names use snake_case and are translated to each host's native casing by the renderer:
 
 | Canonical event | Claude        | Codex           | Gemini         |
 |-----------------|---------------|-----------------|----------------|
-| `pre_tool_use`  | `PreToolUse`  | `pre_tool_use`  | `BeforeTool`   |
-| `post_tool_use` | `PostToolUse` | `post_tool_use` | `AfterTool`    |
-| `pre_commit`    | `PreToolUse`  | `pre_tool_use`  | `BeforeTool`   |
-| `post_edit`     | `PostToolUse` | `post_tool_use` | `AfterTool`    |
-| `session_start` | `SessionStart`| `session_start` | `SessionStart` |
-| `stop`          | `Stop`        | `stop`          | `SessionEnd`   |
+| `pre_tool_use`  | `PreToolUse`  | `PreToolUse`    | `BeforeTool`   |
+| `post_tool_use` | `PostToolUse` | `PostToolUse`   | `AfterTool`    |
+| `permission_request` | `PermissionRequest` | `PermissionRequest` | unsupported |
+| `user_prompt_submit` | `UserPromptSubmit` | `UserPromptSubmit` | unsupported |
+| `pre_commit`    | `PreToolUse`  | `PreToolUse`    | `BeforeTool`   |
+| `post_edit`     | `PostToolUse` | `PostToolUse`   | `AfterTool`    |
+| `session_start` | `SessionStart`| `SessionStart`  | `SessionStart` |
+| `stop`          | `Stop`        | `Stop`          | `SessionEnd`   |
 
 **Gemini event-name correctness note (Sprint 1, 2026-04-26):** Gemini CLI v0.39 expects PascalCase event names (`BeforeTool` / `AfterTool` / `BeforeAgent` / `AfterAgent` / `BeforeModel` / `AfterModel` / `BeforeToolSelection` / `SessionStart` / `SessionEnd` / `Notification` / `PreCompress`), not the camelCase pattern Claude uses. Earlier roadmap iterations had `preToolUse` / `postToolUse` here; those were silently broken (Gemini's hook dispatcher never recognized the keys) and the triad validator's `hook_surface_for` only passed because it did a substring command-path match. Both bugs are fixed: aliases corrected and `hook_surface_for` now also requires the per-host expected event key to be a top-level key in the rendered hooks payload. Live-invocation proof: `runtime/validation/hook-probe/20260426-035313/gemini/` (Gemini blocked `--no-verify` for real, exit 0).
+
+**Codex event-name correctness note (Sprint 2, 2026-04-27):** Current Codex hook docs use PascalCase hook keys in `.codex/hooks.json` (`PreToolUse`, `PermissionRequest`, `PostToolUse`, `UserPromptSubmit`, `SessionStart`, `Stop`). Earlier factory output used snake_case keys such as `pre_tool_use`, which was another silent-correctness risk. Sprint 2 corrected `_EVENT_ALIASES["codex"]`, regenerated all governed project surfaces, and tightened `hook_surface_for()` to check every active hook record's expected native key. Evidence: `runtime/validation/triad/20260427-084059/summary.json`.
 
 ### Rendered surfaces
 
@@ -161,8 +170,8 @@ Global user-home hook surfaces (`~/.claude/settings.json`, `~/.gemini/settings.j
 1. Author the record in `policies/hooks.json` (usually under `shared`).
 2. If the command points to a script, put the script under the owning skill (for example, `skills/global/telemetry-guardian/guardian.sh`) and reference it with an absolute path or `~/Projects/_agent_forge/...`.
 3. Re-run `sync-claude` / `sync-codex` / `sync-gemini` for every governed project.
-4. Re-run `verify-agent-forge.py` — it now checks that every referenced script path exists.
-5. Re-run `validate-triad-runtime.py` — it now checks that each rendered host hook file contains the expected guardian entry.
+4. Re-run `verify-agent-forge.py` — it checks handler shape, target host names, known canonical events, command script paths, and async rules.
+5. Re-run `validate-triad-runtime.py` — it checks that each rendered host hook file contains every active hook record's expected native event key.
 
 ### Seeded hook: `pre-tool-execution-guardian`
 

@@ -15,7 +15,8 @@ Usage:
   prober.sh --host <claude|codex|gemini>
             --project <project-root>
             --command <test-command-string>
-            --expect <block|allow>
+            --expect <block|allow|available>
+            [--handler-type <command|http|mcp_tool|prompt|agent>]
             [--evidence-root <path>]    (default runtime/validation/hook-probe)
             [--timeout <seconds>]       (default 60)
 EOF
@@ -26,6 +27,7 @@ HOST=""
 PROJECT=""
 COMMAND=""
 EXPECT=""
+HANDLER_TYPE="command"
 EVIDENCE_ROOT=""
 TIMEOUT=60
 
@@ -35,6 +37,7 @@ while [ $# -gt 0 ]; do
         --project) PROJECT="$2"; shift 2;;
         --command) COMMAND="$2"; shift 2;;
         --expect) EXPECT="$2"; shift 2;;
+        --handler-type) HANDLER_TYPE="$2"; shift 2;;
         --evidence-root) EVIDENCE_ROOT="$2"; shift 2;;
         --timeout) TIMEOUT="$2"; shift 2;;
         -h|--help) usage;;
@@ -43,7 +46,8 @@ while [ $# -gt 0 ]; do
 done
 
 case "$HOST" in claude|codex|gemini) ;; *) usage;; esac
-case "$EXPECT" in block|allow) ;; *) usage;; esac
+case "$EXPECT" in block|allow|available) ;; *) usage;; esac
+case "$HANDLER_TYPE" in command|http|mcp_tool|prompt|agent) ;; *) usage;; esac
 [ -n "$PROJECT" ] || usage
 [ -n "$COMMAND" ] || usage
 
@@ -81,6 +85,7 @@ emit_json() {
 import json, os
 print(json.dumps({
     "host": os.environ["P_HOST"],
+    "handler_type": os.environ["P_HANDLER_TYPE"],
     "command": os.environ["P_COMMAND"],
     "expected": os.environ["P_EXPECT"],
     "observed": os.environ["P_OBSERVED"],
@@ -91,16 +96,31 @@ print(json.dumps({
 PY
     else
         # Best-effort raw JSON; assumes no embedded quotes in inputs we control.
-        printf '{"host":"%s","command":"%s","expected":"%s","observed":"%s","verdict":"%s","evidence_path":"%s","reason":"%s"}\n' \
-            "$HOST" "$COMMAND" "$EXPECT" "$observed" "$verdict" "$EVIDENCE_DIR" "$reason"
+        printf '{"host":"%s","handler_type":"%s","command":"%s","expected":"%s","observed":"%s","verdict":"%s","evidence_path":"%s","reason":"%s"}\n' \
+            "$HOST" "$HANDLER_TYPE" "$COMMAND" "$EXPECT" "$observed" "$verdict" "$EVIDENCE_DIR" "$reason"
     fi
+}
+
+run_handler_mode_probe() {
+    case "$HANDLER_TYPE" in
+        http)
+            printf '{"handler_type":"http","sentinel":"available"}\n' >"$EVIDENCE_DIR/http-sentinel.json"
+            echo "handler_mode_available"
+            ;;
+        mcp_tool)
+            echo "no_mcp_test_server_available"
+            ;;
+        prompt|agent)
+            echo "headless_handler_probe_unavailable"
+            ;;
+    esac
 }
 
 run_claude() {
     if ! command -v claude >/dev/null 2>&1; then
         echo "prober: claude CLI not on PATH" >"$STDERR_FILE"
         P_VERDICT=escalated P_OBSERVED=cli_missing P_REASON="claude CLI not installed" \
-        P_HOST="$HOST" P_COMMAND="$COMMAND" P_EXPECT="$EXPECT" P_EVIDENCE="$EVIDENCE_DIR" \
+        P_HOST="$HOST" P_HANDLER_TYPE="$HANDLER_TYPE" P_COMMAND="$COMMAND" P_EXPECT="$EXPECT" P_EVIDENCE="$EVIDENCE_DIR" \
         emit_json "escalated" "cli_missing" "claude CLI not installed"
         return 2
     fi
@@ -142,7 +162,7 @@ run_codex() {
     if ! command -v codex >/dev/null 2>&1; then
         echo "prober: codex CLI not on PATH" >"$STDERR_FILE"
         P_VERDICT=escalated P_OBSERVED=cli_missing P_REASON="codex CLI not installed" \
-        P_HOST="$HOST" P_COMMAND="$COMMAND" P_EXPECT="$EXPECT" P_EVIDENCE="$EVIDENCE_DIR" \
+        P_HOST="$HOST" P_HANDLER_TYPE="$HANDLER_TYPE" P_COMMAND="$COMMAND" P_EXPECT="$EXPECT" P_EVIDENCE="$EVIDENCE_DIR" \
         emit_json "escalated" "cli_missing" "codex CLI not installed"
         return 2
     fi
@@ -166,7 +186,7 @@ run_gemini() {
     if ! command -v gemini >/dev/null 2>&1; then
         echo "prober: gemini CLI not on PATH" >"$STDERR_FILE"
         P_VERDICT=escalated P_OBSERVED=cli_missing P_REASON="gemini CLI not installed" \
-        P_HOST="$HOST" P_COMMAND="$COMMAND" P_EXPECT="$EXPECT" P_EVIDENCE="$EVIDENCE_DIR" \
+        P_HOST="$HOST" P_HANDLER_TYPE="$HANDLER_TYPE" P_COMMAND="$COMMAND" P_EXPECT="$EXPECT" P_EVIDENCE="$EVIDENCE_DIR" \
         emit_json "escalated" "cli_missing" "gemini CLI not installed"
         return 2
     fi
@@ -186,11 +206,15 @@ run_gemini() {
     fi
 }
 
-case "$HOST" in
-    claude) OBSERVED="$(run_claude)";;
-    codex)  OBSERVED="$(run_codex)";;
-    gemini) OBSERVED="$(run_gemini)";;
-esac
+if [ "$HANDLER_TYPE" = "command" ]; then
+    case "$HOST" in
+        claude) OBSERVED="$(run_claude)";;
+        codex)  OBSERVED="$(run_codex)";;
+        gemini) OBSERVED="$(run_gemini)";;
+    esac
+else
+    OBSERVED="$(run_handler_mode_probe)"
+fi
 
 # Persist meta record (one line per probe).
 if command -v python3 >/dev/null 2>&1; then
@@ -198,6 +222,7 @@ if command -v python3 >/dev/null 2>&1; then
 import json, time
 print(json.dumps({
     "host": "$HOST",
+    "handler_type": "$HANDLER_TYPE",
     "project": "$PROJECT",
     "command": "$COMMAND",
     "expected": "$EXPECT",
@@ -223,7 +248,16 @@ case "$OBSERVED" in
             fi
         fi
         ;;
-    sandbox_blocked|trust_blocked|cli_missing|headless_permission_constraint)
+    handler_mode_available)
+        if [ "$EXPECT" = "available" ]; then
+            VERDICT=pass
+            REASON=""
+        else
+            VERDICT=fail
+            REASON="handler mode available but expected=$EXPECT"
+        fi
+        ;;
+    sandbox_blocked|trust_blocked|cli_missing|headless_permission_constraint|no_mcp_test_server_available|headless_handler_probe_unavailable)
         VERDICT=escalated
         REASON="$OBSERVED"
         ;;
@@ -233,7 +267,7 @@ case "$OBSERVED" in
         ;;
 esac
 
-P_HOST="$HOST" P_COMMAND="$COMMAND" P_EXPECT="$EXPECT" \
+P_HOST="$HOST" P_HANDLER_TYPE="$HANDLER_TYPE" P_COMMAND="$COMMAND" P_EXPECT="$EXPECT" \
 P_OBSERVED="$OBSERVED" P_VERDICT="$VERDICT" \
 P_EVIDENCE="$EVIDENCE_DIR" P_REASON="$REASON" \
 emit_json "$VERDICT" "$OBSERVED" "$REASON"
@@ -249,6 +283,7 @@ print(json.dumps({
     "ts": time.time(),
     "stamp": "$STAMP",
     "host": "$HOST",
+    "handler_type": "$HANDLER_TYPE",
     "command": "$COMMAND",
     "expected": "$EXPECT",
     "observed": "$OBSERVED",

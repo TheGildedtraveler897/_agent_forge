@@ -24,14 +24,16 @@ Prove, by live execution, that the configured hooks fire on each host. Distingui
 
 ## Subcommand contract
 
-`bash prober.sh --host <claude|codex|gemini> --project <root> --command <one-of-known-test-commands> --expect <block|allow>`
+`bash prober.sh --host <claude|codex|gemini> --project <root> --command <one-of-known-test-commands> --expect <block|allow|available> [--handler-type <command|http|mcp_tool|prompt|agent>]`
 
-Output: one line of JSON to stdout with `host`, `command`, `expected`, `observed`, `verdict` (`pass|fail|escalated`), `evidence_path`, optional `reason`.
+Output: one line of JSON to stdout with `host`, `handler_type`, `command`, `expected`, `observed`, `verdict` (`pass|fail|escalated`), `evidence_path`, optional `reason`.
 
 Exit codes:
 - 0 — verdict matched expected.
 - 1 — verdict did not match (real failure).
 - 2 — environmental constraint (sandbox or trust); evidence dir documents it; caller should treat as escalated, not a hard fail.
+
+`--handler-type command` is the default and is the only mode that fires a real host CLI tool invocation today. `--handler-type http` currently validates the prober's sentinel mode and returns `observed: handler_mode_available` with `--expect available`. `mcp_tool`, `prompt`, and `agent` return explicit escalations until local sentinel servers and headless-safe prompt/agent probes exist.
 
 ## Test commands (curated)
 
@@ -93,6 +95,7 @@ Without it, the same C1-class bug (silent correctness failure due to event-name 
 - **Codex live-probing on this machine escalates** to `sandbox_blocked` due to bubblewrap restrictions. Surface check + filesystem evidence still pass; live invocation is documented as escalated per the 2026-04-23 doctrine.
 - **Gemini live-probing works end-to-end** and is the canonical proof point for the C1 fix (`BeforeTool` event name).
 - **The prober is not safe to invoke from inside a Claude Code session via the Bash tool**, because each call spawns a long-running child CLI whose process tree cannot always be cleanly reaped by `timeout(1)` in a way the harness can observe. Run it directly from a real terminal, or schedule it as a Routine.
+- **Non-command handler live probes are sentinel-only or escalated.** Claude supports five handler types in current docs, while Codex and Gemini document command hooks. This skill exposes the `--handler-type` switch now so validation artifacts can distinguish handler classes, but only command hooks have cross-host live-dispatch proof in this sprint.
 
 ## Future work
 

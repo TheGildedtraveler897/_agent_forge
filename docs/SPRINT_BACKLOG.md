@@ -1,6 +1,6 @@
 # Sprint Backlog — Codex Execution Prompts
 
-**Last updated:** 2026-04-26.
+**Last updated:** 2026-04-27.
 **Audience:** Codex (CLI agent picking up the next sprint cold).
 **Authority:** This file is the contract between the Founder and the executing agent. Each sprint section below is a complete, copy-pasteable execution prompt. Prompts include required reads, web-search obligations, architectural rules, exit gates, and stall warnings.
 
@@ -18,8 +18,8 @@
 | Sprint | Title | Status |
 |---|---|---|
 | Sprint 1 | C1 Hotfix + B1 live-hook-prober | ✅ Shipped 2026-04-26 |
-| **Sprint 2** | **A1 Hook Lifecycle V2** | **Ready for Codex** |
-| **Sprint 3** | **A2 + B2 Memory Bridge** | **Ready for Codex (after Sprint 2)** |
+| Sprint 2 | A1 Hook Lifecycle V2 | ✅ Shipped 2026-04-27 |
+| **Sprint 3** | **A2 + B2 Memory Bridge** | **Ready for Codex** |
 | **Sprint 4** | **A3 MCP Namespace Prefixing** | **Ready for Codex (after Sprint 3)** |
 | Sprint 5+ | (summaries below) | Future |
 

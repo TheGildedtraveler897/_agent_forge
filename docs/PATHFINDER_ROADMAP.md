@@ -39,7 +39,7 @@ Render every canonical hook into all 26 native event names per host. Add 5 handl
 
 Schema bump: `policies/hooks.json` v2 → v3.
 
-**Status:** Sprint 2 in `docs/SPRINT_BACKLOG.md`. Depends on Sprint 1's tightened `hook_surface_for` (shipped).
+**Status:** ✅ Shipped 2026-04-27. `policies/hooks.json` v3, Codex PascalCase event-key fix, v3 handler schema, full curated event allow-list, per-record `hook_surface_for` validation. Evidence: `runtime/validation/triad/20260427-084059/`. **Known incomplete:** non-command handler live-dispatch sentinels are not yet real cross-host proof; Codex and Gemini currently render command hooks only per current docs.
 
 ### A2. Cross-Host Auto-Memory Bridge
 
@@ -183,7 +183,7 @@ The dependency graph imposes the following order. Each sprint follows the establ
 | Sprint | Title | Key deliverables |
 |---|---|---|
 | **Sprint 1** | C1 Hotfix + B1 live-hook-prober | ✅ Shipped 2026-04-26 (commits `f2cea42` + `a15200f`) |
-| **Sprint 2** | A1 Hook Lifecycle V2 | Full 26-event coverage + 5 handler types + async + permission_updates |
+| **Sprint 2** | A1 Hook Lifecycle V2 | ✅ Shipped 2026-04-27 (`policies/hooks.json` v3 + Codex event-key fix + per-record hook surface gate) |
 | **Sprint 3** | A2 + B2 Memory Bridge | Bidirectional native ↔ canonical bridge |
 | **Sprint 4** | A3 MCP Namespace Prefixing | `forge.<service>.<tool>` canonical rendering across hosts |
 | **Sprint 5** | A4 + B3 Orchestration Log + Cost Warden | Audit-grade per-session log + budget enforcement |
@@ -201,7 +201,7 @@ The dependency graph imposes the following order. Each sprint follows the establ
 
 **Architectural Upgrade #1 — Cross-Agent Memory Exchange.** ✅ Shipped 2026-04-25. `policies/memory.json` v1; `MEMORY.md` + `.forge_state/` rendered into all six governed projects; Gemini `@MEMORY.md` import; AGENTS.md Read Order entry #5 covers Claude/Codex; `memory_surface_for` triad gate. Evidence: `runtime/validation/triad/20260425-174222/`. **Known incomplete:** native auto-memory bridge (now A2 above, Sprint 3).
 
-**Architectural Upgrade #2 — Unified Hook Lifecycle.** ✅ Shipped 2026-04-24, hardened 2026-04-26. Gemini event-name correctness BLOCKER (C1) is now fixed (Sprint 1, commit `f2cea42`); `_EVENT_ALIASES["gemini"]` corrected to PascalCase per Gemini CLI v0.39, and `hook_surface_for()` tightened to also require the per-host expected event key. Live invocation gate via `live-hook-prober` (B1) closes vulnerability C2. Evidence: `runtime/validation/triad/20260424-205818/` + `runtime/validation/triad/20260426-035206/` + `runtime/validation/hook-probe/20260426-035313/gemini/`. **Still incomplete:** handler diversity (currently command-only of 5 types), async/asyncRewake, permission_updates — all land with A1 in Sprint 2.
+**Architectural Upgrade #2 — Unified Hook Lifecycle.** ✅ Shipped 2026-04-24, hardened 2026-04-26 and 2026-04-27. Gemini event-name correctness BLOCKER (C1) is fixed (Sprint 1, commit `f2cea42`); `_EVENT_ALIASES["gemini"]` corrected to PascalCase per Gemini CLI v0.39. Sprint 2 then fixed Codex event-key casing to PascalCase and replaced the one-key hook surface check with per-active-record expected event-key validation. Live invocation gate via `live-hook-prober` (B1) closes vulnerability C2 for command hooks. Evidence: `runtime/validation/triad/20260424-205818/` + `runtime/validation/triad/20260426-035206/` + `runtime/validation/hook-probe/20260426-035313/gemini/` + `runtime/validation/triad/20260427-084059/`. **Still incomplete:** non-command handler live-dispatch sentinels are not yet cross-host proof; Codex and Gemini currently render command hooks only per current docs.
 
 **Capability #1 — `memory-archivist`.** ✅ Shipped 2026-04-25. `append`/`validate`/`summary` subcommands; secrets-deny patterns; audit log; wired into `improvement-team`. **Known incomplete:** does not yet bridge to host-native auto-memory (B2, Sprint 3).
 

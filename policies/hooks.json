@@ -1,19 +1,82 @@
 {
-  "version": 2,
-  "description": "Canonical hook inventory. Renderers translate each record into the host's native format. Events use snake_case (pre_tool_use, post_tool_use, pre_commit, post_edit, session_start, stop). A record in 'shared' applies to every host listed in its 'targets' array; host-specific arrays carry hooks that only make sense on one host.",
+  "version": 3,
+  "description": "Canonical hook inventory. Renderers translate each record into the host's native format. Events use snake_case canonical ids and host allow-lists convert to native event keys. V3 records use explicit handler objects; v2 command records are accepted only as a compatibility path.",
   "shared": [
     {
       "id": "pre-tool-execution-guardian",
       "description": "Universal pre-tool guardrail. Blocks destructive invocations such as --no-verify, force-push-to-main, and wildcard home deletion. Opt out per-session with AGENT_FORGE_GUARDIAN=off.",
       "event": "pre_tool_use",
       "matcher": "Bash",
-      "command": "bash ~/Projects/_agent_forge/skills/global/telemetry-guardian/guardian.sh",
+      "handler": {
+        "type": "command",
+        "command": "bash ~/Projects/_agent_forge/skills/global/telemetry-guardian/guardian.sh"
+      },
       "targets": ["claude", "codex", "gemini"],
       "timeout_ms": 5000,
       "status_message": "telemetry-guardian vetting tool invocation"
     }
   ],
-  "claude": [],
+  "claude": [
+    {
+      "id": "example-http-audit",
+      "enabled": false,
+      "description": "Dormant v3 schema example for Claude HTTP hook rendering.",
+      "event": "post_tool_use",
+      "matcher": "Write|Edit",
+      "handler": {
+        "type": "http",
+        "url": "http://127.0.0.1:9/agent-forge/example-hook",
+        "headers": {},
+        "allowed_env_vars": []
+      },
+      "targets": ["claude"],
+      "timeout_ms": 30000
+    },
+    {
+      "id": "example-mcp-tool-audit",
+      "enabled": false,
+      "description": "Dormant v3 schema example for Claude MCP tool hook rendering.",
+      "event": "post_tool_use",
+      "matcher": "Write|Edit",
+      "handler": {
+        "type": "mcp_tool",
+        "server": "example",
+        "tool": "audit_file",
+        "input": {
+          "file_path": "${tool_input.file_path}"
+        }
+      },
+      "targets": ["claude"],
+      "timeout_ms": 30000
+    },
+    {
+      "id": "example-prompt-review",
+      "enabled": false,
+      "description": "Dormant v3 schema example for Claude prompt hook rendering.",
+      "event": "stop",
+      "matcher": "",
+      "handler": {
+        "type": "prompt",
+        "prompt": "Review the hook input JSON and return a yes/no JSON decision.",
+        "model": "fast"
+      },
+      "targets": ["claude"],
+      "timeout_ms": 30000
+    },
+    {
+      "id": "example-agent-review",
+      "enabled": false,
+      "description": "Dormant v3 schema example for Claude agent hook rendering.",
+      "event": "stop",
+      "matcher": "",
+      "handler": {
+        "type": "agent",
+        "prompt": "Inspect the changed files and report whether a policy issue exists."
+      },
+      "targets": ["claude"],
+      "timeout_ms": 60000
+    }
+  ],
   "codex": [],
   "gemini": []
 }

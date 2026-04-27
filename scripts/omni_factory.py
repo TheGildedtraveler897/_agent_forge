@@ -570,14 +570,86 @@ def user_mcp_servers() -> list[dict[str, Any]]:
     return [server for server in load_mcp_servers() if server["scope"] == "user"]
 
 
-_EVENT_ALIASES = {
+HOOK_TARGETS = ("claude", "codex", "gemini")
+HOOK_HANDLER_TYPES = ("command", "http", "mcp_tool", "prompt", "agent")
+
+_EVENT_ALIASES: dict[str, dict[str, str | None]] = {
     "claude": {
         "pre_tool_use": "PreToolUse",
         "post_tool_use": "PostToolUse",
+        "permission_request": "PermissionRequest",
+        "permission_denied": "PermissionDenied",
+        "post_tool_use_failure": "PostToolUseFailure",
+        "post_tool_batch": "PostToolBatch",
+        "user_prompt_submit": "UserPromptSubmit",
+        "user_prompt_expansion": "UserPromptExpansion",
+        "notification": "Notification",
+        "subagent_start": "SubagentStart",
+        "subagent_stop": "SubagentStop",
+        "task_created": "TaskCreated",
+        "task_completed": "TaskCompleted",
+        "stop_failure": "StopFailure",
+        "teammate_idle": "TeammateIdle",
+        "instructions_loaded": "InstructionsLoaded",
+        "config_change": "ConfigChange",
+        "cwd_changed": "CwdChanged",
+        "file_changed": "FileChanged",
+        "worktree_create": "WorktreeCreate",
+        "worktree_remove": "WorktreeRemove",
+        "pre_compact": "PreCompact",
+        "post_compact": "PostCompact",
+        "elicitation": "Elicitation",
+        "elicitation_result": "ElicitationResult",
+        "session_end": "SessionEnd",
         "pre_commit": "PreToolUse",
         "post_edit": "PostToolUse",
         "session_start": "SessionStart",
         "stop": "Stop",
+        "before_agent": None,
+        "after_agent": None,
+        "before_model": None,
+        "after_model": None,
+        "before_tool_selection": None,
+    },
+    "codex": {
+        # Codex hook docs now use PascalCase event keys in hooks.json. The
+        # prior snake_case rendering was a silent-correctness risk mirroring
+        # the Gemini BeforeTool drift fixed in Sprint 1.
+        "pre_tool_use": "PreToolUse",
+        "post_tool_use": "PostToolUse",
+        "permission_request": "PermissionRequest",
+        "user_prompt_submit": "UserPromptSubmit",
+        "session_start": "SessionStart",
+        "stop": "Stop",
+        "pre_commit": "PreToolUse",
+        "post_edit": "PostToolUse",
+        "permission_denied": None,
+        "post_tool_use_failure": None,
+        "post_tool_batch": None,
+        "user_prompt_expansion": None,
+        "notification": None,
+        "subagent_start": None,
+        "subagent_stop": None,
+        "task_created": None,
+        "task_completed": None,
+        "stop_failure": None,
+        "teammate_idle": None,
+        "instructions_loaded": None,
+        "config_change": None,
+        "cwd_changed": None,
+        "file_changed": None,
+        "worktree_create": None,
+        "worktree_remove": None,
+        "pre_compact": None,
+        "post_compact": None,
+        "elicitation": None,
+        "elicitation_result": None,
+        "session_end": None,
+        "before_agent": None,
+        "after_agent": None,
+        "before_model": None,
+        "after_model": None,
+        "before_tool_selection": None,
     },
     "gemini": {
         # Corrected 2026-04-25 (Sprint 1 / C1 fix). Gemini CLI v0.39 expects
@@ -592,39 +664,179 @@ _EVENT_ALIASES = {
         "pre_commit": "BeforeTool",
         "post_edit": "AfterTool",
         "session_start": "SessionStart",
+        "session_end": "SessionEnd",
         "stop": "SessionEnd",
+        "before_agent": "BeforeAgent",
+        "after_agent": "AfterAgent",
+        "before_model": "BeforeModel",
+        "after_model": "AfterModel",
+        "before_tool_selection": "BeforeToolSelection",
+        "notification": "Notification",
+        "pre_compact": "PreCompress",
+        "permission_request": None,
+        "permission_denied": None,
+        "post_tool_use_failure": None,
+        "post_tool_batch": None,
+        "user_prompt_submit": None,
+        "user_prompt_expansion": None,
+        "subagent_start": None,
+        "subagent_stop": None,
+        "task_created": None,
+        "task_completed": None,
+        "stop_failure": None,
+        "teammate_idle": None,
+        "instructions_loaded": None,
+        "config_change": None,
+        "cwd_changed": None,
+        "file_changed": None,
+        "worktree_create": None,
+        "worktree_remove": None,
+        "post_compact": None,
+        "elicitation": None,
+        "elicitation_result": None,
     },
 }
 
 
-def _hooks_for_host(host: str) -> list[dict[str, Any]]:
+CANONICAL_HOOK_EVENTS = frozenset(
+    event for aliases in _EVENT_ALIASES.values() for event in aliases
+)
+
+
+def native_hook_event(host: str, event: str) -> str | None:
+    aliases = _EVENT_ALIASES.get(host)
+    if aliases is None:
+        raise KeyError(f"unknown hook host: {host}")
+    return aliases.get(event)
+
+
+def normalize_hook_record(record: dict[str, Any], bucket: str) -> dict[str, Any]:
+    handler = record.get("handler")
+    if handler is None and record.get("command"):
+        handler = {"type": "command", "command": record["command"]}
+    if not isinstance(handler, dict):
+        handler = {}
+
+    if "targets" in record:
+        targets = list(record.get("targets") or [])
+    elif bucket in HOOK_TARGETS:
+        targets = [bucket]
+    else:
+        targets = list(HOOK_TARGETS)
+
+    normalized = dict(record)
+    normalized["handler"] = dict(handler)
+    normalized["targets"] = targets
+    normalized["enabled"] = bool(record.get("enabled", True))
+    return normalized
+
+
+def _all_hook_records(include_disabled: bool = False) -> list[dict[str, Any]]:
     payload = load_json(HOOKS_PATH)
+    records: list[dict[str, Any]] = []
+    for bucket in ("shared", "claude", "codex", "gemini"):
+        for record in (payload.get(bucket) or []):
+            normalized = normalize_hook_record(record, bucket)
+            normalized["_bucket"] = bucket
+            if include_disabled or normalized["enabled"]:
+                records.append(normalized)
+    return records
+
+
+def _hooks_for_host(host: str, include_disabled: bool = False) -> list[dict[str, Any]]:
     out: list[dict[str, Any]] = []
-    for record in (payload.get("shared") or []):
-        targets = record.get("targets") or ["claude", "codex", "gemini"]
-        if host in targets:
+    for record in _all_hook_records(include_disabled=include_disabled):
+        if not record["enabled"] and not include_disabled:
+            continue
+        if host in record.get("targets", []):
             out.append(record)
-    for record in (payload.get(host) or []):
-        out.append(record)
     return out
+
+
+def _timeout_seconds(timeout_ms: int | None) -> int | None:
+    if not timeout_ms:
+        return None
+    return max(1, int((timeout_ms + 999) / 1000))
+
+
+def _render_claude_handler(hook: dict[str, Any]) -> dict[str, Any]:
+    handler = hook["handler"]
+    handler_type = handler.get("type")
+    rendered: dict[str, Any] = {"type": handler_type}
+    if hook.get("if"):
+        rendered["if"] = hook["if"]
+    if hook.get("status_message"):
+        rendered["statusMessage"] = hook["status_message"]
+    timeout = _timeout_seconds(hook.get("timeout_ms"))
+    if timeout:
+        rendered["timeout"] = timeout
+
+    if handler_type == "command":
+        rendered["command"] = handler.get("command", "")
+        if hook.get("async"):
+            rendered["async"] = True
+        if hook.get("async_rewake"):
+            rendered["async"] = True
+            rendered["asyncRewake"] = True
+    elif handler_type == "http":
+        rendered["url"] = handler.get("url", "")
+        if handler.get("headers"):
+            rendered["headers"] = handler["headers"]
+        if handler.get("allowed_env_vars"):
+            rendered["allowedEnvVars"] = handler["allowed_env_vars"]
+    elif handler_type == "mcp_tool":
+        rendered["server"] = handler.get("server", "")
+        rendered["tool"] = handler.get("tool", "")
+        if handler.get("input"):
+            rendered["input"] = handler["input"]
+    elif handler_type in {"prompt", "agent"}:
+        rendered["prompt"] = handler.get("prompt", "")
+        if handler_type == "prompt" and handler.get("model"):
+            rendered["model"] = handler["model"]
+    return rendered
+
+
+def _render_command_handler_for_host(hook: dict[str, Any], host: str) -> dict[str, Any] | None:
+    handler = hook["handler"]
+    if handler.get("type") != "command":
+        return None
+
+    if host == "gemini":
+        rendered: dict[str, Any] = {
+            "type": "command",
+            "command": handler.get("command", ""),
+            "name": hook.get("id", ""),
+        }
+        if hook.get("timeout_ms"):
+            rendered["timeout"] = hook["timeout_ms"]
+        if hook.get("description"):
+            rendered["description"] = hook["description"]
+        return rendered
+
+    rendered = {
+        "type": "command",
+        "command": handler.get("command", ""),
+    }
+    if hook.get("status_message"):
+        rendered["statusMessage"] = hook["status_message"]
+    timeout = _timeout_seconds(hook.get("timeout_ms"))
+    if timeout:
+        rendered["timeout"] = timeout
+    return rendered
 
 
 def codex_hook_payload() -> dict[str, Any]:
     hooks = _hooks_for_host("codex")
     grouped: dict[str, list[dict[str, Any]]] = {"hooks": {}}
     for hook in hooks:
-        event = hook["event"]
+        event = native_hook_event("codex", hook["event"])
+        handler = _render_command_handler_for_host(hook, "codex")
+        if event is None or handler is None:
+            continue
         grouped["hooks"].setdefault(event, []).append(
             {
                 "matcher": hook.get("matcher", ""),
-                "hooks": [
-                    {
-                        "type": "command",
-                        "command": hook["command"],
-                        **({"statusMessage": hook["status_message"]} if hook.get("status_message") else {}),
-                        **({"timeout": hook.get("timeout_ms") or hook.get("timeout")} if (hook.get("timeout_ms") or hook.get("timeout")) else {}),
-                    }
-                ],
+                "hooks": [handler],
             }
         )
     return grouped
@@ -634,15 +846,13 @@ def claude_hook_payload() -> dict[str, list[dict[str, Any]]]:
     hooks = _hooks_for_host("claude")
     grouped: dict[str, list[dict[str, Any]]] = {}
     for hook in hooks:
-        native_event = _EVENT_ALIASES["claude"].get(hook["event"], hook["event"])
+        native_event = native_hook_event("claude", hook["event"])
+        if native_event is None:
+            continue
         entry: dict[str, Any] = {
             "matcher": hook.get("matcher", ""),
-            "hooks": [
-                {"type": "command", "command": hook["command"]},
-            ],
+            "hooks": [_render_claude_handler(hook)],
         }
-        if hook.get("timeout_ms"):
-            entry["hooks"][0]["timeout"] = hook["timeout_ms"]
         grouped.setdefault(native_event, []).append(entry)
     return grouped
 
@@ -651,15 +861,16 @@ def gemini_hook_payload() -> dict[str, list[dict[str, Any]]]:
     hooks = _hooks_for_host("gemini")
     grouped: dict[str, list[dict[str, Any]]] = {}
     for hook in hooks:
-        native_event = _EVENT_ALIASES["gemini"].get(hook["event"], hook["event"])
+        native_event = native_hook_event("gemini", hook["event"])
+        handler = _render_command_handler_for_host(hook, "gemini")
+        if native_event is None or handler is None:
+            continue
         entry: dict[str, Any] = {
             "matcher": hook.get("matcher", ""),
-            "command": hook["command"],
+            "hooks": [handler],
         }
-        if hook.get("timeout_ms"):
-            entry["timeoutMs"] = hook["timeout_ms"]
-        if hook.get("description"):
-            entry["description"] = hook["description"]
+        if "sequential" in hook:
+            entry["sequential"] = bool(hook["sequential"])
         grouped.setdefault(native_event, []).append(entry)
     return grouped
 
@@ -1162,6 +1373,9 @@ def verify() -> int:
         print(f"[FAIL] {message}")
         status = 1
 
+    def warn(message: str) -> None:
+        print(f"[WARN] {message}")
+
     required_paths = [
         ROOT / "scripts" / "bootstrap-project.sh",
         ROOT / "scripts" / "bootstrap-workstation.sh",
@@ -1238,19 +1452,69 @@ def verify() -> int:
         fail(f"policies/hooks.json does not parse: {exc}")
     else:
         ok("policies/hooks.json parses")
+        if hooks_payload.get("version") == 2:
+            warn("policies/hooks.json is schema v2; v3 handler records are preferred")
+        elif hooks_payload.get("version") != 3:
+            fail(f"policies/hooks.json unsupported version: {hooks_payload.get('version')}")
         for bucket in ("shared", "claude", "codex", "gemini"):
             for hook in (hooks_payload.get(bucket) or []):
-                for key in ("id", "event", "command"):
-                    if not hook.get(key):
+                normalized = normalize_hook_record(hook, bucket)
+                for key in ("id", "event"):
+                    if not normalized.get(key):
                         fail(f"hooks.json[{bucket}] record missing '{key}': {hook}")
-                cmd = (hook.get("command") or "").strip()
-                if cmd.startswith("bash "):
-                    script_ref = cmd.split(None, 1)[1].split()[0]
-                    resolved = Path(script_ref.replace("~", str(Path.home())))
-                    if not resolved.exists():
-                        fail(f"hooks.json '{hook.get('id')}' command script missing: {resolved}")
-                    else:
-                        ok(f"Hook script present: {hook.get('id')} -> {resolved.relative_to(Path.home()) if resolved.is_relative_to(Path.home()) else resolved}")
+
+                event = normalized.get("event")
+                if event and event not in CANONICAL_HOOK_EVENTS:
+                    fail(f"hooks.json[{bucket}] unknown canonical event '{event}': {hook}")
+
+                targets = normalized.get("targets") or []
+                bad_targets = [target for target in targets if target not in HOOK_TARGETS]
+                if bad_targets:
+                    fail(f"hooks.json[{bucket}] invalid targets {bad_targets}: {hook}")
+                if normalized["enabled"] and not targets:
+                    fail(f"hooks.json[{bucket}] enabled record has no targets: {hook}")
+
+                handler = normalized.get("handler") or {}
+                handler_type = handler.get("type")
+                if handler_type not in HOOK_HANDLER_TYPES:
+                    fail(f"hooks.json[{bucket}] invalid handler.type '{handler_type}': {hook}")
+                    continue
+
+                if normalized.get("async_rewake") and not normalized.get("async"):
+                    fail(f"hooks.json[{bucket}] async_rewake requires async=true: {hook}")
+                if normalized.get("async") and handler_type != "command":
+                    warn(f"hooks.json[{bucket}] async ignored for non-command hook: {normalized.get('id')}")
+
+                for target in targets:
+                    native_event = native_hook_event(target, event) if event else None
+                    if native_event is None and normalized["enabled"]:
+                        warn(f"hooks.json[{bucket}] {normalized.get('id')} event '{event}' is unsupported on {target}; renderer skips it")
+                    if handler_type != "command" and target in {"codex", "gemini"} and normalized["enabled"]:
+                        warn(f"hooks.json[{bucket}] {normalized.get('id')} handler '{handler_type}' is unsupported on {target}; renderer skips it")
+
+                if handler_type == "command":
+                    cmd = (handler.get("command") or "").strip()
+                    if not cmd:
+                        fail(f"hooks.json[{bucket}] command handler missing command: {hook}")
+                        continue
+                    if not normalized["enabled"]:
+                        continue
+                    if cmd.startswith("bash "):
+                        script_ref = cmd.split(None, 1)[1].split()[0]
+                        resolved = Path(script_ref.replace("~", str(Path.home())))
+                        if not resolved.exists():
+                            fail(f"hooks.json '{normalized.get('id')}' command script missing: {resolved}")
+                        else:
+                            ok(f"Hook script present: {normalized.get('id')} -> {resolved.relative_to(Path.home()) if resolved.is_relative_to(Path.home()) else resolved}")
+                elif handler_type == "http":
+                    if not handler.get("url"):
+                        fail(f"hooks.json[{bucket}] http handler missing url: {hook}")
+                elif handler_type == "mcp_tool":
+                    if not handler.get("server") or not handler.get("tool"):
+                        fail(f"hooks.json[{bucket}] mcp_tool handler missing server/tool: {hook}")
+                elif handler_type in {"prompt", "agent"}:
+                    if not handler.get("prompt"):
+                        fail(f"hooks.json[{bucket}] {handler_type} handler missing prompt: {hook}")
 
     if MEMORY_POLICY_PATH.exists():
         try:

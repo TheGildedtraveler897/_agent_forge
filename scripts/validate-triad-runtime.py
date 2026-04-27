@@ -31,6 +31,9 @@ REGISTRY_PATH = ROOT / "registry.json"
 PROJECTS_CATALOG_PATH = ROOT / "projects.json"
 MATRIX_PATH = ROOT / "runtime" / "validation-matrix.json"
 
+sys.path.insert(0, str(ROOT / "scripts"))
+import omni_factory  # noqa: E402
+
 
 def utc_stamp() -> str:
     return datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
@@ -222,23 +225,30 @@ def _expected_guardian_id() -> str:
     return "pre-tool-execution-guardian"
 
 
-# Per-host canonical event name we expect to find as a key in the rendered
-# hooks payload for the seeded pre-tool-execution-guardian. The Sprint 1
-# (2026-04-25) hardening adds an event-name check on top of the existing
-# substring command-path check, so a host-event-name drift (e.g. Gemini's
-# 2026-04 BeforeTool / AfterTool / SessionStart names vs. our older
-# preToolUse / postToolUse aliases) cannot silently pass surface validation.
-_EXPECTED_HOOK_EVENT_KEY = {
-    "claude": "PreToolUse",
-    # Codex hooks.json is keyed by snake_case canonical event ids.
-    "codex": "pre_tool_use",
-    "gemini": "BeforeTool",
-}
+def expected_hook_records_for(host: str) -> list[dict]:
+    records: list[dict] = []
+    for hook in omni_factory._hooks_for_host(host):
+        native_event = omni_factory.native_hook_event(host, hook["event"])
+        handler_type = (hook.get("handler") or {}).get("type")
+        if native_event is None:
+            continue
+        if host in {"codex", "gemini"} and handler_type != "command":
+            continue
+        records.append(
+            {
+                "id": hook.get("id"),
+                "event": hook.get("event"),
+                "native_event": native_event,
+                "handler_type": handler_type,
+            }
+        )
+    return records
 
 
 def hook_surface_for(host: str, project_root: Path) -> dict:
     expected_id = _expected_guardian_id()
-    expected_event_key = _EXPECTED_HOOK_EVENT_KEY.get(host)
+    expected_records = expected_hook_records_for(host)
+    expected_event_keys = sorted({record["native_event"] for record in expected_records})
     try:
         if host == "claude":
             path = project_root / ".claude" / "settings.json"
@@ -269,17 +279,18 @@ def hook_surface_for(host: str, project_root: Path) -> dict:
         return {"pass": False, "reason": f"parse error: {exc}"}
 
     guardian_present = "telemetry-guardian" in body or "guardian.sh" in body
-    event_key_present = (
-        expected_event_key is not None and expected_event_key in event_keys
-    )
+    missing_event_keys = [key for key in expected_event_keys if key not in event_keys]
+    event_keys_present = not missing_event_keys
     return {
-        "pass": guardian_present and event_key_present,
+        "pass": guardian_present and event_keys_present,
         "path": str(path),
         "guardian_present": guardian_present,
         "expected_hook_id": expected_id,
-        "expected_event_key": expected_event_key,
+        "expected_hook_records": expected_records,
+        "expected_event_keys": expected_event_keys,
         "observed_event_keys": event_keys,
-        "event_key_present": event_key_present,
+        "missing_event_keys": missing_event_keys,
+        "event_keys_present": event_keys_present,
     }
 
 
@@ -351,7 +362,12 @@ def memory_surface_for(host: str, project_root: Path) -> dict:
     }
 
 
-def live_hook_invocation_for(host: str, project_root: Path, evidence_dir: Path) -> dict:
+def live_hook_invocation_for(
+    host: str,
+    project_root: Path,
+    evidence_dir: Path,
+    handler_type: str = "command",
+) -> dict:
     """Fire a known-blocked Bash invocation on the target host CLI and report
     whether the seeded telemetry-guardian hook actually intercepted it.
 
@@ -384,6 +400,8 @@ def live_hook_invocation_for(host: str, project_root: Path, evidence_dir: Path) 
         test_command,
         "--expect",
         expect,
+        "--handler-type",
+        handler_type,
         "--evidence-root",
         str(evidence_dir),
         "--timeout",
@@ -411,6 +429,7 @@ def live_hook_invocation_for(host: str, project_root: Path, evidence_dir: Path) 
     return {
         "pass": overall_pass,
         "host": host,
+        "handler_type": handler_type,
         "command": test_command,
         "expected": expect,
         "observed": observed,

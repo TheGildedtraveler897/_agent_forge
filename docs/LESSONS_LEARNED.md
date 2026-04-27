@@ -1,5 +1,5 @@
 # Lessons Learned
-Last updated: 2026-04-26 (Sprint 1: Gemini hook-alias hotfix + live-hook-prober + headless-CLI live-probe limitation)
+Last updated: 2026-04-27 (Sprint 2: Hook Lifecycle V2 + Codex event-key drift)
 
 This file is the append-first knowledge anchor for Agent Forge.
 
@@ -142,4 +142,14 @@ This file is the append-first knowledge anchor for Agent Forge.
 - `Architectural Decision:` (a) `prober.sh` `run_claude()` uses `--permission-mode default` (NOT `--dangerously-skip-permissions`) with a short 30s timeout. On hang or permission-denied, returns `headless_permission_constraint` and escalates. (b) Validator integration accepts escalated as pass for the gate (matches Codex sandbox-block doctrine) so the triad doesn't FAIL on inherent CLI limitations. (c) Roadmap dependency added: real Claude live-probing is gated on `forge-shell` (B4) which provides a persistent shell session that `claude -p` cannot. (d) `SKILL.md` gains a "Known limitations" section documenting all three escalation modes and the harness-invocation warning.
 - `Evidence:` `skills/global/live-hook-prober/prober.sh` `run_claude()` with `--permission-mode default` + 30s timeout + headless_permission_constraint detection; `skills/global/live-hook-prober/SKILL.md` § Known limitations + Future work; two stuck `claude` PIDs (11660, killed) observed during the sprint; the leftover-child stall pattern reproduces reliably in this harness.
 - `Promotion Target:` `AGENTS.md` Operator Tips — add a short rule "do not invoke long-running CLI tool calls transitively through a Claude Code session's Bash tool; run them in a real terminal or as a Routine". Promote after the next sprint confirms the rule (Sprint 2 / Hook Lifecycle V2 will likely surface more long-running probe calls).
+- `Status:` active
+
+### 2026-04-27 - Codex Hook Event Keys Drifted To PascalCase; Validate Every Active Hook Record
+
+- `Date:` 2026-04-27
+- `Context:` Sprint 2 upgraded `policies/hooks.json` to schema v3 and rechecked current host hook docs. The official Codex hook reference now shows `.codex/hooks.json` keys such as `PreToolUse`, `PermissionRequest`, `PostToolUse`, `UserPromptSubmit`, `SessionStart`, and `Stop`; the factory was still rendering Codex project hooks under snake_case keys such as `pre_tool_use`.
+- `Lesson:` Gemini was not a one-off. Host hook event names are a curated semantic boundary across all three CLIs, and any host can drift. Surface validation must derive expected native event keys from every active policy record, not from one hardcoded guardian key or a substring search against a command path.
+- `Architectural Decision:` `policies/hooks.json` is now v3 with explicit `handler` objects. `scripts/omni_factory.py` normalizes v2 records, maps Codex `pre_tool_use` to `PreToolUse`, exposes a full canonical event allow-list, translates `timeout_ms` per host, and renders Gemini hooks in the current nested `hooks` shape. `scripts/validate-triad-runtime.py` now computes `expected_hook_records` for each host and fails if any active record's native event key is missing. Non-command handler examples are present but disabled until host-safe sentinels exist; Claude renders all five handler types, while current Codex/Gemini docs only justify active command rendering.
+- `Evidence:` `docs/SPRINT2_DESIGN.md`; `tests/test_hooks_v3.py` RED/GREEN (`python3 -m unittest tests.test_hooks_v3`, exit 0 after patch); `policies/hooks.json` v3; generated Jarvis surfaces show Claude `PreToolUse`, Codex `PreToolUse`, Gemini `BeforeTool`; `python3 scripts/verify-agent-forge.py` exit 0; `runtime/validation/triad/20260427-084059/summary.json` (`overall pass=true`, expected 30 skills, all hosts `hook_pass=true memory_pass=true`, Codex `expected_event_keys:["PreToolUse"]` and `sandbox_blocked:true` with filesystem evidence).
+- `Promotion Target:` `docs/CONOPS.md` §Validation Gate — promote "every cross-host semantic surface gets a curated allow-list and per-record validator check" after the same pattern is applied to MCP namespace prefixing.
 - `Status:` active
