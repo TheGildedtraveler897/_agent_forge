@@ -43,11 +43,11 @@ Schema bump: `policies/hooks.json` v2 → v3.
 
 ### A2. Cross-Host Auto-Memory Bridge
 
-Bridge our canonical `<project>/MEMORY.md` to each host's native auto-memory store: Claude's `~/.claude/projects/<project>/memory/MEMORY.md`, Gemini's experimental Auto Memory, Codex's `codex resume` thread state + AGENTS.md auto-discovery. Outbound (canonical → native) injects on `SessionStart`. Inbound (native → canonical) harvests on `Stop` / `SessionEnd`. Append-first; `active_tasks` rewriteable; secrets-deny re-applied at the bridge layer.
+Bridge canonical `<project>/MEMORY.md` to host-local memory surfaces: Claude's true machine-local auto-memory index, plus Codex and Gemini project sidecars where no stable project fact-memory file exists. Outbound (canonical → host-local) injects on `SessionStart`. Inbound (host-local → canonical) harvests on `Stop` / `SessionEnd`. Append-first; `active_tasks` rewriteable through `memory-archivist`; secrets-deny re-applied at the bridge layer.
 
 Schema additions: `policies/memory.json` gains a `bridge` block. New `<project>/.forge_state/bridge.json` for state.
 
-**Status:** Sprint 3 in `docs/SPRINT_BACKLOG.md`. Depends on A1 (Stop / SessionStart hooks rendered correctly across hosts).
+**Status:** ✅ Shipped 2026-04-27. `policies/memory.json` v2, `memory-bridge` skill, host-specific async SessionStart/Stop hook records, per-project `.forge_state/bridge.json` + `bridge.log`, bridge-aware verifier, and triad `bridge_pass` gate. Evidence: `runtime/validation/triad/20260427-203021/`.
 
 ### A3. MCP Namespace Prefixing & Routing — canonical-first
 
@@ -98,7 +98,7 @@ Skills and agents that exercise the architectural upgrades. Cross-references eac
 | ID | Skill | Depends on | Priority | Status |
 |---|---|---|---|---|
 | **B1** | `live-hook-prober` | A1 | Highest | ✅ Shipped 2026-04-26 |
-| **B2** | `memory-bridge` | A1 + A2 | High | Sprint 3 |
+| **B2** | `memory-bridge` | A1 + A2 | High | ✅ Shipped 2026-04-27 |
 | **B3** | `cost-warden` | A4 | High | Sprint 5+ |
 | **B4** | `forge-shell` | A2 + telemetry-guardian | High | Sprint 6+ |
 | **B5** | `routine-auditor` | A4 + A6 | High | Sprint 7+ |
@@ -131,7 +131,7 @@ Bidirectional bridge between canonical `<project>/MEMORY.md` and each host's nat
 
 Surface: hook handler, not a slash command. Visible via `<project>/.forge_state/bridge.json` + `bridge.log`.
 
-**Sprint 3 in `docs/SPRINT_BACKLOG.md`.**
+**Status:** ✅ Shipped 2026-04-27. Surface: `bridge.py outbound|inbound|status`; state in `<project>/.forge_state/bridge.json`; audit in `bridge.log`. Codex and Gemini targets are project sidecars, not claims of native auto-memory loading.
 
 ### B3. `cost-warden`
 
@@ -193,7 +193,7 @@ The dependency graph imposes the following order. Each sprint follows the establ
 |---|---|---|
 | **Sprint 1** | C1 Hotfix + B1 live-hook-prober | ✅ Shipped 2026-04-26 (commits `f2cea42` + `a15200f`) |
 | **Sprint 2** | A1 Hook Lifecycle V2 | ✅ Shipped 2026-04-27 (`policies/hooks.json` v3 + Codex event-key fix + per-record hook surface gate) |
-| **Sprint 3** | A2 + B2 Memory Bridge | Bidirectional native ↔ canonical bridge |
+| **Sprint 3** | A2 + B2 Memory Bridge | ✅ Shipped 2026-04-27 (`bridge_pass` green on Claude/Codex/Gemini) |
 | **Sprint 4** | A3 MCP Namespace Prefixing | `forge.<service>.<tool>` canonical rendering across hosts |
 | **Sprint 5** | A4 + B3 Orchestration Log + Cost Warden | Audit-grade per-session log + budget enforcement |
 | **Sprint 6** | A5 + B4 forge-shell | Persistent bash primitive |
@@ -208,11 +208,11 @@ The dependency graph imposes the following order. Each sprint follows the establ
 
 ## Previously shipped — preserved status footnotes
 
-**Architectural Upgrade #1 — Cross-Agent Memory Exchange.** ✅ Shipped 2026-04-25. `policies/memory.json` v1; `MEMORY.md` + `.forge_state/` rendered into all six governed projects; Gemini `@MEMORY.md` import; AGENTS.md Read Order entry #5 covers Claude/Codex; `memory_surface_for` triad gate. Evidence: `runtime/validation/triad/20260425-174222/`. **Known incomplete:** native auto-memory bridge (now A2 above, Sprint 3).
+**Architectural Upgrade #1 — Cross-Agent Memory Exchange.** ✅ Shipped 2026-04-25, extended 2026-04-27. `policies/memory.json` v2; `MEMORY.md` + `.forge_state/` rendered into all six governed projects; Gemini `@MEMORY.md` import; AGENTS.md Read Order entry #5 covers Claude/Codex; `memory_surface_for` and `memory_bridge_for` triad gates. Evidence: `runtime/validation/triad/20260425-174222/` and `runtime/validation/triad/20260427-203021/`.
 
 **Architectural Upgrade #2 — Unified Hook Lifecycle.** ✅ Shipped 2026-04-24, hardened 2026-04-26 and 2026-04-27. Gemini event-name correctness BLOCKER (C1) is fixed (Sprint 1, commit `f2cea42`); `_EVENT_ALIASES["gemini"]` corrected to PascalCase per Gemini CLI v0.39. Sprint 2 then fixed Codex event-key casing to PascalCase and replaced the one-key hook surface check with per-active-record expected event-key validation. Live invocation gate via `live-hook-prober` (B1) closes vulnerability C2 for command hooks. Evidence: `runtime/validation/triad/20260424-205818/` + `runtime/validation/triad/20260426-035206/` + `runtime/validation/hook-probe/20260426-035313/gemini/` + `runtime/validation/triad/20260427-084059/`. **Still incomplete:** non-command handler live-dispatch sentinels are not yet cross-host proof; Codex and Gemini currently render command hooks only per current docs.
 
-**Capability #1 — `memory-archivist`.** ✅ Shipped 2026-04-25. `append`/`validate`/`summary` subcommands; secrets-deny patterns; audit log; wired into `improvement-team`. **Known incomplete:** does not yet bridge to host-native auto-memory (B2, Sprint 3).
+**Capability #1 — `memory-archivist`.** ✅ Shipped 2026-04-25. `append`/`validate`/`summary` subcommands; secrets-deny patterns; audit log; wired into `improvement-team`; now reused by `memory-bridge` inbound imports with file locking and atomic writes.
 
 **Capability #3 — `telemetry-guardian`.** ✅ Shipped 2026-04-24. POSIX `guardian.sh`; deny-list; bypass via `AGENT_FORGE_GUARDIAN=off` logged to `~/.agent-forge/guardian.log`. **Known incomplete:** allow-list pair (Nemotron pattern); persistent-cwd; HITL confirm — all land with `forge-shell` (B4 / A5, Sprint 6).
 

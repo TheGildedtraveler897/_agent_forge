@@ -5,6 +5,7 @@ import argparse
 import ast
 import json
 import os
+import shlex
 import shutil
 import subprocess
 import sys
@@ -176,6 +177,12 @@ def write_text(path: Path, content: str) -> None:
     ensure_parent(path)
     existing = path.read_text() if path.exists() else None
     if existing != content:
+        path.write_text(content)
+
+
+def write_text_if_missing(path: Path, content: str) -> None:
+    ensure_parent(path)
+    if not path.exists():
         path.write_text(content)
 
 
@@ -753,6 +760,19 @@ def _hooks_for_host(host: str, include_disabled: bool = False) -> list[dict[str,
     return out
 
 
+def hook_command_script_path(command: str) -> Path | None:
+    try:
+        parts = shlex.split(command)
+    except ValueError:
+        return None
+    if len(parts) < 2:
+        return None
+    runner = Path(parts[0]).name
+    if runner not in {"bash", "python", "python3"}:
+        return None
+    return Path(os.path.expanduser(parts[1]))
+
+
 def _timeout_seconds(timeout_ms: int | None) -> int | None:
     if not timeout_ms:
         return None
@@ -888,6 +908,51 @@ def _memory_policy() -> dict[str, Any]:
     return load_json(MEMORY_POLICY_PATH)
 
 
+def _memory_bridge_policy() -> dict[str, Any]:
+    bridge = _memory_policy().get("bridge") or {}
+    return dict(bridge) if isinstance(bridge, dict) else {}
+
+
+def memory_bridge_enabled() -> bool:
+    return bool(_memory_bridge_policy().get("enabled", False))
+
+
+def memory_bridge_hosts() -> list[str]:
+    return list(_memory_bridge_policy().get("hosts") or [])
+
+
+def claude_memory_bridge_project_slug(project_root: Path) -> str:
+    return str(project_root.resolve()).replace("/", "-")
+
+
+def memory_bridge_native_target(project_root: Path, host: str) -> Path:
+    if host == "claude":
+        return Path.home() / ".claude" / "projects" / claude_memory_bridge_project_slug(project_root) / "memory" / "MEMORY.md"
+    if host == "codex":
+        return project_root / ".codex" / "memory" / "AGENTS_MEMORY.md"
+    if host == "gemini":
+        return project_root / ".gemini" / "memory" / "MEMORY.md"
+    raise ValueError(f"unknown memory bridge host: {host}")
+
+
+def render_bridge_state(project_root: Path) -> str:
+    hosts = memory_bridge_hosts()
+    state = {
+        "version": 1,
+        "last_outbound": {},
+        "last_inbound": {},
+        "last_outbound_hash": {},
+        "last_inbound_diff_hash": {},
+        "imported_entry_hashes": {},
+        "native_targets": {
+            host: str(memory_bridge_native_target(project_root, host))
+            for host in hosts
+        },
+        "last_errors": {},
+    }
+    return json.dumps(state, indent=2, sort_keys=True) + "\n"
+
+
 def render_memory_md(project_root: Path) -> str:
     sections = _memory_sections()
     lines = [
@@ -933,6 +998,8 @@ def render_forge_state_readme() -> str:
             "",
             "- `manifest.json` — schema version, section list, and last-updated timestamp.",
             "- `archivist.log` — append-only audit trail produced by the `memory-archivist` skill.",
+            "- `bridge.json` — mutable memory bridge state for host-local synchronization.",
+            "- `bridge.log` — append-only JSONL audit trail produced by the `memory-bridge` skill.",
             "",
             "This directory is factory-managed. Do not edit `manifest.json` by hand; use the `memory-archivist` skill or re-run `python3 scripts/omni_factory.py sync-claude --project <name>` (or `sync-codex` / `sync-gemini`).",
             "",
@@ -957,6 +1024,9 @@ def render_forge_state_manifest(project_root: Path) -> str:
         "secrets_policy": policy.get("secrets_policy", "deny"),
         "last_updated": utc_now(),
     }
+    bridge = policy.get("bridge")
+    if bridge:
+        manifest["bridge"] = bridge
     return json.dumps(manifest, indent=2, sort_keys=True) + "\n"
 
 
@@ -971,6 +1041,9 @@ def sync_memory(project_root: Path, state: dict[str, Any]) -> None:
     forge_dir = project_root / ".forge_state"
     write_managed_text(forge_dir / "README.md", render_forge_state_readme(), "forge-state-readme", state)
     write_managed_text(forge_dir / "manifest.json", render_forge_state_manifest(project_root), "forge-state-manifest", state)
+    if memory_bridge_enabled():
+        write_text_if_missing(forge_dir / "bridge.json", render_bridge_state(project_root))
+        write_text_if_missing(forge_dir / "bridge.log", "")
 
 
 def render_claude_project_mcp(project_name: str) -> str | None:
@@ -1499,9 +1572,9 @@ def verify() -> int:
                         continue
                     if not normalized["enabled"]:
                         continue
-                    if cmd.startswith("bash "):
-                        script_ref = cmd.split(None, 1)[1].split()[0]
-                        resolved = Path(script_ref.replace("~", str(Path.home())))
+                    script_path = hook_command_script_path(cmd)
+                    if script_path is not None:
+                        resolved = script_path
                         if not resolved.exists():
                             fail(f"hooks.json '{normalized.get('id')}' command script missing: {resolved}")
                         else:
@@ -1523,9 +1596,33 @@ def verify() -> int:
             fail(f"policies/memory.json does not parse: {exc}")
         else:
             ok("policies/memory.json parses")
+            version = memory_payload.get("version")
+            if version not in {1, 2}:
+                fail(f"policies/memory.json unsupported version: {version}")
             section_ids = [s.get("id") for s in (memory_payload.get("sections") or [])]
             if not section_ids:
                 fail("policies/memory.json has no sections")
+            bridge_policy = memory_payload.get("bridge") or {}
+            bridge_enabled = bool(bridge_policy.get("enabled", False))
+            if bridge_policy:
+                allowed_hosts = set(HOOK_TARGETS)
+                hosts = bridge_policy.get("hosts") or []
+                bad_hosts = [host for host in hosts if host not in allowed_hosts]
+                if bad_hosts:
+                    fail(f"policies/memory.json bridge has invalid hosts: {bad_hosts}")
+                for key in ("enabled", "hosts", "outbound_event", "inbound_event", "conflict_policy", "secrets_policy_inheritance"):
+                    if key not in bridge_policy:
+                        fail(f"policies/memory.json bridge missing key '{key}'")
+                if bridge_policy.get("outbound_event") != "session_start":
+                    fail("policies/memory.json bridge outbound_event must be session_start")
+                if bridge_policy.get("inbound_event") != "stop":
+                    fail("policies/memory.json bridge inbound_event must be stop")
+                if bridge_policy.get("conflict_policy") != "append-first":
+                    fail("policies/memory.json bridge conflict_policy must be append-first")
+                if bridge_policy.get("secrets_policy_inheritance") != "deny":
+                    fail("policies/memory.json bridge secrets_policy_inheritance must be deny")
+                if bridge_enabled and set(hosts) != set(HOOK_TARGETS):
+                    fail("policies/memory.json bridge enabled hosts must include claude, codex, and gemini")
             for project in load_projects():
                 project_root = project.root
                 memory_md = project_root / "MEMORY.md"
@@ -1553,6 +1650,34 @@ def verify() -> int:
                         break
                 else:
                     ok(f"Forge state manifest valid: {manifest_path.relative_to(PROJECTS_ROOT)}")
+                if bridge_enabled:
+                    bridge_path = project_root / ".forge_state" / "bridge.json"
+                    if not bridge_path.exists():
+                        fail(f"Bridge state missing: {bridge_path.relative_to(PROJECTS_ROOT)}")
+                    else:
+                        try:
+                            bridge_state = load_json(bridge_path)
+                        except Exception as exc:
+                            fail(f"Bridge state does not parse: {bridge_path.relative_to(PROJECTS_ROOT)}: {exc}")
+                        else:
+                            for key in ("version", "last_outbound", "last_inbound", "native_targets", "last_errors"):
+                                if key not in bridge_state:
+                                    fail(f"Bridge state missing key '{key}': {bridge_path.relative_to(PROJECTS_ROOT)}")
+                                    break
+                            else:
+                                missing_targets = [
+                                    host for host in bridge_policy.get("hosts", [])
+                                    if not bridge_state.get("native_targets", {}).get(host)
+                                ]
+                                if missing_targets:
+                                    fail(f"Bridge state missing native targets {missing_targets}: {bridge_path.relative_to(PROJECTS_ROOT)}")
+                                else:
+                                    ok(f"Bridge state valid: {bridge_path.relative_to(PROJECTS_ROOT)}")
+                    bridge_log = project_root / ".forge_state" / "bridge.log"
+                    if bridge_log.exists():
+                        ok(f"Bridge log present: {bridge_log.relative_to(PROJECTS_ROOT)}")
+                    else:
+                        fail(f"Bridge log missing: {bridge_log.relative_to(PROJECTS_ROOT)}")
 
     return status
 

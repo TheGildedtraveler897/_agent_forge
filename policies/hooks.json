@@ -18,6 +18,34 @@
   ],
   "claude": [
     {
+      "id": "memory-bridge-outbound-claude",
+      "description": "Bridge canonical MEMORY.md into Claude's native machine-local auto-memory at session start.",
+      "event": "session_start",
+      "matcher": "",
+      "handler": {
+        "type": "command",
+        "command": "python3 ~/Projects/_agent_forge/skills/global/memory-bridge/bridge.py outbound --project . --host claude"
+      },
+      "targets": ["claude"],
+      "async": true,
+      "timeout_ms": 10000,
+      "status_message": "memory-bridge outbound to Claude auto-memory"
+    },
+    {
+      "id": "memory-bridge-inbound-claude",
+      "description": "Import new Claude auto-memory notes back into canonical MEMORY.md at session stop.",
+      "event": "stop",
+      "matcher": "",
+      "handler": {
+        "type": "command",
+        "command": "python3 ~/Projects/_agent_forge/skills/global/memory-bridge/bridge.py inbound --project . --host claude"
+      },
+      "targets": ["claude"],
+      "async": true,
+      "timeout_ms": 30000,
+      "status_message": "memory-bridge inbound from Claude auto-memory"
+    },
+    {
       "id": "example-http-audit",
       "enabled": false,
       "description": "Dormant v3 schema example for Claude HTTP hook rendering.",
@@ -77,6 +105,64 @@
       "timeout_ms": 60000
     }
   ],
-  "codex": [],
-  "gemini": []
+  "codex": [
+    {
+      "id": "memory-bridge-outbound-codex",
+      "description": "Bridge canonical MEMORY.md into a Codex-readable project sidecar at session start.",
+      "event": "session_start",
+      "matcher": "",
+      "handler": {
+        "type": "command",
+        "command": "python3 ~/Projects/_agent_forge/skills/global/memory-bridge/bridge.py outbound --project . --host codex"
+      },
+      "targets": ["codex"],
+      "async": true,
+      "timeout_ms": 10000,
+      "status_message": "memory-bridge outbound to Codex sidecar"
+    },
+    {
+      "id": "memory-bridge-inbound-codex",
+      "description": "Import new Codex bridge sidecar notes back into canonical MEMORY.md at session stop.",
+      "event": "stop",
+      "matcher": "",
+      "handler": {
+        "type": "command",
+        "command": "python3 ~/Projects/_agent_forge/skills/global/memory-bridge/bridge.py inbound --project . --host codex"
+      },
+      "targets": ["codex"],
+      "async": true,
+      "timeout_ms": 30000,
+      "status_message": "memory-bridge inbound from Codex sidecar"
+    }
+  ],
+  "gemini": [
+    {
+      "id": "memory-bridge-outbound-gemini",
+      "description": "Bridge canonical MEMORY.md into a Gemini project-local memory sidecar at session start.",
+      "event": "session_start",
+      "matcher": "",
+      "handler": {
+        "type": "command",
+        "command": "python3 ~/Projects/_agent_forge/skills/global/memory-bridge/bridge.py outbound --project . --host gemini"
+      },
+      "targets": ["gemini"],
+      "async": true,
+      "timeout_ms": 10000,
+      "status_message": "memory-bridge outbound to Gemini sidecar"
+    },
+    {
+      "id": "memory-bridge-inbound-gemini",
+      "description": "Import new Gemini sidecar notes back into canonical MEMORY.md at session end.",
+      "event": "stop",
+      "matcher": "",
+      "handler": {
+        "type": "command",
+        "command": "python3 ~/Projects/_agent_forge/skills/global/memory-bridge/bridge.py inbound --project . --host gemini"
+      },
+      "targets": ["gemini"],
+      "async": true,
+      "timeout_ms": 30000,
+      "status_message": "memory-bridge inbound from Gemini sidecar"
+    }
+  ]
 }

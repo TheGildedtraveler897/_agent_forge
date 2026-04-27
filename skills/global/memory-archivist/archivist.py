@@ -8,10 +8,17 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import sys
+from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
+
+try:
+    import fcntl
+except ImportError:  # pragma: no cover - POSIX hosts are the supported path.
+    fcntl = None
 
 ROOT = Path(__file__).resolve().parent.parent.parent.parent
 MEMORY_POLICY_PATH = ROOT / "policies" / "memory.json"
@@ -72,6 +79,31 @@ def audit_log_path(project_root: Path) -> Path:
     return project_root / ".forge_state" / "archivist.log"
 
 
+def lock_path(project_root: Path) -> Path:
+    return project_root / ".forge_state" / "archivist.lock"
+
+
+def atomic_write(path: Path, text: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    tmp.write_text(text)
+    os.replace(tmp, path)
+
+
+@contextmanager
+def archivist_lock(project_root: Path):
+    lock = lock_path(project_root)
+    lock.parent.mkdir(parents=True, exist_ok=True)
+    with lock.open("a+") as fh:
+        if fcntl is not None:
+            fcntl.flock(fh.fileno(), fcntl.LOCK_EX)
+        try:
+            yield
+        finally:
+            if fcntl is not None:
+                fcntl.flock(fh.fileno(), fcntl.LOCK_UN)
+
+
 def read_memory(project_root: Path) -> str:
     p = memory_path(project_root)
     if not p.exists():
@@ -107,28 +139,29 @@ def append_entry(project_root: Path, section_id: str, entry: str, source: str | 
     section_index(policy, section_id)
     secrets_check(entry, policy)
 
-    body = read_memory(project_root)
-    s, e = section_block_bounds(body, section_id)
+    with archivist_lock(project_root):
+        body = read_memory(project_root)
+        s, e = section_block_bounds(body, section_id)
 
-    timestamp = utc_now()
-    src_tag = f" [{source}]" if source else ""
-    line = f"- {timestamp}{src_tag} — {entry.strip()}"
+        timestamp = utc_now()
+        src_tag = f" [{source}]" if source else ""
+        line = f"- {timestamp}{src_tag} — {entry.strip()}"
 
-    block = body[s:e].rstrip("\n")
-    if block.strip():
-        new_block = f"{block}\n{line}\n"
-    else:
-        new_block = f"\n{line}\n"
-    new_body = body[:s] + new_block + body[e:]
-    memory_path(project_root).write_text(new_body)
+        block = body[s:e].rstrip("\n")
+        if block.strip():
+            new_block = f"{block}\n{line}\n"
+        else:
+            new_block = f"\n{line}\n"
+        new_body = body[:s] + new_block + body[e:]
+        atomic_write(memory_path(project_root), new_body)
 
-    refresh_manifest(project_root, policy)
-    audit_line = json.dumps({"ts": timestamp, "action": "append", "section": section_id, "source": source, "entry_len": len(entry)})
-    with audit_log_path(project_root).open("a") as f:
-        f.write(audit_line + "\n")
+        refresh_manifest(project_root, policy)
+        audit_line = json.dumps({"ts": timestamp, "action": "append", "section": section_id, "source": source, "entry_len": len(entry)})
+        with audit_log_path(project_root).open("a") as f:
+            f.write(audit_line + "\n")
 
-    warn_at = (policy.get("retention") or {}).get("warn_at", 40)
-    count = count_entries(new_body, section_id)
+        warn_at = (policy.get("retention") or {}).get("warn_at", 40)
+        count = count_entries(new_body, section_id)
     print(json.dumps({"appended": True, "section": section_id, "timestamp": timestamp, "section_count": count, "warn_at": warn_at}))
     if count >= warn_at:
         print(f"archivist: warning — section '{section_id}' has {count} entries (warn_at={warn_at})", file=sys.stderr)
@@ -141,17 +174,18 @@ def replace_active_tasks(project_root: Path, entry: str, source: str | None) -> 
         die("active_tasks is marked append_only=true; replace not allowed")
     secrets_check(entry, policy)
 
-    body = read_memory(project_root)
-    s, e = section_block_bounds(body, "active_tasks")
-    timestamp = utc_now()
-    src_tag = f" [{source}]" if source else ""
-    new_block = f"\n- {timestamp}{src_tag} — {entry.strip()}\n"
-    new_body = body[:s] + new_block + body[e:]
-    memory_path(project_root).write_text(new_body)
-    refresh_manifest(project_root, policy)
-    audit = json.dumps({"ts": timestamp, "action": "replace", "section": "active_tasks", "source": source})
-    with audit_log_path(project_root).open("a") as f:
-        f.write(audit + "\n")
+    with archivist_lock(project_root):
+        body = read_memory(project_root)
+        s, e = section_block_bounds(body, "active_tasks")
+        timestamp = utc_now()
+        src_tag = f" [{source}]" if source else ""
+        new_block = f"\n- {timestamp}{src_tag} — {entry.strip()}\n"
+        new_body = body[:s] + new_block + body[e:]
+        atomic_write(memory_path(project_root), new_body)
+        refresh_manifest(project_root, policy)
+        audit = json.dumps({"ts": timestamp, "action": "replace", "section": "active_tasks", "source": source})
+        with audit_log_path(project_root).open("a") as f:
+            f.write(audit + "\n")
     print(json.dumps({"replaced": True, "section": "active_tasks", "timestamp": timestamp}))
 
 
@@ -164,7 +198,7 @@ def refresh_manifest(project_root: Path, policy: dict) -> None:
     except Exception:
         return
     data["last_updated"] = utc_now()
-    p.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n")
+    atomic_write(p, json.dumps(data, indent=2, sort_keys=True) + "\n")
 
 
 def cmd_append(args: argparse.Namespace) -> int:

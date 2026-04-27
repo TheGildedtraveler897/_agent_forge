@@ -1,6 +1,6 @@
 {
-  "version": 1,
-  "description": "Canonical session-state layer. Renderers translate sections into per-project MEMORY.md and .forge_state/ surfaces reachable by every host. Append-first by default; active_tasks is the only rewriteable section. Secrets are denied at write time by the memory-archivist skill.",
+  "version": 2,
+  "description": "Canonical session-state layer. Renderers translate sections into per-project MEMORY.md and .forge_state/ surfaces reachable by every host. Append-first by default; active_tasks is the only rewriteable section. Secrets are denied at write time by the memory-archivist skill. The bridge block defines host-local memory synchronization around canonical MEMORY.md.",
   "sections": [
     {
       "id": "build_commands",
@@ -47,5 +47,13 @@
     "max_entries_per_section": 50,
     "warn_at": 40
   },
-  "secrets_policy": "deny"
+  "secrets_policy": "deny",
+  "bridge": {
+    "enabled": true,
+    "hosts": ["claude", "codex", "gemini"],
+    "outbound_event": "session_start",
+    "inbound_event": "stop",
+    "conflict_policy": "append-first",
+    "secrets_policy_inheritance": "deny"
+  }
 }

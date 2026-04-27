@@ -1,5 +1,5 @@
 # Lessons Learned
-Last updated: 2026-04-27 (Sprint 2: Hook Lifecycle V2 + Codex event-key drift)
+Last updated: 2026-04-27 (Sprint 3: Memory Bridge)
 
 This file is the append-first knowledge anchor for Agent Forge.
 
@@ -152,4 +152,14 @@ This file is the append-first knowledge anchor for Agent Forge.
 - `Architectural Decision:` `policies/hooks.json` is now v3 with explicit `handler` objects. `scripts/omni_factory.py` normalizes v2 records, maps Codex `pre_tool_use` to `PreToolUse`, exposes a full canonical event allow-list, translates `timeout_ms` per host, and renders Gemini hooks in the current nested `hooks` shape. `scripts/validate-triad-runtime.py` now computes `expected_hook_records` for each host and fails if any active record's native event key is missing. Non-command handler examples are present but disabled until host-safe sentinels exist; Claude renders all five handler types, while current Codex/Gemini docs only justify active command rendering.
 - `Evidence:` `docs/SPRINT2_DESIGN.md`; `tests/test_hooks_v3.py` RED/GREEN (`python3 -m unittest tests.test_hooks_v3`, exit 0 after patch); `policies/hooks.json` v3; generated Jarvis surfaces show Claude `PreToolUse`, Codex `PreToolUse`, Gemini `BeforeTool`; `python3 scripts/verify-agent-forge.py` exit 0; `runtime/validation/triad/20260427-084059/summary.json` (`overall pass=true`, expected 30 skills, all hosts `hook_pass=true memory_pass=true`, Codex `expected_event_keys:["PreToolUse"]` and `sandbox_blocked:true` with filesystem evidence).
 - `Promotion Target:` `docs/CONOPS.md` §Validation Gate — promote "every cross-host semantic surface gets a curated allow-list and per-record validator check" after the same pattern is applied to MCP namespace prefixing.
+- `Status:` active
+
+### 2026-04-27 - Bridge Native Memory Conservatively; Sidecars Beat False Claims
+
+- `Date:` 2026-04-27
+- `Context:` Sprint 3 implemented the cross-host memory bridge after web recon confirmed the three hosts do not expose equivalent project fact-memory primitives. Claude has a true machine-local auto-memory index under `~/.claude/projects/<project>/memory/MEMORY.md`; Gemini Auto Memory is experimental and extracts procedural `SKILL.md` drafts, while `save_memory` appends facts to global `~/.gemini/GEMINI.md`; Codex did not expose a stable project fact-memory file in the official developer docs search.
+- `Lesson:` Cross-host parity must not be faked. When a host lacks a stable native memory target, use a clearly named project sidecar and validate it as bridge evidence, but do not claim the host auto-loads that sidecar.
+- `Architectural Decision:` `memory-bridge` writes Claude's true auto-memory path, Codex `<project>/.codex/memory/AGENTS_MEMORY.md`, and Gemini `<project>/.gemini/memory/MEMORY.md`. Canonical `<project>/MEMORY.md` remains the source of truth; inbound imports append through `memory-archivist`; `validate-triad-runtime.py` records a separate `bridge_pass` so bridge evidence cannot be conflated with `memory_pass`.
+- `Evidence:` `policies/memory.json` v2 bridge block; `skills/global/memory-bridge/bridge.py`; `tests/test_memory_bridge.py`; `python3 -m unittest tests.test_hooks_v3 tests.test_memory_bridge` exit 0; `python3 scripts/verify-agent-forge.py` exit 0; `runtime/validation/triad/20260427-203021/summary.json` all hosts `hook+ mem+ bridge+`.
+- `Promotion Target:` `docs/CONOPS.md` §Host Delivery Surfaces and §Runtime Validation once MCP namespace prefixing confirms the same conservative sidecar pattern still holds.
 - `Status:` active

@@ -4,6 +4,30 @@ Last updated: 2026-04-27
 
 ## What Changed
 
+### Sprint 3: Cross-Host Auto-Memory Bridge (2026-04-27, Codex)
+
+Shipped A2 + B2: canonical `MEMORY.md` now syncs to host-local memory surfaces through async session lifecycle hooks, with bridge state and triad runtime proof.
+
+#### Changes Made
+
+1. **`policies/memory.json` upgraded to v2** — additive `bridge` block enables Claude/Codex/Gemini, outbound `session_start`, inbound `stop`, `append-first` conflicts, and `deny` secrets inheritance.
+2. **`memory-bridge` capability shipped** — `skills/global/memory-bridge/` includes `SKILL.md` plus `bridge.py outbound|inbound|status`. Outbound writes a managed block into the host target; inbound removes the managed block, imports new notes once, rejects credential-shaped content, and appends through `memory-archivist`.
+3. **Host-specific hook records added** — `memory-bridge-outbound-claude|codex|gemini` and `memory-bridge-inbound-claude|codex|gemini`, using explicit `--host` arguments instead of relying on an undocumented `$HOST_TAG`.
+4. **Bridge targets are explicit** — Claude writes true machine-local auto memory at `~/.claude/projects/<encoded-project-path>/memory/MEMORY.md`; Codex writes `<project>/.codex/memory/AGENTS_MEMORY.md`; Gemini writes `<project>/.gemini/memory/MEMORY.md`. Codex and Gemini are sidecars, not claims of native auto-memory loading.
+5. **Bridge state created for every governed project** — `<project>/.forge_state/bridge.json` and `bridge.log` now exist alongside memory manifest state.
+6. **Verifier and triad validator extended** — `verify-agent-forge.py` validates memory policy v2, Python hook command paths, bridge fields, and bridge state/log sidecars. `validate-triad-runtime.py` adds `memory_bridge_for()` and records `bridge_pass` per host.
+7. **Archivist hardened** — `memory-archivist` now uses file locking and atomic writes so bridge inbound imports cannot corrupt canonical `MEMORY.md`.
+8. **Focused tests added** — `tests/test_memory_bridge.py` covers outbound idempotence, inbound de-duplication, secrets rejection, archivist source tagging, and bridge state initialization.
+
+Evidence:
+- Tests: `python3 -m py_compile scripts/omni_factory.py scripts/validate-triad-runtime.py skills/global/memory-bridge/bridge.py skills/global/memory-archivist/archivist.py` exit 0.
+- Tests: `python3 -m unittest tests.test_hooks_v3 tests.test_memory_bridge` exit 0.
+- Structural verifier: `python3 scripts/verify-agent-forge.py` exit 0.
+- Bridge outbound proof: Claude, Codex, and Gemini all wrote Jarvis native targets with hash `5413aa8cb72de0e691f4b7c77b8926879f589b2fa86e133c5af00e4232861eef`.
+- Triad runtime artifact: `runtime/validation/triad/20260427-203021/summary.json` (`overall pass=true`, expected 31 skills, all hosts `hook+ mem+ bridge+`; Codex remains `filesystem-escalated` with `sandbox_blocked:true`).
+
+Operational note: Gemini global context sync still refuses to overwrite unmanaged `~/.gemini/GEMINI.md`; project-local Gemini surfaces sync correctly. This is deliberate managed-file protection, not a Sprint 3 failure.
+
 ### Sprint 2: Hook Lifecycle V2 + Codex Event-Key Drift Fix (2026-04-27, Codex)
 
 Shipped the v3 hook policy foundation and closed a second event-key drift class before it reached a live failure.

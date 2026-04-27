@@ -666,6 +666,19 @@ The Sprint 1 live-hook-prober treats this as `escalated` (with `observed: headle
 
 **Research note.** Future audits of the factory's correctness posture should reference this artifact as the baseline. If a regression happens on Gemini, the validator should still show this exact pattern: `verdict: pass`, `observed: block`. Anything else is a regression worth investigating.
 
+## Section 5 — Sprint 3 Memory Bridge Recon (appended 2026-04-27)
+
+Sprint 3 verified that host memory surfaces are not equivalent and should not be documented as if they are.
+
+### 5.1 — Claude Has True Machine-Local Auto Memory; Gemini And Codex Need Conservative Sidecars
+
+**Claude.** The current Claude Code memory docs describe two complementary systems: human-authored `CLAUDE.md` files and Claude-authored auto memory. Auto memory is machine-local, stored under `~/.claude/projects/<project>/memory/`, with `MEMORY.md` as the session-start index and optional topic files beside it. The first 200 lines or 25KB of `MEMORY.md` load at conversation start. Source: `https://code.claude.com/docs/en/memory` (queried 2026-04-27).
+
+**Gemini.** The current Gemini CLI docs split memory into two behaviors. The `save_memory` tool appends facts to the `## Gemini Added Memories` section of global `~/.gemini/GEMINI.md`. Experimental Auto Memory mines prior local transcripts and drafts reusable `SKILL.md` files into a review inbox; it does not automatically load a project fact-memory file. Sources: `https://geminicli.com/docs/tools/memory/` and `https://geminicli.com/docs/cli/auto-memory/` (queried 2026-04-27).
+
+**Codex.** Official OpenAI developer-doc search did not surface a stable project fact-memory file equivalent to Claude's auto-memory path. Codex's reliable checked-in project context remains `AGENTS.md`, while generated memory state must not become an authoring target. Source search: `developers.openai.com` Codex docs queries for project memory and `~/.codex/memories/` (queried 2026-04-27).
+
+**Decision.** Sprint 3's bridge writes to Claude's true auto-memory target and uses explicit project sidecars for Codex and Gemini: `<project>/.codex/memory/AGENTS_MEMORY.md` and `<project>/.gemini/memory/MEMORY.md`. The docs must call these sidecars what they are. `bridge_pass` proves the sidecars and Claude target exist and have outbound/inbound hash evidence; it does not claim native auto-loading for Codex or Gemini.
 
 
 

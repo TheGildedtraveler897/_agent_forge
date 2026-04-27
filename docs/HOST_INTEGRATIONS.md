@@ -21,6 +21,7 @@ The generator reads exactly these authoring surfaces:
 - `projects.json`
 - `global-mcp.json`
 - `policies/hooks.json`
+- `policies/memory.json`
 
 `registry.json` is compatibility output only.
 
@@ -179,16 +180,24 @@ The factory ships one standard hook: the `telemetry-guardian` pre-tool veto. It 
 
 ## Universal State Layer
 
-`policies/memory.json` is the canonical authoring surface for the cross-host session-state layer. The renderers compile its sections into a per-project `MEMORY.md` plus a sibling `.forge_state/` directory, so Claude Auto-Memory, Codex Chronicle, and Gemini Memory v2 all read and write the same brain.
+`policies/memory.json` is the canonical authoring surface for the cross-host session-state layer. The renderers compile its sections into a per-project `MEMORY.md` plus a sibling `.forge_state/` directory. Host-native memory surfaces are synchronized around that canonical file; they are not treated as doctrine.
 
 ### Schema
 
 ```json
 {
-  "version": 1,
+  "version": 2,
   "sections": [{ "id": "...", "name": "...", "append_only": true|false, "host_writers": [...], "host_readers": [...], "description": "..." }],
   "retention":      { "max_entries_per_section": 50, "warn_at": 40 },
-  "secrets_policy": "deny"
+  "secrets_policy": "deny",
+  "bridge": {
+    "enabled": true,
+    "hosts": ["claude", "codex", "gemini"],
+    "outbound_event": "session_start",
+    "inbound_event": "stop",
+    "conflict_policy": "append-first",
+    "secrets_policy_inheritance": "deny"
+  }
 }
 ```
 
@@ -202,6 +211,8 @@ Per sync, the factory writes:
 - `<project>/.forge_state/README.md` — short explanation of the directory.
 - `<project>/.forge_state/manifest.json` — `version`, project name, sections (id/name/append_only), retention, secrets_policy, `last_updated`.
 - `<project>/.forge_state/archivist.log` — append-only audit trail produced when the archivist runs.
+- `<project>/.forge_state/bridge.json` — host-local memory bridge state, native target paths, and last outbound/inbound hashes.
+- `<project>/.forge_state/bridge.log` — append-only JSONL audit trail produced by `memory-bridge`.
 
 ### Host reachability
 
@@ -218,3 +229,19 @@ Per sync, the factory writes:
 ### `memory-archivist` skill
 
 The companion capability that exercises the layer. Three subcommands: `append` (timestamped, one entry per call, secrets-deny on write), `validate` (confirms anchors and manifest are well-formed), `summary` (per-section counts and retention warnings). See `skills/global/memory-archivist/SKILL.md` for the contract; live invocation is `python3 ~/Projects/_agent_forge/skills/global/memory-archivist/archivist.py append --project <root> --section <id> --entry "<text>" --source claude|codex|gemini`.
+
+### `memory-bridge` skill
+
+The bridge capability synchronizes host-local memory files around canonical `<project>/MEMORY.md`:
+
+- Outbound: `python3 ~/Projects/_agent_forge/skills/global/memory-bridge/bridge.py outbound --project <root> --host claude|codex|gemini`
+- Inbound: `python3 ~/Projects/_agent_forge/skills/global/memory-bridge/bridge.py inbound --project <root> --host claude|codex|gemini`
+- Status: `python3 ~/Projects/_agent_forge/skills/global/memory-bridge/bridge.py status --project <root>`
+
+Native targets:
+
+- Claude: `~/.claude/projects/<encoded-project-path>/memory/MEMORY.md` — true machine-local Claude auto memory.
+- Codex: `<project>/.codex/memory/AGENTS_MEMORY.md` — project sidecar; do not mutate generated `~/.codex/memories/` state.
+- Gemini: `<project>/.gemini/memory/MEMORY.md` — project sidecar; Gemini Auto Memory currently extracts procedural skills, while facts still flow through `GEMINI.md` context.
+
+Bridge hooks are host-specific records in `policies/hooks.json`: `memory-bridge-outbound-<host>` on canonical `session_start`, and `memory-bridge-inbound-<host>` on canonical `stop` (`SessionEnd` on Gemini). They run async, are idempotent by content hash, and reapply the memory secrets-deny policy before export or import.

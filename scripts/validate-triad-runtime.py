@@ -362,6 +362,66 @@ def memory_surface_for(host: str, project_root: Path) -> dict:
     }
 
 
+def memory_bridge_for(host: str, project_root: Path) -> dict:
+    """Confirm the host-local memory bridge has state and evidence.
+
+    The canonical source remains <project>/MEMORY.md. Bridge pass means the
+    bridge policy is enabled for this host, the per-project state file parses,
+    a native target path is known, and at least one outbound or inbound bridge
+    action has run for the host.
+    """
+    policy = omni_factory._memory_bridge_policy()
+    if not policy.get("enabled", False):
+        return {"pass": True, "enabled": False, "reason": "memory bridge disabled"}
+
+    hosts = list(policy.get("hosts") or [])
+    if host not in hosts:
+        return {"pass": False, "enabled": True, "reason": f"host not enabled: {host}"}
+
+    state_file = project_root / ".forge_state" / "bridge.json"
+    if not state_file.exists():
+        return {"pass": False, "enabled": True, "path": str(state_file), "reason": "bridge.json missing"}
+    try:
+        state = json.loads(state_file.read_text())
+    except Exception as exc:
+        return {"pass": False, "enabled": True, "path": str(state_file), "reason": f"bridge.json parse error: {exc}"}
+
+    required = ("version", "last_outbound", "last_inbound", "last_outbound_hash", "last_inbound_diff_hash", "native_targets", "last_errors")
+    missing_keys = [key for key in required if key not in state]
+    native_target = (state.get("native_targets") or {}).get(host)
+    if not native_target:
+        try:
+            native_target = str(omni_factory.memory_bridge_native_target(project_root, host))
+        except Exception:
+            native_target = ""
+    outbound = (state.get("last_outbound") or {}).get(host)
+    inbound = (state.get("last_inbound") or {}).get(host)
+    outbound_hash = (state.get("last_outbound_hash") or {}).get(host)
+    inbound_hash = (state.get("last_inbound_diff_hash") or {}).get(host)
+    last_error = (state.get("last_errors") or {}).get(host)
+    target_exists = bool(native_target) and Path(native_target).exists()
+    evidence = bool(outbound or inbound)
+    hash_evidence = bool(outbound_hash or inbound_hash)
+    pass_ = not missing_keys and bool(native_target) and target_exists and evidence and hash_evidence and not last_error
+
+    return {
+        "pass": pass_,
+        "enabled": True,
+        "path": str(state_file),
+        "host": host,
+        "native_target": native_target,
+        "native_target_exists": target_exists,
+        "last_outbound": outbound,
+        "last_inbound": inbound,
+        "last_outbound_hash": outbound_hash,
+        "last_inbound_diff_hash": inbound_hash,
+        "last_error": last_error,
+        "missing_state_keys": missing_keys,
+        "evidence_present": evidence,
+        "hash_evidence_present": hash_evidence,
+    }
+
+
 def live_hook_invocation_for(
     host: str,
     project_root: Path,
@@ -453,6 +513,7 @@ def update_matrix(project_name: str, summary: dict) -> None:
                 "method": r["method"],
                 "hook_pass": r.get("hook_surface", {}).get("pass", False),
                 "memory_pass": r.get("memory_surface", {}).get("pass", False),
+                "bridge_pass": r.get("memory_bridge", {}).get("pass", False),
                 **(
                     {
                         "live_hook_pass": r["live_hook"].get("pass", False),
@@ -514,6 +575,11 @@ def main() -> int:
         if not memory_res["pass"]:
             res["pass"] = False
             res.setdefault("missing", []).append(f"memory-surface:{memory_res.get('reason') or memory_res.get('host_link_reason') or 'memory layer not reachable'}")
+        bridge_res = memory_bridge_for(host, project_root)
+        res["memory_bridge"] = bridge_res
+        if not bridge_res["pass"]:
+            res["pass"] = False
+            res.setdefault("missing", []).append(f"memory-bridge:{bridge_res.get('reason') or bridge_res.get('last_error') or 'bridge evidence missing'}")
         live_tag = ""
         if args.probe_invocations and res["pass"]:
             live_dir = evidence_dir / "live-hook"
@@ -529,7 +595,8 @@ def main() -> int:
         status = "PASS" if res["pass"] else "FAIL"
         hook_tag = "hook+" if hook_res["pass"] else "hook-"
         mem_tag = "mem+" if memory_res["pass"] else "mem-"
-        print(f"[{status}] {host:7s} method={res['method']:22s} missing={len(res['missing'])}/{res['expected_count']}  {hook_tag} {mem_tag}{live_tag}")
+        bridge_tag = "bridge+" if bridge_res["pass"] else "bridge-"
+        print(f"[{status}] {host:7s} method={res['method']:22s} missing={len(res['missing'])}/{res['expected_count']}  {hook_tag} {mem_tag} {bridge_tag}{live_tag}")
         results[host] = res
 
     overall = all(r["pass"] for r in results.values()) if results else False

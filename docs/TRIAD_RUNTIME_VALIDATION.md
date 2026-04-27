@@ -4,12 +4,13 @@ Use this runbook when you want live proof that the generated Claude, Codex, and 
 
 ## Purpose
 
-Answer four questions:
+Answer five questions:
 
 1. Can the omni-factory regenerate every host surface from canonical sources?
 2. Can every governed project's surface actually be enumerated by each host CLI at runtime?
 3. Does the knowledge anchor stay visible where each host can realistically consume it?
-4. Can a sandbox-blocked host still be validated via paired filesystem evidence?
+4. Did the memory bridge produce per-host native target evidence?
+5. Can a sandbox-blocked host still be validated via paired filesystem evidence?
 
 ## Preflight Reads
 
@@ -67,8 +68,9 @@ For each host, if the CLI returns no parseable skill set (e.g. the CLI is not in
 - A new run directory appears under `runtime/validation/triad/<YYYYMMDD-HHMMSS>/`
 - `summary.json` reports `pass: true` overall
 - Per-host `result.json` reports `missing: []` **and** `hook_surface.pass: true` (guardian present and every active hook record's native event key present in the rendered settings file)
-- `runtime/validation-matrix.json` receives an updated `triad_runtime.<project>` entry with both `pass` and `hook_pass: true` per host
-- The expected skill count tracks the canonical `registry.json` (currently 30 after `onboarding-guide`)
+- Per-host `result.json` reports `memory_surface.pass: true` and `memory_bridge.pass: true`
+- `runtime/validation-matrix.json` receives an updated `triad_runtime.<project>` entry with `pass`, `hook_pass`, `memory_pass`, and `bridge_pass: true` per host
+- The expected skill count tracks the canonical `registry.json` (currently 31 after `memory-bridge`)
 
 ### Hook surface check
 
@@ -90,6 +92,27 @@ After hook-surface, the validator runs `memory_surface_for(host, project_root)` 
 - For Claude and Codex, confirms `AGENTS.md` (which both auto-load) names `MEMORY.md` in its Read Order.
 
 If any check fails, that host's `pass` becomes `false` and overall pass is `false`. Per-host matrix entries include a `memory_pass` field alongside `hook_pass`.
+
+### Memory bridge check
+
+After the universal memory surface check, the validator runs `memory_bridge_for(host, project_root)`. A host passes when:
+
+- `policies/memory.json` has bridge enabled for that host.
+- `<project>/.forge_state/bridge.json` parses and has required state keys.
+- The host has a known native target path.
+- The native target file exists.
+- At least one outbound or inbound bridge action has run for that host.
+- The action produced hash evidence and no current `last_errors` entry for that host.
+
+For the normal gate, run outbound proof before triad:
+
+```bash
+python3 skills/global/memory-bridge/bridge.py outbound --project ~/Projects/jarvis --host claude
+python3 skills/global/memory-bridge/bridge.py outbound --project ~/Projects/jarvis --host codex
+python3 skills/global/memory-bridge/bridge.py outbound --project ~/Projects/jarvis --host gemini
+```
+
+Per-host matrix entries include `bridge_pass` alongside `hook_pass` and `memory_pass`.
 
 ### Codex sandbox-block detection
 
@@ -125,9 +148,9 @@ runtime/validation/triad/<stamp>/
       "last_run": "YYYYMMDD-HHMMSS",
       "overall_pass": true,
       "per_host": {
-        "claude": {"pass": true, "hook_pass": true, "memory_pass": true, "method": "cli"},
-        "codex":  {"pass": true, "hook_pass": true, "memory_pass": true, "method": "filesystem-escalated"},
-        "gemini": {"pass": true, "hook_pass": true, "memory_pass": true, "method": "cli"}
+        "claude": {"pass": true, "hook_pass": true, "memory_pass": true, "bridge_pass": true, "method": "cli"},
+        "codex":  {"pass": true, "hook_pass": true, "memory_pass": true, "bridge_pass": true, "method": "filesystem-escalated"},
+        "gemini": {"pass": true, "hook_pass": true, "memory_pass": true, "bridge_pass": true, "method": "cli"}
       },
       "artifact_path": "runtime/validation/triad/<stamp>"
     }
