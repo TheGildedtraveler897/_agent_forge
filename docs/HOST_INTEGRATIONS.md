@@ -136,7 +136,7 @@ Each hook record:
 }
 ```
 
-The v3 `handler.type` can be `command`, `http`, `mcp_tool`, `prompt`, or `agent`. Claude currently renders all five native handler types. Codex and Gemini currently render active `command` hooks only, matching their current public docs; non-command examples in `policies/hooks.json` stay disabled until a host-safe sentinel exists.
+The v3 `handler.type` can be `command`, `http`, `mcp_tool`, `prompt`, or `agent`. Claude currently renders all five native handler types. Codex and Gemini currently render active `command` hooks only, matching their current public docs; non-command examples in `policies/hooks.json` stay disabled until a host-safe sentinel exists. Current triad artifacts prove active command-hook surface reachability, not live dispatch for dormant non-command handlers.
 
 Event names use snake_case and are translated to each host's native casing by the renderer:
 
@@ -153,7 +153,7 @@ Event names use snake_case and are translated to each host's native casing by th
 
 **Gemini event-name correctness note (Sprint 1, 2026-04-26):** Gemini CLI v0.39 expects PascalCase event names (`BeforeTool` / `AfterTool` / `BeforeAgent` / `AfterAgent` / `BeforeModel` / `AfterModel` / `BeforeToolSelection` / `SessionStart` / `SessionEnd` / `Notification` / `PreCompress`), not the camelCase pattern Claude uses. Earlier roadmap iterations had `preToolUse` / `postToolUse` here; those were silently broken (Gemini's hook dispatcher never recognized the keys) and the triad validator's `hook_surface_for` only passed because it did a substring command-path match. Both bugs are fixed: aliases corrected and `hook_surface_for` now also requires the per-host expected event key to be a top-level key in the rendered hooks payload. Live-invocation proof: `runtime/validation/hook-probe/20260426-035313/gemini/` (Gemini blocked `--no-verify` for real, exit 0).
 
-**Codex event-name correctness note (Sprint 2, 2026-04-27):** Current Codex hook docs use PascalCase hook keys in `.codex/hooks.json` (`PreToolUse`, `PermissionRequest`, `PostToolUse`, `UserPromptSubmit`, `SessionStart`, `Stop`). Earlier factory output used snake_case keys such as `pre_tool_use`, which was another silent-correctness risk. Sprint 2 corrected `_EVENT_ALIASES["codex"]`, regenerated all governed project surfaces, and tightened `hook_surface_for()` to check every active hook record's expected native key. Evidence: `runtime/validation/triad/20260427-084059/summary.json`.
+**Codex event-name correctness note (Sprint 2, 2026-04-27):** Current Codex hook docs use PascalCase hook keys in `.codex/hooks.json` (`PreToolUse`, `PermissionRequest`, `PostToolUse`, `UserPromptSubmit`, `SessionStart`, `Stop`). Earlier factory output used snake_case keys such as `pre_tool_use`, which was another silent-correctness risk. Sprint 2 corrected `_EVENT_ALIASES["codex"]`, regenerated all governed project surfaces, and tightened `hook_surface_for()` to check every active hook record's expected native key. Evidence: `runtime/validation/triad/20260427-085402/summary.json`.
 
 ### Rendered surfaces
 

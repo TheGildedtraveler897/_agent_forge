@@ -1,6 +1,6 @@
 # TECH_DEBT
 
-This file records the most important remaining gaps as of 2026-04-25, after the universal state layer + memory-archivist sprint shipped.
+This file records the most important remaining gaps as of 2026-04-27, after the hook lifecycle v3 sprint shipped and the stabilization proof at `runtime/validation/triad/20260427-085402/summary.json` passed.
 
 ## Recently Resolved (no longer debt)
 
@@ -9,12 +9,15 @@ This file records the most important remaining gaps as of 2026-04-25, after the 
 - **Universal pre-tool guardrail** — `telemetry-guardian` shipped 2026-04-24 with `policies/hooks.json` v2 + three host renderers; live deny list covering `--no-verify`, force-push to protected branches, wildcard home deletion, unscoped `terraform destroy`, whole-disk `dd`, recursive 777.
 - **Universal cross-host memory layer** — `MEMORY.md` + `.forge_state/` shipped 2026-04-25 with `policies/memory.json` schema + `memory-archivist` skill + `memory_surface_for` triad gate.
 - **Codex sandbox-marker drift** — `host_sandbox_blocked()` in the triad validator now recognizes the newer Codex error strings (`needs access to create user namespaces`, `shell tool failed before command execution`, etc.) so sandbox-blocked Codex runs still escalate to filesystem-escalated evidence.
+- **Hook lifecycle v3 + Codex event-key drift** — `policies/hooks.json` now uses explicit handler objects, Codex native keys render as PascalCase (`PreToolUse`, `SessionStart`, `Stop`), and `hook_surface_for()` checks every active hook record's native event key.
 
 ## Open Debt
 
 - No real shared MCP server has been added to `global-mcp.json`, so cross-host MCP injection is still structurally wired but operationally unproven (Architectural Upgrade #3 in `docs/PATHFINDER_ROADMAP.md`).
+- Non-command hook handlers (`http`, `mcp_tool`, `prompt`, `agent`) are schema-modeled and dormant, but not live-dispatch proven. Sprint 2 deliberately validated command hooks only until host-safe sentinels exist.
 - The Codex runtime validator performs live execution, but it still does not prove every generated command or agent invocation path; it confirms enumeration, not invocation correctness.
 - On this machine, Codex runtime inspection is regularly blocked by `bwrap` namespace restrictions; the validator escalates to filesystem-escalated evidence per documented doctrine, but a sandbox-friendly Codex probe would be cleaner.
+- Governed project repos can remain dirty after sync because generated host surfaces are delivery targets. `_agent_forge` is the canonical authoring repo; do not hand-edit generated target surfaces to chase clean status.
 - `bootstrap-project.sh --existing` and `--with-local-skills` still need deliberate live exercise.
 - Debian and macOS suitcase proofs are still pending with real operators, not just local smoke tests.
 - Team manifests remain conceptual; there is no executable orchestration layer yet (deferred deliberately — the Pathfinder roadmap `crew-director` capability is the future home for this).
@@ -23,13 +26,13 @@ This file records the most important remaining gaps as of 2026-04-25, after the 
 
 ## Follow-On Work
 
-1. Add the first real shared MCP server and validate all three host renderers (paves the way for Architectural Upgrade #3, MCP namespace prefixing).
-2. Resolve or work around the local Codex `bwrap` sandbox failure for cleaner runtime proof.
-3. Exercise `bootstrap-project.sh --existing` on a real existing repo.
-4. Exercise the suitcase path on a fresh Debian VM and a fresh macOS machine.
-5. Push `_agent_forge` to a GitHub remote so the weekly watchdog routine can be scheduled.
-6. Promote or supersede ledger entries in `docs/LESSONS_LEARNED.md` before they turn into a second backlog.
-7. Pick up the next Pathfinder pair (likely Architectural #4 + Capability #4: continuous-evolution / anti-rot loop + `routine-auditor`).
+1. Pick up Sprint 3 / Architectural Upgrade A2 + Capability B2: host memory bridge around the existing universal `MEMORY.md` layer.
+2. Add the first real shared MCP server and validate all three host renderers after the memory bridge lands (paves the way for Architectural Upgrade #3, MCP namespace prefixing).
+3. Resolve or work around the local Codex `bwrap` sandbox failure for cleaner runtime proof.
+4. Exercise `bootstrap-project.sh --existing` on a real existing repo.
+5. Exercise the suitcase path on a fresh Debian VM and a fresh macOS machine.
+6. Push `_agent_forge` to a GitHub remote so the weekly watchdog routine can be scheduled.
+7. Promote or supersede ledger entries in `docs/LESSONS_LEARNED.md` before they turn into a second backlog.
 
 ## Notes For The Next Session
 

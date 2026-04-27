@@ -15,7 +15,7 @@ Shipped the v3 hook policy foundation and closed a second event-key drift class 
 3. **Codex hook aliases corrected** — `_EVENT_ALIASES["codex"]` now maps canonical `pre_tool_use` to native `PreToolUse` and related supported Codex events to PascalCase. Official Codex docs show PascalCase hook keys; prior snake_case output was a silent-correctness risk.
 4. **Hook renderer normalized v2/v3 records** — `scripts/omni_factory.py` now normalizes legacy top-level `command` records into v3 command handlers, exposes `native_hook_event()`, converts `timeout_ms` to seconds for Claude/Codex and milliseconds for Gemini, and renders Gemini hooks in the current nested `hooks` array shape.
 5. **Verifier tightened** — `verify()` checks hook version, known canonical event ids, target host names, handler types, required handler fields, command script paths, and async rules. Unsupported active event/handler/host pairs produce warnings instead of invalid rendered config.
-6. **Triad validator tightened again** — `hook_surface_for()` now computes `expected_hook_records` from every active policy record and checks every expected native event key, not just one guardian event. Fresh artifact `runtime/validation/triad/20260427-084059/summary.json` shows all hosts `hook+ mem+`, with Codex expecting and observing `PreToolUse`.
+6. **Triad validator tightened again** — `hook_surface_for()` now computes `expected_hook_records` from every active policy record and checks every expected native event key, not just one guardian event. Fresh artifact `runtime/validation/triad/20260427-085402/summary.json` shows all hosts `hook+ mem+`, with Codex expecting and observing `PreToolUse`.
 7. **`live-hook-prober` updated** — accepts `--handler-type <command|http|mcp_tool|prompt|agent>` and records handler type in JSON evidence. Command mode remains the only cross-host live-dispatch proof; non-command modes are sentinel/escalated until safe local sentinels exist.
 8. **Docs and lessons updated** — `docs/SPRINT2_DESIGN.md`, `docs/HOST_INTEGRATIONS.md`, `docs/TRIAD_RUNTIME_VALIDATION.md`, and `docs/LESSONS_LEARNED.md` now record v3 schema and the Codex event-key drift lesson.
 
@@ -23,7 +23,9 @@ Evidence:
 - Preflight commit: `e5a370c` (`Add onboarding guide and Codex cost tally helpers`).
 - Tests: `python3 -m unittest tests.test_hooks_v3` exit 0.
 - Structural verifier: `python3 scripts/verify-agent-forge.py` exit 0.
-- Triad runtime artifact: `runtime/validation/triad/20260427-084059/summary.json` (`overall pass=true`, expected 30 skills).
+- Triad runtime artifact: `runtime/validation/triad/20260427-085402/summary.json` (`overall pass=true`, expected 30 skills).
+
+Stabilization note: Sprint 2 proves command hook reachability and every active rendered native event key. Non-command hook handler shapes are schema-validated and dormant by design; they are not live-dispatch proven until a host-safe sentinel exists. Generated delivery-target repos may show surface dirt after sync and should be treated as outputs of `_agent_forge`, not hand-edit sources.
 
 ### Sprint 1: Gemini Hook-Alias Hotfix + live-hook-prober (2026-04-25/26, Claude)
 
