@@ -1,5 +1,5 @@
 # Agent Forge CONOPS
-Last updated: 2026-04-28
+Last updated: 2026-04-28 (RC milestone — doctrine promotion pass)
 
 ## Mission
 
@@ -31,6 +31,18 @@ Each capability lives in its own skill directory with one `SKILL.md`. Frontmatte
 - MCP dependencies
 
 The skill body remains the durable instruction contract.
+
+## Authoring Pattern: Policy + Renderers + Capability
+
+New cross-host primitives follow a five-step rhythm. The pattern is load-bearing as of the RC milestone, having shipped clean across hooks (2026-04-24), the universal state layer (2026-04-25), the memory bridge (2026-04-27), MCP namespace prefixing (2026-04-27), and the user-prompt advisory (2026-04-28).
+
+1. **Canonical schema** in `policies/<name>.json` (or `global-mcp.json` for MCP). Versioned. Sections, retention, trust posture, and `targets` are first-class fields.
+2. **Three host renderers** in `scripts/omni_factory.py` — one per host. Curated allow-lists translate canonical names to native names. `targets: [...]` controls which hosts receive a record; renderers drop records whose canonical event aliases to `None` for a given host.
+3. **Verifier extension** in `scripts/verify-agent-forge.py` — schema validation plus on-disk evidence checks.
+4. **Triad validator extension** in `scripts/validate-triad-runtime.py` — per-host surface check that derives expected native keys or aliases from every active record. Pass requires reachable rendered surface, not just JSON parse.
+5. **Capability skill** under `skills/global/<name>/` that exercises the layer end-to-end. One skill, one purpose; do not bolt new responsibilities onto existing skills.
+
+Cross-host parity is enforced at the alias / event-key boundary, not by pretending one literal name renders identically on all hosts. When a host lacks an equivalent native primitive, exclude it explicitly via `targets` and record the exclusion in `docs/LESSONS_LEARNED.md` so the next operator re-verifies against current host CLI release notes.
 
 ## Team Model
 
@@ -66,6 +78,35 @@ Gemini:
 - `<project>/.gemini/commands`
 - `<project>/.gemini/skills`
 - `<project>/.gemini/settings.json`
+
+### Native vs Sidecar Surfaces
+
+Not every host exposes equivalent native primitives. The factory uses native paths where they exist and clearly-named sidecars where they don't. Bridge surfaces in particular split this way:
+
+- **Native** (the host CLI auto-loads these): Claude `~/.claude/projects/<encoded>/memory/MEMORY.md` (true machine-local auto memory); Claude/Gemini `CLAUDE.md` / `GEMINI.md` boot files via hierarchical walk; Codex `AGENTS.md` auto-load.
+- **Sidecar** (canonical surface that the host does not auto-load, but is governed in lockstep with the native surface): Codex `<project>/.codex/memory/AGENTS_MEMORY.md`; Gemini `<project>/.gemini/memory/MEMORY.md`. These are bridge-evidence files, not claims of native auto-loading.
+
+Do not fake parity. When a host lacks a stable native target, validate the sidecar as bridge evidence and document the conservatism rather than claiming equivalence.
+
+## Hook Governance
+
+`policies/hooks.json` (schema v3) is the canonical authoring surface for hooks across Claude, Codex, and Gemini. The seeded `pre-tool-execution-guardian` is the universal pre-tool veto; subsequent records have shipped for memory bridge lifecycle and the user-prompt advisory.
+
+- The schema supports five handler types (`command`, `http`, `mcp_tool`, `prompt`, `agent`); only command handlers are currently live across all three hosts.
+- Canonical events translate to host-native event names through a curated allow-list in `scripts/omni_factory.py:_EVENT_ALIASES`. Drift in this allow-list is a silent-correctness class: surface JSON parse alone does not catch it, which is why `validate-triad-runtime.py` derives expected native event keys from every active record.
+- A canonical event whose alias is `None` for a given host is dropped by that host's renderer; the record's `targets` array must reflect the same exclusion explicitly so intent is documented.
+
+Full rendering rules, the canonical event translation table, and the add-a-hook workflow live in `docs/HOST_INTEGRATIONS.md` §Unified Hook Lifecycle.
+
+## Universal State Layer And Memory Bridge
+
+`policies/memory.json` (schema v2) authors the cross-host session-state layer. Renderers compile its sections into a per-project `MEMORY.md` plus a sibling `.forge_state/` directory containing manifest, archivist log, bridge state, and bridge log.
+
+- `<project>/MEMORY.md` is the canonical session-state file. It is the only rewriteable surface in the universal state layer, owned by the `memory-archivist` skill; never edit anchor lines by hand.
+- The bridge synchronizes canonical `MEMORY.md` to host-local memory targets via async session lifecycle hooks (`session_start` outbound, `stop` / `SessionEnd` inbound). Inbound imports re-apply the secrets-deny policy and append through the archivist.
+- Bridge targets follow the native-vs-sidecar split above. The validator records `memory_pass` (universal layer reachable) and `bridge_pass` (host-local target written and hash-recorded) as separate gates.
+
+Full schema, rendered surface paths, and the add-or-remove-a-section workflow live in `docs/HOST_INTEGRATIONS.md` §Universal State Layer.
 
 ## Knowledge Anchor
 

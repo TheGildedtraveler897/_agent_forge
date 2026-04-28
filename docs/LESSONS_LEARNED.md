@@ -1,5 +1,5 @@
 # Lessons Learned
-Last updated: 2026-04-28 (RC milestone: SOTA-2026 ship + ledger triage — 9 entries promoted, 7 remain active)
+Last updated: 2026-04-28 (RC milestone: SOTA-2026 ship + doctrine promotion sweep — 15 entries promoted, 1 remains active, 0 superseded)
 
 This file is the append-first knowledge anchor for Agent Forge.
 
@@ -32,7 +32,7 @@ This file is the append-first knowledge anchor for Agent Forge.
 - `Architectural Decision:` Keep host boot files native and rename only secondary docs to host-agnostic names such as `HOST_INTEGRATIONS.md` and `TRIAD_RUNTIME_VALIDATION.md`.
 - `Evidence:` 2026 official docs for Claude Code memory, Codex `AGENTS.md`, and Gemini `GEMINI.md`; Phase 3 wargame and repo reconciliation pass.
 - `Promotion Target:` `docs/HOST_INTEGRATIONS.md`
-- `Status:` active
+- `Status:` promoted (`docs/HOST_INTEGRATIONS.md` §Native Boot Rules and `docs/PORTABILITY.md` §Native Boot Files both name `CLAUDE.md`/`AGENTS.md`/`GEMINI.md` as native; secondary docs renamed safely without breaking host-native boot)
 
 ### 2026-04-23 - Codex Needs AGENTS-Led Access To The Lesson Ledger
 
@@ -42,7 +42,7 @@ This file is the append-first knowledge anchor for Agent Forge.
 - `Architectural Decision:` Keep the canonical knowledge anchor at `docs/LESSONS_LEARNED.md`. Load it natively through `CLAUDE.md` and `GEMINI.md`, and require Codex-facing docs and runtime probes to consult it deliberately.
 - `Evidence:` Codex `AGENTS.md` discovery rules, Gemini `@` imports, Claude `@` imports, and Phase 3 runtime-validation design.
 - `Promotion Target:` `docs/TRIAD_RUNTIME_VALIDATION.md`
-- `Status:` active
+- `Status:` promoted (`docs/HOST_INTEGRATIONS.md` §Codex and §Knowledge Anchor + `docs/CONOPS.md` §Knowledge Anchor encode the AGENTS-led-access rule; `docs/TRIAD_RUNTIME_VALIDATION.md` Preflight Reads names the ledger explicitly)
 
 ### 2026-04-23 - Delete Legacy Host-Specific Source Trees Once The Generator Owns Delivery
 
@@ -52,7 +52,7 @@ This file is the append-first knowledge anchor for Agent Forge.
 - `Architectural Decision:` Generated Claude, Codex, and Gemini surfaces must come only from canonical capability metadata plus the shared omni-factory engine. Remove dead source trees once the replacement path is verified.
 - `Evidence:` `scripts/omni_factory.py` capability discovery, stale-doc audit, and the Phase 3 purge plan.
 - `Promotion Target:` `docs/PORTABILITY.md`
-- `Status:` active
+- `Status:` promoted (`AGENTS.md` Rule "Generated host surfaces are never hand-edited" + `docs/PORTABILITY.md` "Host-native directories are generated delivery targets, not authoring surfaces" encode the principle; legacy `_agent_forge/claude/` deletion stands)
 
 ### 2026-04-23 - Distinguish Codex Sandbox Failure From Missing Generated Surfaces
 
@@ -102,7 +102,7 @@ This file is the append-first knowledge anchor for Agent Forge.
 - `Architectural Decision:` (a) Bumped `policies/hooks.json` to schema version 2 with a top-level `shared` array plus host-specific arrays. Each record carries `id`, `event`, `matcher`, `command`, `targets`, optional `timeout_ms`, `status_message`, `description`. (b) Added `claude_hook_payload()` and `gemini_hook_payload()` renderers in `omni_factory.py` next to the existing Codex renderer; all three pull from `_hooks_for_host(host)` which merges shared + own. Claude writes `.claude/settings.json`, Gemini merges hooks into `.gemini/settings.json`, Codex continues to emit `.codex/hooks.json`. (c) Event names translate via `_EVENT_ALIASES`. (d) New skill `skills/global/telemetry-guardian/` with POSIX `guardian.sh` deny list (`--no-verify`, force-push-to-protected, wildcard home deletion, unscoped `terraform destroy`, whole-disk `dd`, recursive 777 on home, `--no-gpg-sign`, explicit `git reset --hard <ref>`). Opt out with `AGENT_FORGE_GUARDIAN=off`, logged to `~/.agent-forge/guardian.log`. (e) `verify()` now parses `hooks.json`, checks every record has `id`/`event`/`command`, and verifies referenced `bash <script>` paths exist. (f) `validate-triad-runtime.py` now runs a `hook_surface_for(host, project_root)` check after skill enumeration and attaches `hook_surface` to each host result; overall pass requires both skill enumeration AND hook-surface presence.
 - `Evidence:` `policies/hooks.json` (version 2 schema with `shared[0]` = `pre-tool-execution-guardian`); `scripts/omni_factory.py` (`_hooks_for_host`, `codex_hook_payload`, `claude_hook_payload`, `gemini_hook_payload`, `_EVENT_ALIASES`, `sync_claude` writing `.claude/settings.json`, `render_gemini_settings` injecting `hooks` block, extended `verify()` checks); `skills/global/telemetry-guardian/SKILL.md` and `guardian.sh` (tested with 7 invocations: 3 allowed, 4 blocked, 1 bypassed correctly); `scripts/validate-triad-runtime.py` `hook_surface_for` check added.
 - `Promotion Target:` `docs/CONOPS.md` §Hook Governance — promote once at least one additional cross-host hook has been added and survived a full sync cycle across all 6 governed projects.
-- `Status:` active
+- `Status:` promoted (`docs/CONOPS.md` §Hook Governance now exists; criterion met by six `memory-bridge` records on `session_start`/`stop` plus `prompt-auto-activator` on `user_prompt_submit`, all surviving full-sync across all 6 governed projects)
 
 ### 2026-04-25 - Universal State Layer + Memory Archivist; Triad Validator Gains memory_surface_for + Refined Sandbox Detection
 
@@ -112,7 +112,7 @@ This file is the append-first knowledge anchor for Agent Forge.
 - `Architectural Decision:` (a) Canonical schema at `policies/memory.json` v1 with five sections (build_commands, project_quirks, active_tasks, recent_decisions, known_failures), retention 50/warn-at-40, secrets_policy=deny. `active_tasks` is the only rewriteable section. (b) `scripts/omni_factory.py` gains `_memory_sections()`, `render_memory_md()`, `render_forge_state_readme()`, `render_forge_state_manifest()`, and `sync_memory()`; the latter is called from `sync_claude` / `sync_codex` / `sync_gemini` so memory writes propagate to every governed project. (c) `render_project_gemini_md` adds `@MEMORY.md` import. (d) `AGENTS.md` Read Order gains a fifth entry pointing every host at `<project>/MEMORY.md` — single edit covers Claude / Codex / Gemini reachability. (e) `verify()` parses `policies/memory.json` and checks every governed project has `MEMORY.md` with all section anchors and a well-formed `.forge_state/manifest.json`. (f) `skills/global/memory-archivist/` ships with `SKILL.md` (workflow class, all-host targets) and `archivist.py` providing `append`, `validate`, `summary` subcommands; secrets-deny patterns reject API keys, private keys, and credential-shaped strings; audit log at `<project>/.forge_state/archivist.log`. (g) `scripts/validate-triad-runtime.py` gains `memory_surface_for(host, project_root)` parallel to `hook_surface_for`. Overall pass now requires skill + hook + memory surfaces. Per-host matrix entry adds `memory_pass`. (h) `host_sandbox_blocked()` marker list extended with the new Codex error strings.
 - `Evidence:` `policies/memory.json`; `scripts/omni_factory.py` (memory renderers, `MEMORY_POLICY_PATH`, extended `verify()`); `AGENTS.md` Read Order entry 5; `skills/global/memory-archivist/SKILL.md` and `archivist.py` (live unit-tested: append OK, validate OK, secrets-deny rejected `API_KEY=...` with exit 2); `scripts/validate-triad-runtime.py` (`memory_surface_for`, expanded sandbox-marker list); `runtime/validation/triad/20260425-174222/summary.json` (overall pass=true, all three hosts hook_pass=true memory_pass=true, 28/28 skills, Codex `filesystem-escalated` after sandbox detection upgrade); `teams/improvement-team.json` (memory-archivist wired alongside sprint-harvester); `runtime/validation-matrix.json` (per-host memory_pass field).
 - `Promotion Target:` `docs/CONOPS.md` §Capability Model — promote the "policy schema + three renderers + skill that exercises it" rhythm into first-class CONOPS doctrine once a third paired sprint succeeds. The two data points so far (hook lifecycle 2026-04-24, memory layer 2026-04-25) are convergent but a third confirms the pattern is robust.
-- `Status:` active
+- `Status:` promoted (`docs/CONOPS.md` §Authoring Pattern: Policy + Renderers + Capability now codifies the rhythm; criterion met by five sprints — hooks 2026-04-24, memory layer 2026-04-25, memory bridge 2026-04-27, MCP namespace 2026-04-27, prompt-auto-activator 2026-04-28; CONOPS.md §Universal State Layer And Memory Bridge codifies the layer specifically)
 
 ### 2026-04-25 - Compound Bash Calls Cause Silent Tool-Result Delivery Stalls; Treat Missing Tool Results As A Re-Grounding Signal
 
@@ -162,7 +162,7 @@ This file is the append-first knowledge anchor for Agent Forge.
 - `Architectural Decision:` `memory-bridge` writes Claude's true auto-memory path, Codex `<project>/.codex/memory/AGENTS_MEMORY.md`, and Gemini `<project>/.gemini/memory/MEMORY.md`. Canonical `<project>/MEMORY.md` remains the source of truth; inbound imports append through `memory-archivist`; `validate-triad-runtime.py` records a separate `bridge_pass` so bridge evidence cannot be conflated with `memory_pass`.
 - `Evidence:` `policies/memory.json` v2 bridge block; `skills/global/memory-bridge/bridge.py`; `tests/test_memory_bridge.py`; `python3 -m unittest tests.test_hooks_v3 tests.test_memory_bridge` exit 0; `python3 scripts/verify-agent-forge.py` exit 0; `runtime/validation/triad/20260427-203021/summary.json` all hosts `hook+ mem+ bridge+`.
 - `Promotion Target:` `docs/CONOPS.md` §Host Delivery Surfaces and §Runtime Validation once MCP namespace prefixing confirms the same conservative sidecar pattern still holds.
-- `Status:` active
+- `Status:` promoted (MCP namespace prefixing landed 2026-04-27 with the same conservative pattern; `docs/CONOPS.md` §Host Delivery Surfaces now carries a §Native vs Sidecar Surfaces subsection that names native auto-load paths vs governed sidecars and forbids faking parity)
 
 ### 2026-04-27 - Canonical MCP Prefixing Lives At The Server Alias Boundary; Direct MCP Smoke Beats Host Management UIs
 
