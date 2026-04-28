@@ -98,6 +98,47 @@ python3 scripts/omni_factory.py sync-gemini --project <name>
 
 The shell wrappers remain convenience entrypoints only.
 
+## Canonical MCP Routing
+
+`global-mcp.json` is the canonical shared MCP inventory. Sprint 4 upgraded it to schema v2 and seeded the first real shared server.
+
+### Schema posture
+
+- `prefix` is the semantic namespace (`forge.factory`), used for collision control in canonical data and verifier checks.
+- `server_alias` is derived for host configs (`forge-factory`), because hosts do not expose one shared tool-name format:
+  - Claude pattern-matches MCP tools as `mcp__<server>__<tool>`
+  - Gemini auto-prefixes tools as `mcp_<server>_<tool>`
+  - Codex keys servers under `[mcp_servers.<server>]`
+- `projects.json` now carries `trusted_workspace: true|false`. Remote or project-scoped MCP servers do not emit to untrusted projects.
+
+### Rendered surfaces
+
+- Claude → `<project>/.mcp.json`
+- Codex → `<project>/.codex/config.toml`
+- Gemini → `<project>/.gemini/settings.json`
+
+### Host-specific rendering
+
+- Claude stores MCP servers under `.mcp.json.mcpServers.<server_alias>`. Stdio servers render with `command` and `args`; HTTP servers render with `type` and `url`.
+- Codex stores project-local MCP config under `[mcp_servers.<server_alias>]` in `.codex/config.toml`. Tool filters render as `enabled_tools`; streamable HTTP bearer auth renders as `bearer_token_env_var`.
+- Gemini stores servers under `.gemini/settings.json.mcpServers.<server_alias>`. Gemini then discovers tools as `mcp_<server_alias>_<tool>`. Avoid underscores in `server_alias` because Gemini policy parsing splits on underscores.
+
+### Seeded proof server
+
+Sprint 4 seeds one local stdio server: `forge-factory`, with semantic prefix `forge.factory`, exposing one tool: `read_handoff`.
+
+- Canonical source: `global-mcp.json`
+- Server implementation: `scripts/mcp/forge_factory_server.py`
+- Trust posture: local stdio only, no credentials
+
+### Validation rule
+
+`mcp_pass` does not mean every host CLI's MCP management subcommand can browse project-local tools identically. It means:
+
+- the expected server alias reached the rendered host config
+- the expected tool filter is present where the host supports it
+- the seeded stdio server answered a direct `tools/list` smoke test during triad validation
+
 ## Unified Hook Lifecycle
 
 `policies/hooks.json` is the canonical authoring surface for hooks across all three hosts. The renderers compile each record into the host's native format, so one canonical hook propagates identically to Claude, Codex, and Gemini.

@@ -4,6 +4,7 @@
     {
       "name": "jarvis",
       "root": "jarvis",
+      "trusted_workspace": true,
       "required_files": [
         "AGENTS.md",
         "CLAUDE.md",
@@ -20,6 +21,7 @@
     {
       "name": "RoboNaaz",
       "root": "RoboNaaz",
+      "trusted_workspace": false,
       "required_files": [
         "AGENTS.md",
         "CLAUDE.md",
@@ -31,6 +33,7 @@
     {
       "name": "ZorroClaw",
       "root": "ZorroClaw",
+      "trusted_workspace": false,
       "required_files": [
         "AGENTS.md",
         "docs/CONOPS.md",
@@ -41,6 +44,7 @@
     {
       "name": "homelab",
       "root": "homelab",
+      "trusted_workspace": false,
       "required_files": [
         "AGENTS.md",
         "AI_GUIDE.md",
@@ -51,6 +55,7 @@
     {
       "name": "factory",
       "root": "ZorroForge/factory",
+      "trusted_workspace": false,
       "required_files": [
         "AGENTS.md",
         "README.md",
@@ -61,6 +66,7 @@
     {
       "name": "playlist-archive",
       "root": "playlist-archive",
+      "trusted_workspace": false,
       "required_files": [
         "AGENTS.md",
         "CLAUDE.md",

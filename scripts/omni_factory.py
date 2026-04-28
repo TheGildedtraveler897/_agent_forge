@@ -39,6 +39,7 @@ class ProjectSpec:
     name: str
     root: Path
     required_files: list[str]
+    trusted_workspace: bool = False
 
 
 @dataclass(frozen=True)
@@ -328,6 +329,7 @@ def load_projects() -> list[ProjectSpec]:
                 name=entry["name"],
                 root=PROJECTS_ROOT / entry["root"],
                 required_files=list(entry.get("required_files") or []),
+                trusted_workspace=bool(entry.get("trusted_workspace", False)),
             )
         )
     return projects
@@ -533,17 +535,55 @@ def render_global_gemini_md() -> str:
     )
 
 
+MCP_TARGETS = ("claude", "codex", "gemini")
+MCP_SCOPES = ("user", "project", "shared")
+MCP_TRANSPORT_TYPES = ("stdio", "streamable_http", "sse")
+MCP_AUTH_MODES = ("none", "bearer", "oauth")
+MCP_TRUST_MODES = ("local", "remote-trusted", "remote-sandboxed")
+
+
+def _as_list(value: Any) -> list[Any]:
+    if value is None:
+        return []
+    if value == "*":
+        return ["*"]
+    if isinstance(value, list):
+        return value
+    return [value]
+
+
+def mcp_server_alias(prefix: str) -> str:
+    return prefix.replace(".", "-")
+
+
 def normalize_mcp_server(server_id: str, server: dict[str, Any], defaults: dict[str, Any]) -> dict[str, Any]:
+    prefix = str(server.get("prefix") or server_id)
+    tool_filter = list(server.get("tool_filter") or server.get("tool_allow") or [])
+    trust = str(server.get("trust") or ("remote-trusted" if server.get("trust_server") else "local"))
+    bearer_token_env_var = (
+        server.get("bearer_token_env_var")
+        or server.get("bearer_token_env")
+        or (server.get("transport") or {}).get("bearer_token_env_var")
+    )
     merged = {
         "id": server_id,
+        "server_alias": str(server.get("server_alias") or mcp_server_alias(prefix)),
+        "prefix": prefix,
         "description": server.get("description", ""),
         "scope": server.get("scope", "project"),
-        "projects": list(server.get("projects") or []),
+        "projects": _as_list(server.get("projects")),
+        "targets": list(server.get("targets") or MCP_TARGETS),
         "transport": dict(server.get("transport") or {}),
+        "auth": server.get("auth", "none"),
+        "trust": trust,
         "env_passthrough": list(server.get("env_passthrough") or []),
+        "env_optional": list(server.get("env_optional") or []),
         "env_literal": dict(server.get("env_literal") or {}),
         "headers": dict(server.get("headers") or {}),
-        "tool_allow": list(server.get("tool_allow") or []),
+        "env_headers": dict(server.get("env_headers") or server.get("env_http_headers") or {}),
+        "bearer_token_env_var": bearer_token_env_var,
+        "tool_filter": tool_filter,
+        "tool_allow": tool_filter,
         "tool_deny": list(server.get("tool_deny") or []),
         "required": server.get("required", defaults.get("required", False)),
         "trust_server": server.get("trust_server", defaults.get("trust_server", False)),
@@ -563,18 +603,134 @@ def load_mcp_servers() -> list[dict[str, Any]]:
     return servers
 
 
-def project_mcp_servers(project_name: str) -> list[dict[str, Any]]:
+def project_is_trusted(project_name: str) -> bool:
+    for project in load_projects():
+        if project.name == project_name:
+            return project.trusted_workspace
+    return False
+
+
+def mcp_server_requires_trusted_workspace(server: dict[str, Any]) -> bool:
+    transport_type = (server.get("transport") or {}).get("type")
+    return (
+        server.get("scope") == "project"
+        or str(server.get("trust", "")).startswith("remote")
+        or transport_type in {"streamable_http", "sse"}
+    )
+
+
+def mcp_server_selected_for_project(server: dict[str, Any], project_name: str) -> bool:
+    scope = server["scope"]
+    projects = server["projects"]
+    if scope not in {"project", "shared"}:
+        return False
+    if projects and "*" not in projects and project_name not in projects:
+        return False
+    if mcp_server_requires_trusted_workspace(server) and not project_is_trusted(project_name):
+        return False
+    return True
+
+
+def project_mcp_servers(project_name: str, host: str | None = None) -> list[dict[str, Any]]:
     selected: list[dict[str, Any]] = []
     for server in load_mcp_servers():
-        scope = server["scope"]
-        projects = server["projects"]
-        if scope in {"project", "shared"} and (not projects or project_name in projects):
+        if host is not None and host not in server["targets"]:
+            continue
+        if mcp_server_selected_for_project(server, project_name):
             selected.append(server)
     return selected
 
 
-def user_mcp_servers() -> list[dict[str, Any]]:
-    return [server for server in load_mcp_servers() if server["scope"] == "user"]
+def user_mcp_servers(host: str | None = None) -> list[dict[str, Any]]:
+    selected: list[dict[str, Any]] = []
+    for server in load_mcp_servers():
+        if server["scope"] != "user":
+            continue
+        if host is not None and host not in server["targets"]:
+            continue
+        selected.append(server)
+    return selected
+
+
+def validate_mcp_inventory() -> tuple[list[str], list[str]]:
+    errors: list[str] = []
+    warnings: list[str] = []
+    payload = load_json(GLOBAL_MCP_PATH)
+    version = payload.get("version")
+    if version != 2:
+        errors.append(f"global-mcp.json unsupported version: {version}")
+        return errors, warnings
+
+    seen_prefixes: dict[str, str] = {}
+    projects = {project.name: project for project in load_projects()}
+    servers = load_mcp_servers()
+    for server in servers:
+        if not server.get("prefix"):
+            errors.append(f"global-mcp.json[{server['id']}] missing prefix")
+        elif server["prefix"] in seen_prefixes:
+            errors.append(
+                f"global-mcp.json duplicate prefix '{server['prefix']}' for "
+                f"{seen_prefixes[server['prefix']]} and {server['id']}"
+            )
+        else:
+            seen_prefixes[server["prefix"]] = server["id"]
+
+        if server["scope"] not in MCP_SCOPES:
+            errors.append(f"global-mcp.json[{server['id']}] invalid scope '{server['scope']}'")
+        if any(target not in MCP_TARGETS for target in server["targets"]):
+            errors.append(f"global-mcp.json[{server['id']}] invalid targets {server['targets']}")
+        if server["auth"] not in MCP_AUTH_MODES:
+            errors.append(f"global-mcp.json[{server['id']}] invalid auth '{server['auth']}'")
+        if server["trust"] not in MCP_TRUST_MODES:
+            errors.append(f"global-mcp.json[{server['id']}] invalid trust '{server['trust']}'")
+
+        transport = server["transport"]
+        transport_type = transport.get("type")
+        if transport_type not in MCP_TRANSPORT_TYPES:
+            errors.append(f"global-mcp.json[{server['id']}] invalid transport type '{transport_type}'")
+        elif transport_type == "stdio":
+            if not transport.get("command"):
+                errors.append(f"global-mcp.json[{server['id']}] stdio transport missing command")
+        elif transport_type in {"streamable_http", "sse"}:
+            if not (transport.get("http_url") or transport.get("url")):
+                errors.append(f"global-mcp.json[{server['id']}] {transport_type} transport missing url")
+
+        if "gemini" in server["targets"] and "_" in server["server_alias"]:
+            errors.append(
+                f"global-mcp.json[{server['id']}] server alias '{server['server_alias']}' "
+                "contains '_' which Gemini CLI cannot namespace safely"
+            )
+
+        if any(not isinstance(name, str) for name in server["tool_filter"]):
+            errors.append(f"global-mcp.json[{server['id']}] tool_filter must contain only strings")
+
+        if server["auth"] == "bearer" and not server.get("bearer_token_env_var") and not transport.get("bearer_token_env_var"):
+            warnings.append(f"global-mcp.json[{server['id']}] bearer auth has no bearer_token_env_var")
+
+        required_env = [
+            name for name in server["env_passthrough"]
+            if name not in set(server["env_optional"])
+        ]
+        if server["scope"] in {"project", "shared"}:
+            candidate_projects = server["projects"]
+            if not candidate_projects or "*" in candidate_projects:
+                candidate_projects = list(projects.keys())
+            for project_name in candidate_projects:
+                project = projects.get(project_name)
+                if project is None:
+                    errors.append(f"global-mcp.json[{server['id']}] references unknown project '{project_name}'")
+                    continue
+                if mcp_server_requires_trusted_workspace(server) and not project.trusted_workspace:
+                    errors.append(
+                        f"global-mcp.json[{server['id']}] cannot emit to untrusted project '{project_name}'"
+                    )
+            for env_name in required_env:
+                if env_name not in os.environ:
+                    warnings.append(
+                        f"global-mcp.json[{server['id']}] env_passthrough '{env_name}' is unset"
+                    )
+
+    return errors, warnings
 
 
 HOOK_TARGETS = ("claude", "codex", "gemini")
@@ -1047,7 +1203,7 @@ def sync_memory(project_root: Path, state: dict[str, Any]) -> None:
 
 
 def render_claude_project_mcp(project_name: str) -> str | None:
-    servers = project_mcp_servers(project_name)
+    servers = project_mcp_servers(project_name, host="claude")
     if not servers:
         return None
     payload = {"mcpServers": {}}
@@ -1061,20 +1217,23 @@ def render_claude_project_mcp(project_name: str) -> str | None:
         if transport.get("type") == "stdio":
             entry.update(
                 {
+                    "type": "stdio",
                     "command": transport.get("command"),
                     "args": transport.get("args", []),
                     **({"cwd": transport["cwd"]} if transport.get("cwd") else {}),
                 }
             )
         elif transport.get("type") == "streamable_http":
-            entry["httpUrl"] = transport.get("http_url") or transport.get("url")
+            entry["type"] = "http"
+            entry["url"] = transport.get("http_url") or transport.get("url")
         elif transport.get("type") == "sse":
+            entry["type"] = "sse"
             entry["url"] = transport.get("url")
         if server["headers"]:
             entry["headers"] = server["headers"]
         if env_map:
             entry["env"] = env_map
-        payload["mcpServers"][server["id"]] = entry
+        payload["mcpServers"][server["server_alias"]] = entry
     return json.dumps(payload, indent=2, sort_keys=True) + "\n"
 
 
@@ -1084,7 +1243,7 @@ def render_gemini_settings(project_name: str) -> str:
             "fileName": "GEMINI.md",
         }
     }
-    servers = project_mcp_servers(project_name)
+    servers = project_mcp_servers(project_name, host="gemini")
     if servers:
         settings["mcpServers"] = {}
         for server in servers:
@@ -1110,11 +1269,11 @@ def render_gemini_settings(project_name: str) -> str:
                 entry["url"] = transport.get("url")
             if server["headers"]:
                 entry["headers"] = server["headers"]
-            if server["tool_allow"]:
-                entry["includeTools"] = server["tool_allow"]
             if server["tool_deny"]:
                 entry["excludeTools"] = server["tool_deny"]
-            settings["mcpServers"][server["id"]] = entry
+            if server["tool_filter"]:
+                entry["includeTools"] = server["tool_filter"]
+            settings["mcpServers"][server["server_alias"]] = entry
     gemini_hooks = gemini_hook_payload()
     if gemini_hooks:
         settings["hooks"] = gemini_hooks
@@ -1137,10 +1296,10 @@ def render_codex_config(project_name: str, project_root: Path, capabilities: lis
     for capability in capabilities:
         relevant_ids.update(capability.requires_mcp_servers)
 
-    for server in project_mcp_servers(project_name):
+    for server in project_mcp_servers(project_name, host="codex"):
         if relevant_ids and server["id"] not in relevant_ids:
             continue
-        lines.extend(["", f"[mcp_servers.{server['id']}]"])
+        lines.extend(["", f"[mcp_servers.{server['server_alias']}]"])
         transport = server["transport"]
         if transport.get("type") == "stdio":
             if transport.get("command"):
@@ -1153,16 +1312,17 @@ def render_codex_config(project_name: str, project_root: Path, capabilities: lis
         elif transport.get("type") == "streamable_http":
             url = transport.get("http_url") or transport.get("url")
             lines.append(f"url = {toml_string(url)}")
+            bearer_env = server.get("bearer_token_env_var") or transport.get("bearer_token_env_var")
+            if bearer_env:
+                lines.append(f"bearer_token_env_var = {toml_string(bearer_env)}")
         elif transport.get("type") == "sse":
             lines.append(f"url = {toml_string(transport['url'])}")
-        if server["headers"]:
-            pass
         lines.append(f"required = {'true' if server['required'] else 'false'}")
         lines.append(f"supports_parallel_tool_calls = {'true' if server['parallel_safe'] else 'false'}")
         lines.append(f"startup_timeout_sec = {max(1, server['startup_timeout_ms'] // 1000)}")
         lines.append(f"tool_timeout_sec = {max(1, server['tool_timeout_ms'] // 1000)}")
-        if server["tool_allow"]:
-            items = ", ".join(toml_string(item) for item in server["tool_allow"])
+        if server["tool_filter"]:
+            items = ", ".join(toml_string(item) for item in server["tool_filter"])
             lines.append(f"enabled_tools = [{items}]")
         if server["tool_deny"]:
             items = ", ".join(toml_string(item) for item in server["tool_deny"])
@@ -1170,19 +1330,23 @@ def render_codex_config(project_name: str, project_root: Path, capabilities: lis
         env_map = {key: f"${key}" for key in server["env_passthrough"]}
         env_map.update(server["env_literal"])
         if env_map:
-            lines.append("[mcp_servers." + server["id"] + ".env]")
+            lines.append("[mcp_servers." + server["server_alias"] + ".env]")
             for key, value in env_map.items():
                 lines.append(f"{key} = {toml_string(value)}")
         if server["headers"]:
-            lines.append("[mcp_servers." + server["id"] + ".headers]")
+            lines.append("[mcp_servers." + server["server_alias"] + ".http_headers]")
             for key, value in server["headers"].items():
+                lines.append(f"{key} = {toml_string(value)}")
+        if server["env_headers"]:
+            lines.append("[mcp_servers." + server["server_alias"] + ".env_http_headers]")
+            for key, value in server["env_headers"].items():
                 lines.append(f"{key} = {toml_string(value)}")
     lines.append("")
     return "\n".join(lines)
 
 
 def render_user_codex_mcp_block() -> str:
-    servers = user_mcp_servers()
+    servers = user_mcp_servers(host="codex")
     if not servers:
         return ""
     lines = [
@@ -1190,7 +1354,7 @@ def render_user_codex_mcp_block() -> str:
         "# Generated by Agent Forge omni-factory.",
     ]
     for server in servers:
-        lines.extend(["", f"[mcp_servers.{server['id']}]"])
+        lines.extend(["", f"[mcp_servers.{server['server_alias']}]"])
         transport = server["transport"]
         if transport.get("type") == "stdio":
             if transport.get("command"):
@@ -1203,12 +1367,35 @@ def render_user_codex_mcp_block() -> str:
         elif transport.get("type") == "streamable_http":
             url = transport.get("http_url") or transport.get("url")
             lines.append(f"url = {toml_string(url)}")
+            bearer_env = server.get("bearer_token_env_var") or transport.get("bearer_token_env_var")
+            if bearer_env:
+                lines.append(f"bearer_token_env_var = {toml_string(bearer_env)}")
         elif transport.get("type") == "sse":
             lines.append(f"url = {toml_string(transport['url'])}")
         lines.append(f"required = {'true' if server['required'] else 'false'}")
         lines.append(f"supports_parallel_tool_calls = {'true' if server['parallel_safe'] else 'false'}")
         lines.append(f"startup_timeout_sec = {max(1, server['startup_timeout_ms'] // 1000)}")
         lines.append(f"tool_timeout_sec = {max(1, server['tool_timeout_ms'] // 1000)}")
+        if server["tool_filter"]:
+            items = ", ".join(toml_string(item) for item in server["tool_filter"])
+            lines.append(f"enabled_tools = [{items}]")
+        if server["tool_deny"]:
+            items = ", ".join(toml_string(item) for item in server["tool_deny"])
+            lines.append(f"disabled_tools = [{items}]")
+        env_map = {key: f"${key}" for key in server["env_passthrough"]}
+        env_map.update(server["env_literal"])
+        if env_map:
+            lines.append("[mcp_servers." + server["server_alias"] + ".env]")
+            for key, value in env_map.items():
+                lines.append(f"{key} = {toml_string(value)}")
+        if server["headers"]:
+            lines.append("[mcp_servers." + server["server_alias"] + ".http_headers]")
+            for key, value in server["headers"].items():
+                lines.append(f"{key} = {toml_string(value)}")
+        if server["env_headers"]:
+            lines.append("[mcp_servers." + server["server_alias"] + ".env_http_headers]")
+            for key, value in server["env_headers"].items():
+                lines.append(f"{key} = {toml_string(value)}")
     lines.extend(["", "# END AGENT FORGE MCP", ""])
     return "\n".join(lines)
 
@@ -1491,6 +1678,18 @@ def verify() -> int:
             fail("registry.json is out of date with canonical omni-factory sources")
     else:
         fail("Missing registry.json")
+
+    try:
+        errors, warnings = validate_mcp_inventory()
+    except Exception as exc:
+        fail(f"global-mcp.json validation failed to run: {exc}")
+    else:
+        if not errors:
+            ok("global-mcp.json inventory valid")
+        for message in errors:
+            fail(message)
+        for message in warnings:
+            warn(message)
 
     for team in load_team_entries():
         ok(f"Team manifest present: {team['name']}")

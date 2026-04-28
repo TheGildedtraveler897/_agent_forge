@@ -22,6 +22,7 @@ import shlex
 import shutil
 import subprocess
 import sys
+import tomllib
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -422,6 +423,160 @@ def memory_bridge_for(host: str, project_root: Path) -> dict:
     }
 
 
+def project_name_for_root(project_root: Path) -> str:
+    project_root = project_root.resolve()
+    for entry in load_projects():
+        candidate = (PROJECTS_ROOT / entry["root"]).resolve()
+        if candidate == project_root:
+            return entry["name"]
+    return project_root.name
+
+
+def _write_mcp_message(stream, payload: dict) -> None:
+    body = json.dumps(payload).encode("utf-8")
+    stream.write(f"Content-Length: {len(body)}\r\n\r\n".encode("utf-8"))
+    stream.write(body)
+    stream.flush()
+
+
+def _read_mcp_message(stream) -> dict | None:
+    headers: dict[str, str] = {}
+    while True:
+        line = stream.readline()
+        if not line:
+            return None
+        if line in {b"\r\n", b"\n"}:
+            break
+        decoded = line.decode("utf-8").strip()
+        if ":" not in decoded:
+            continue
+        key, value = decoded.split(":", 1)
+        headers[key.strip().lower()] = value.strip()
+    length = int(headers.get("content-length", "0"))
+    if length <= 0:
+        return None
+    payload = stream.read(length)
+    if not payload:
+        return None
+    return json.loads(payload.decode("utf-8"))
+
+
+def stdio_tools_list_for(server: dict, project_root: Path) -> dict:
+    transport = server.get("transport") or {}
+    if transport.get("type") != "stdio":
+        return {"pass": True, "listed_tools": [], "reason": "non-stdio server skipped"}
+
+    command = transport.get("command")
+    args = list(transport.get("args") or [])
+    if not command:
+        return {"pass": False, "listed_tools": [], "reason": "stdio command missing"}
+
+    cwd = Path(os.path.expanduser(transport.get("cwd") or str(project_root)))
+    env = dict(os.environ)
+    env.update({key: value for key, value in (server.get("env_literal") or {}).items() if isinstance(value, str)})
+    for key in server.get("env_passthrough") or []:
+        if key in os.environ:
+            env[key] = os.environ[key]
+
+    proc = subprocess.Popen(
+        [os.path.expanduser(command), *args],
+        cwd=str(cwd),
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        env=env,
+    )
+    try:
+        assert proc.stdin is not None
+        assert proc.stdout is not None
+        _write_mcp_message(
+            proc.stdin,
+            {
+                "jsonrpc": "2.0",
+                "id": 1,
+                "method": "initialize",
+                "params": {
+                    "protocolVersion": "2025-06-18",
+                    "capabilities": {},
+                    "clientInfo": {"name": "agent-forge-validator", "version": "1.0.0"},
+                },
+            },
+        )
+        _read_mcp_message(proc.stdout)
+        _write_mcp_message(proc.stdin, {"jsonrpc": "2.0", "method": "notifications/initialized", "params": {}})
+        _write_mcp_message(proc.stdin, {"jsonrpc": "2.0", "id": 2, "method": "tools/list", "params": {}})
+        response = _read_mcp_message(proc.stdout) or {}
+        result = response.get("result") or {}
+        tools = result.get("tools") or []
+        listed_tools = [tool.get("name") for tool in tools if isinstance(tool, dict) and tool.get("name")]
+        return {"pass": bool(listed_tools), "listed_tools": listed_tools, "reason": ""}
+    except Exception as exc:
+        return {"pass": False, "listed_tools": [], "reason": str(exc)}
+    finally:
+        try:
+            if proc.stdin is not None:
+                proc.stdin.close()
+            if proc.stdout is not None:
+                proc.stdout.close()
+            if proc.stderr is not None:
+                proc.stderr.close()
+            proc.terminate()
+            proc.wait(timeout=3)
+        except Exception:
+            proc.kill()
+
+
+def mcp_surface_for(host: str, project_root: Path) -> dict:
+    project_name = project_name_for_root(project_root)
+    expected_servers = omni_factory.project_mcp_servers(project_name, host=host)
+    if not expected_servers:
+        return {"pass": True, "reason": "no MCP servers active", "listed_tools": []}
+
+    try:
+        if host == "claude":
+            path = project_root / ".mcp.json"
+            if not path.exists():
+                return {"pass": False, "path": str(path), "reason": ".mcp.json missing", "listed_tools": []}
+            data = json.loads(path.read_text())
+            observed = data.get("mcpServers") or {}
+        elif host == "codex":
+            path = project_root / ".codex" / "config.toml"
+            if not path.exists():
+                return {"pass": False, "path": str(path), "reason": "config.toml missing", "listed_tools": []}
+            data = tomllib.loads(path.read_text())
+            observed = data.get("mcp_servers") or {}
+        elif host == "gemini":
+            path = project_root / ".gemini" / "settings.json"
+            if not path.exists():
+                return {"pass": False, "path": str(path), "reason": "settings.json missing", "listed_tools": []}
+            data = json.loads(path.read_text())
+            observed = data.get("mcpServers") or {}
+        else:
+            return {"pass": False, "reason": f"unknown host {host}", "listed_tools": []}
+    except Exception as exc:
+        return {"pass": False, "reason": f"parse error: {exc}", "listed_tools": []}
+
+    expected_aliases = [server["server_alias"] for server in expected_servers]
+    missing_aliases = [alias for alias in expected_aliases if alias not in observed]
+    smoke = stdio_tools_list_for(expected_servers[0], project_root)
+    listed_tools = smoke.get("listed_tools") or []
+    expected_tools = list(expected_servers[0].get("tool_filter") or [])
+    missing_tools = [tool for tool in expected_tools if tool not in listed_tools]
+    pass_ = not missing_aliases and smoke.get("pass", False) and not missing_tools
+    return {
+        "pass": pass_,
+        "path": str(path),
+        "server_alias": expected_servers[0]["server_alias"],
+        "expected_aliases": expected_aliases,
+        "observed_aliases": sorted(observed.keys()),
+        "missing_aliases": missing_aliases,
+        "listed_tools": listed_tools,
+        "expected_tools": expected_tools,
+        "missing_tools": missing_tools,
+        "smoke_reason": smoke.get("reason", ""),
+    }
+
+
 def live_hook_invocation_for(
     host: str,
     project_root: Path,
@@ -514,6 +669,7 @@ def update_matrix(project_name: str, summary: dict) -> None:
                 "hook_pass": r.get("hook_surface", {}).get("pass", False),
                 "memory_pass": r.get("memory_surface", {}).get("pass", False),
                 "bridge_pass": r.get("memory_bridge", {}).get("pass", False),
+                "mcp_pass": r.get("mcp_surface", {}).get("pass", False),
                 **(
                     {
                         "live_hook_pass": r["live_hook"].get("pass", False),
@@ -580,6 +736,11 @@ def main() -> int:
         if not bridge_res["pass"]:
             res["pass"] = False
             res.setdefault("missing", []).append(f"memory-bridge:{bridge_res.get('reason') or bridge_res.get('last_error') or 'bridge evidence missing'}")
+        mcp_res = mcp_surface_for(host, project_root)
+        res["mcp_surface"] = mcp_res
+        if not mcp_res["pass"]:
+            res["pass"] = False
+            res.setdefault("missing", []).append(f"mcp-surface:{mcp_res.get('reason') or mcp_res.get('smoke_reason') or 'mcp surface not reachable'}")
         live_tag = ""
         if args.probe_invocations and res["pass"]:
             live_dir = evidence_dir / "live-hook"
@@ -596,7 +757,8 @@ def main() -> int:
         hook_tag = "hook+" if hook_res["pass"] else "hook-"
         mem_tag = "mem+" if memory_res["pass"] else "mem-"
         bridge_tag = "bridge+" if bridge_res["pass"] else "bridge-"
-        print(f"[{status}] {host:7s} method={res['method']:22s} missing={len(res['missing'])}/{res['expected_count']}  {hook_tag} {mem_tag} {bridge_tag}{live_tag}")
+        mcp_tag = "mcp+" if mcp_res["pass"] else "mcp-"
+        print(f"[{status}] {host:7s} method={res['method']:22s} missing={len(res['missing'])}/{res['expected_count']}  {hook_tag} {mem_tag} {bridge_tag} {mcp_tag}{live_tag}")
         results[host] = res
 
     overall = all(r["pass"] for r in results.values()) if results else False

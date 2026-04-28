@@ -163,3 +163,13 @@ This file is the append-first knowledge anchor for Agent Forge.
 - `Evidence:` `policies/memory.json` v2 bridge block; `skills/global/memory-bridge/bridge.py`; `tests/test_memory_bridge.py`; `python3 -m unittest tests.test_hooks_v3 tests.test_memory_bridge` exit 0; `python3 scripts/verify-agent-forge.py` exit 0; `runtime/validation/triad/20260427-203021/summary.json` all hosts `hook+ mem+ bridge+`.
 - `Promotion Target:` `docs/CONOPS.md` §Host Delivery Surfaces and §Runtime Validation once MCP namespace prefixing confirms the same conservative sidecar pattern still holds.
 - `Status:` active
+
+### 2026-04-27 - Canonical MCP Prefixing Lives At The Server Alias Boundary; Direct MCP Smoke Beats Host Management UIs
+
+- `Date:` 2026-04-27
+- `Context:` Sprint 4 shipped the first real shared MCP server through `global-mcp.json`. Web recon showed Gemini CLI auto-prefixes MCP tools as `mcp_<server>_<tool>`, Claude matches MCP tools as `mcp__<server>__<tool>`, and Codex's documented MCP config does not expose a first-class `prefix` field. At the same time, host MCP management subcommands (`mcp get`, `mcp list`) did not provide one clean cross-host proof surface for project-local servers.
+- `Lesson:` Cross-host MCP parity should be enforced at the **server alias** layer, not by pretending one literal tool FQN will render identically on all hosts. Also, a host's MCP management UI is not automatically the best release gate. The stronger proof for a seeded local stdio server is: rendered host config contains the expected alias, then a direct MCP `tools/list` smoke succeeds against that same server.
+- `Architectural Decision:` `global-mcp.json` v2 now carries a semantic `prefix` (for example `forge.factory`) plus a derived host-safe `server_alias` (`forge-factory`). `validate-triad-runtime.py` records `mcp_pass` only after the host config surface parses, the expected alias is present, and the seeded stdio server returns the expected tools over real MCP framing. Manual `mcp get/list` commands remain a secondary spot check, not the canonical release gate.
+- `Evidence:` `global-mcp.json` v2 seeded `forge-factory`; `scripts/mcp/forge_factory_server.py`; `tests/test_mcp_namespace.py`; `python3 -m unittest tests.test_hooks_v3 tests.test_memory_bridge tests.test_mcp_namespace` exit 0; `python3 scripts/verify-agent-forge.py` exit 0; `runtime/validation/triad/20260427-234006/summary.json` all hosts `hook+ mem+ bridge+ mcp+`; `claude mcp get forge-factory` saw the project config but still reported `Failed to connect`, while the triad smoke and host runtime probe proved the underlying stdio server path.
+- `Promotion Target:` `docs/HOST_INTEGRATIONS.md` and `docs/TRIAD_RUNTIME_VALIDATION.md`
+- `Status:` active

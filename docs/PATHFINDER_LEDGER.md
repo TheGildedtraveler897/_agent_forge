@@ -680,6 +680,21 @@ Sprint 3 verified that host memory surfaces are not equivalent and should not be
 
 **Decision.** Sprint 3's bridge writes to Claude's true auto-memory target and uses explicit project sidecars for Codex and Gemini: `<project>/.codex/memory/AGENTS_MEMORY.md` and `<project>/.gemini/memory/MEMORY.md`. The docs must call these sidecars what they are. `bridge_pass` proves the sidecars and Claude target exist and have outbound/inbound hash evidence; it does not claim native auto-loading for Codex or Gemini.
 
+## Section 6 — Sprint 4 MCP Namespace Recon (appended 2026-04-27)
+
+Sprint 4 verified that canonical MCP prefixing must respect each host's native namespace model rather than inventing a host-agnostic rendered tool name that none of the CLIs document equally.
+
+### 6.1 — Server Alias Is The Cross-Host Control Point
+
+**MCP protocol.** The current architecture docs still describe MCP as a client-server protocol with stdio and streamable HTTP transports. The function-name collision discussion remains client-side guidance rather than a protocol-native namespace field: clients should use the server name to namespace tools.
+
+**Claude.** Claude Code project MCP config lives in `.mcp.json`. Project-scoped servers prompt for approval before use. MCP prompts and hook matchers use the `mcp__<server>__<tool>` convention, so a server alias is the prefix authority.
+
+**Codex.** Codex CLI 0.124.0 stores MCP config in `config.toml`; project-scoped `.codex/config.toml` is trusted-workspace scoped. Streamable HTTP bearer auth uses `bearer_token_env_var`, not the backlog's proposed `bearer_token_env`.
+
+**Gemini.** Gemini CLI 0.39.1 unconditionally assigns fully qualified MCP tool names in the `mcp_<serverName>_<toolName>` form. Gemini also warns not to use underscores in server names because the policy parser splits on the first underscore after `mcp_`.
+
+**Decision.** Sprint 4 will keep `global-mcp.json` as the semantic source of truth with a `prefix` such as `forge.factory`, but render the host config server alias as `forge-factory`. The validator checks each host's native expected namespace form instead of pretending every host can display the literal `forge.factory.read_handoff` string.
 
 
 

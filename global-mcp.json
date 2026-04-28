@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "defaults": {
     "startup_timeout_ms": 20000,
     "tool_timeout_ms": 60000,
@@ -7,5 +7,33 @@
     "trust_server": false,
     "parallel_safe": false
   },
-  "servers": {}
+  "servers": {
+    "forge-factory": {
+      "prefix": "forge.factory",
+      "description": "Local Agent Forge factory MCP server.",
+      "scope": "shared",
+      "projects": "*",
+      "targets": [
+        "claude",
+        "codex",
+        "gemini"
+      ],
+      "transport": {
+        "type": "stdio",
+        "command": "sh",
+        "args": [
+          "-c",
+          "exec python3 \"$HOME/Projects/_agent_forge/scripts/mcp/forge_factory_server.py\""
+        ]
+      },
+      "auth": "none",
+      "trust": "local",
+      "tool_filter": [
+        "read_handoff"
+      ],
+      "env_passthrough": [],
+      "env_literal": {},
+      "headers": {}
+    }
+  }
 }

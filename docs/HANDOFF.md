@@ -4,6 +4,28 @@ Last updated: 2026-04-27
 
 ## What Changed
 
+### Sprint 4: MCP Namespace Prefixing & Routing (2026-04-27, Codex)
+
+Shipped A3: the omni-factory now has its first real shared MCP server, host-safe namespace rendering, trust-gated project routing, and a triad `mcp_pass` gate.
+
+#### Changes Made
+
+1. **`global-mcp.json` upgraded to v2** — seeded `forge-factory` as a local stdio shared server with semantic prefix `forge.factory`, host-safe alias `forge-factory`, and one filtered tool: `read_handoff`.
+2. **`projects.json` gained `trusted_workspace`** — `jarvis` is the Sprint 4 proof target; remote or project-scoped MCP servers are now blocked from untrusted governed projects.
+3. **Local proof server shipped** — `scripts/mcp/forge_factory_server.py` implements a minimal MCP stdio server with real content-length framing, `initialize`, `ping`, `tools/list`, and `tools/call`.
+4. **MCP renderers hardened** — `scripts/omni_factory.py` now normalizes MCP v2 records, derives host-safe `server_alias`, filters by host targets, emits Codex `bearer_token_env_var` / `enabled_tools`, and writes Claude `.mcp.json`, Codex `.codex/config.toml`, and Gemini `.gemini/settings.json` consistently.
+5. **Verifier extended** — `validate_mcp_inventory()` now rejects duplicate prefixes, invalid targets/scope/auth/trust/transport values, Gemini-unsafe underscores in server aliases, and trust-gate violations for project-scoped or remote servers.
+6. **Triad validator extended** — `validate-triad-runtime.py` now runs `mcp_surface_for()` per host and records `mcp_pass`. Pass means the host-native config surface contains the expected alias and the seeded stdio server answers a direct MCP `tools/list` smoke request with `read_handoff`.
+7. **Focused tests added** — `tests/test_mcp_namespace.py` covers v2 normalization, alias derivation, trust gating, duplicate-prefix rejection, the proof server handshake, and validator MCP surface proof.
+
+Evidence:
+- Tests: `python3 -m py_compile scripts/omni_factory.py scripts/validate-triad-runtime.py scripts/mcp/forge_factory_server.py` exit 0.
+- Tests: `python3 -m unittest tests.test_hooks_v3 tests.test_memory_bridge tests.test_mcp_namespace` exit 0.
+- Structural verifier: `python3 scripts/verify-agent-forge.py` exit 0.
+- Triad runtime artifact: `runtime/validation/triad/20260427-234006/summary.json` (`overall pass=true`, all hosts `hook+ mem+ bridge+ mcp+`; Codex remains `filesystem-escalated` with `sandbox_blocked:true`).
+
+Operational note: host MCP management subcommands are not yet a clean cross-host proof surface for project-local servers. `claude mcp get forge-factory` sees the project config but still reports `Failed to connect`; `mcp_pass` therefore uses rendered-surface validation plus a direct stdio `tools/list` smoke instead of `mcp get/list` parity.
+
 ### Sprint 3: Cross-Host Auto-Memory Bridge (2026-04-27, Codex)
 
 Shipped A2 + B2: canonical `MEMORY.md` now syncs to host-local memory surfaces through async session lifecycle hooks, with bridge state and triad runtime proof.
@@ -155,14 +177,14 @@ Finished the final standardization pass needed to make the omni-factory model in
 - **Teams:** canonical team manifests, with improvement-team now including lesson harvesting
 - **Hosts:** Claude, Codex, and Gemini delivery all wired through one sync engine
 - **Knowledge anchor:** `docs/LESSONS_LEARNED.md` holds durable lessons before doctrine promotion
-- **MCP:** canonical governance layer exists, but `global-mcp.json` is intentionally empty until real shared servers are added
-- **Validation:** structural verifier is green; Codex runtime validation now returns a strict structured result; Claude/Gemini checks remain runbook-driven
+- **MCP:** canonical governance layer is live with one seeded shared stdio server (`forge-factory`) and host-safe alias rendering
+- **Validation:** structural verifier is green; triad validation now records `hook_pass`, `memory_pass`, `bridge_pass`, and `mcp_pass` per host
 - **Suitcase status:** export/deploy path still present and should now describe host-agnostic surfaces instead of the retired Claude-first model
 - **Pickup path:** `docs/NEXT_AGENT_PROMPT.md` is the intended operator handoff artifact for Claude or Gemini
 
 ## Remaining Weaknesses
 
-1. **No live MCP servers yet** — the governance layer exists but has not been exercised with real shared MCP definitions.
+1. **Host-native MCP management UIs are not equivalent proof surfaces** — project-local `mcp get/list` behavior still differs across Claude, Codex, and Gemini even when the rendered surfaces and direct stdio smoke are correct.
 2. **No real Debian VM proof** — export/deploy/bootstrap flows still need a full fresh-machine operator run.
 3. **No real macOS proof** — MacPorts bootstrap path remains untested.
 4. **No automated Claude runtime validator yet** — Claude still relies on a documented manual runtime pass rather than an in-repo probe script.
@@ -177,7 +199,7 @@ Finished the final standardization pass needed to make the omni-factory model in
 2. Run `scripts/verify-agent-forge.py` after the doc and registry updates are committed
 3. Exercise `bootstrap-project.sh --existing` against a real existing repo
 4. Run a real Debian VM proof and a real macOS proof
-5. Add the first real shared MCP server to `global-mcp.json` and test all three host renderers
+5. Broaden MCP proof depth from direct stdio smoke to true host-native tool invocation parity where the CLIs expose a stable project-local MCP inspection path
 6. Resolve the Codex `bwrap` sandbox issue on this machine and rerun the strict `jarvis` probe
 7. Add automated Claude and Gemini runtime probes so all three hosts have comparable proof depth
 8. Periodically promote or supersede entries from `docs/LESSONS_LEARNED.md` instead of letting the ledger become a second backlog

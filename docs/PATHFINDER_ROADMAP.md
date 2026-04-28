@@ -55,7 +55,7 @@ Render canonical `policies/mcp.json` server records as namespaced tools (`forge.
 
 Schema bump: `global-mcp.json` v2.
 
-**Status:** Sprint 4 in `docs/SPRINT_BACKLOG.md`. Latent until first real shared MCP server lands; pre-empts the namespace-collision class.
+**Status:** ✅ Shipped 2026-04-27. `global-mcp.json` v2, seeded local stdio `forge-factory` server, `trusted_workspace` project gating, host-safe server aliases, verifier MCP inventory checks, and triad `mcp_pass` gate. Evidence: `runtime/validation/triad/20260427-234006/`. **Known limitation:** host MCP management subcommands are not equivalent proof surfaces; `mcp_pass` currently means rendered surface + direct stdio `tools/list` smoke, not universal `mcp get/list` parity.
 
 ### A4. Audit-Grade Orchestration Log
 
@@ -194,7 +194,7 @@ The dependency graph imposes the following order. Each sprint follows the establ
 | **Sprint 1** | C1 Hotfix + B1 live-hook-prober | ✅ Shipped 2026-04-26 (commits `f2cea42` + `a15200f`) |
 | **Sprint 2** | A1 Hook Lifecycle V2 | ✅ Shipped 2026-04-27 (`policies/hooks.json` v3 + Codex event-key fix + per-record hook surface gate) |
 | **Sprint 3** | A2 + B2 Memory Bridge | ✅ Shipped 2026-04-27 (`bridge_pass` green on Claude/Codex/Gemini) |
-| **Sprint 4** | A3 MCP Namespace Prefixing | `forge.<service>.<tool>` canonical rendering across hosts |
+| **Sprint 4** | A3 MCP Namespace Prefixing | ✅ Shipped 2026-04-27 (`mcp_pass` green on Claude/Codex/Gemini) |
 | **Sprint 5** | A4 + B3 Orchestration Log + Cost Warden | Audit-grade per-session log + budget enforcement |
 | **Sprint 6** | A5 + B4 forge-shell | Persistent bash primitive |
 | **Sprint 7** | A6 + B5 routine-auditor | Self-governance |

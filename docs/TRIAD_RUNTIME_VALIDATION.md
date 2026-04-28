@@ -10,7 +10,8 @@ Answer five questions:
 2. Can every governed project's surface actually be enumerated by each host CLI at runtime?
 3. Does the knowledge anchor stay visible where each host can realistically consume it?
 4. Did the memory bridge produce per-host native target evidence?
-5. Can a sandbox-blocked host still be validated via paired filesystem evidence?
+5. Did the MCP renderer emit the expected server alias and can the seeded stdio server answer `tools/list`?
+6. Can a sandbox-blocked host still be validated via paired filesystem evidence?
 
 ## Preflight Reads
 
@@ -68,8 +69,8 @@ For each host, if the CLI returns no parseable skill set (e.g. the CLI is not in
 - A new run directory appears under `runtime/validation/triad/<YYYYMMDD-HHMMSS>/`
 - `summary.json` reports `pass: true` overall
 - Per-host `result.json` reports `missing: []` **and** `hook_surface.pass: true` (guardian present and every active hook record's native event key present in the rendered settings file)
-- Per-host `result.json` reports `memory_surface.pass: true` and `memory_bridge.pass: true`
-- `runtime/validation-matrix.json` receives an updated `triad_runtime.<project>` entry with `pass`, `hook_pass`, `memory_pass`, and `bridge_pass: true` per host
+- Per-host `result.json` reports `memory_surface.pass: true`, `memory_bridge.pass: true`, and `mcp_surface.pass: true`
+- `runtime/validation-matrix.json` receives an updated `triad_runtime.<project>` entry with `pass`, `hook_pass`, `memory_pass`, `bridge_pass`, and `mcp_pass: true` per host
 - The expected skill count tracks the canonical `registry.json` (currently 31 after `memory-bridge`)
 
 ### Hook surface check
@@ -114,6 +115,25 @@ python3 skills/global/memory-bridge/bridge.py outbound --project ~/Projects/jarv
 
 Per-host matrix entries include `bridge_pass` alongside `hook_pass` and `memory_pass`.
 
+### MCP surface check
+
+After the bridge check, the validator runs `mcp_surface_for(host, project_root)`. A host passes when:
+
+- the expected project-local MCP config file exists and parses;
+- the expected server alias is present in the rendered host config;
+- the seeded local stdio server answers a direct MCP `tools/list` smoke request;
+- the expected filtered tool (`read_handoff` for Sprint 4) appears in the returned tool list.
+
+Rendered surface paths:
+
+- Claude → `<project>/.mcp.json`
+- Codex → `<project>/.codex/config.toml`
+- Gemini → `<project>/.gemini/settings.json`
+
+Per-host matrix entries include `mcp_pass` alongside `hook_pass`, `memory_pass`, and `bridge_pass`.
+
+Important limitation: `mcp_pass` is currently a surface-plus-stdio-smoke gate, not a guarantee that every host CLI's `mcp get` or `mcp list` subcommand will browse project-local MCP servers identically. Sprint 4 found that those management subcommands differ across hosts even when the generated runtime surfaces and direct MCP smoke are correct.
+
 ### Codex sandbox-block detection
 
 Codex's CLI emits different error strings depending on release. The validator's `host_sandbox_blocked()` keeps a curated allow-list of phrases that signal "Codex couldn't run its shell tool because of bubblewrap restrictions, but the surfaces on disk are correct" — for example `bwrap: loopback: Failed RTM_NEWADDR`, `needs access to create user namespaces`, `shell tool failed before command execution`, `shell tool is blocked by the sandbox`. When any of those is detected, the validator escalates to filesystem inspection and records `method: filesystem-escalated`. If Codex changes its error wording in a future release and the marker list is not updated, the validator will report `cli`/`missing=N/N` even though all surfaces exist — the fix is to add the new marker, not weaken the validator.
@@ -148,9 +168,9 @@ runtime/validation/triad/<stamp>/
       "last_run": "YYYYMMDD-HHMMSS",
       "overall_pass": true,
       "per_host": {
-        "claude": {"pass": true, "hook_pass": true, "memory_pass": true, "bridge_pass": true, "method": "cli"},
-        "codex":  {"pass": true, "hook_pass": true, "memory_pass": true, "bridge_pass": true, "method": "filesystem-escalated"},
-        "gemini": {"pass": true, "hook_pass": true, "memory_pass": true, "bridge_pass": true, "method": "cli"}
+        "claude": {"pass": true, "hook_pass": true, "memory_pass": true, "bridge_pass": true, "mcp_pass": true, "method": "cli"},
+        "codex":  {"pass": true, "hook_pass": true, "memory_pass": true, "bridge_pass": true, "mcp_pass": true, "method": "filesystem-escalated"},
+        "gemini": {"pass": true, "hook_pass": true, "memory_pass": true, "bridge_pass": true, "mcp_pass": true, "method": "cli"}
       },
       "artifact_path": "runtime/validation/triad/<stamp>"
     }
