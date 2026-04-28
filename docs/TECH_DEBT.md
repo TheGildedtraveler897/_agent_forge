@@ -1,6 +1,6 @@
 # TECH_DEBT
 
-This file records the most important remaining gaps as of 2026-04-28, after the memory-bridge and MCP namespace-routing sprints shipped and the Sprint 4 proof at `runtime/validation/triad/20260427-234006/summary.json` passed.
+This file records the most important remaining gaps as of 2026-04-28 (RC milestone), after Sprint 5 (SOTA-2026 overhaul) shipped and the lessons ledger was triaged. Latest triad proof: `runtime/validation/triad/20260428-190104/summary.json`.
 
 ## Recently Resolved (no longer debt)
 
@@ -12,6 +12,8 @@ This file records the most important remaining gaps as of 2026-04-28, after the 
 - **MCP namespace routing** — `global-mcp.json` v2 shipped 2026-04-27 with the seeded `forge-factory` stdio server, host-safe aliases, trust-gated project routing, and `mcp_pass` in the triad validator.
 - **Codex sandbox-marker drift** — `host_sandbox_blocked()` in the triad validator now recognizes the newer Codex error strings (`needs access to create user namespaces`, `shell tool failed before command execution`, etc.) so sandbox-blocked Codex runs still escalate to filesystem-escalated evidence.
 - **Hook lifecycle v3 + Codex event-key drift** — `policies/hooks.json` now uses explicit handler objects, Codex native keys render as PascalCase (`PreToolUse`, `SessionStart`, `Stop`), and `hook_surface_for()` checks every active hook record's native event key.
+- **SOTA-2026 overhaul (Sprint 5, RC milestone)** — shipped 2026-04-28. `token-optimizer` and `prompt-auto-activator` skills landed; first cross-host record bound to canonical event `user_prompt_submit` (Claude+Codex; Gemini alias is `None` by design); checkpoint discipline added to `context-engineer` and `execution-planner`; triad runtime green at `runtime/validation/triad/20260428-190104/`.
+- **Lessons-ledger triage / doctrine promotion** — completed 2026-04-28. 15 of 16 entries promoted; 1 remains active (`user_prompt_submit Claude+Codex-only`, awaits a second non-Gemini event ship to confirm cross-host targets pattern). New CONOPS.md doctrine sections: §Authoring Pattern, §Native vs Sidecar Surfaces, §Hook Governance, §Universal State Layer And Memory Bridge.
 
 ## Open Debt
 
@@ -33,7 +35,6 @@ This file records the most important remaining gaps as of 2026-04-28, after the 
 3. Exercise `bootstrap-project.sh --existing` on a real existing repo.
 4. Exercise the suitcase path on a fresh Debian VM and a fresh macOS machine.
 5. Push `_agent_forge` to a GitHub remote so the weekly watchdog routine can be scheduled.
-6. Promote or supersede ledger entries in `docs/LESSONS_LEARNED.md` before they turn into a second backlog.
 
 ## Notes For The Next Session
 

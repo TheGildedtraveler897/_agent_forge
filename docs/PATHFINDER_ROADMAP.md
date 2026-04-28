@@ -195,14 +195,15 @@ The dependency graph imposes the following order. Each sprint follows the establ
 | **Sprint 2** | A1 Hook Lifecycle V2 | ✅ Shipped 2026-04-27 (`policies/hooks.json` v3 + Codex event-key fix + per-record hook surface gate) |
 | **Sprint 3** | A2 + B2 Memory Bridge | ✅ Shipped 2026-04-27 (`bridge_pass` green on Claude/Codex/Gemini) |
 | **Sprint 4** | A3 MCP Namespace Prefixing | ✅ Shipped 2026-04-27 (`mcp_pass` green on Claude/Codex/Gemini) |
-| **Sprint 5** | A4 + B3 Orchestration Log + Cost Warden | Audit-grade per-session log + budget enforcement |
-| **Sprint 6** | A5 + B4 forge-shell | Persistent bash primitive |
-| **Sprint 7** | A6 + B5 routine-auditor | Self-governance |
-| **Sprint 8** | B6 router-overseer | Agent-as-a-Tool dispatcher |
-| **Sprint 9** | B10 path-scoped-rules + B11 host-quirk-translator | Operator quality-of-life pass |
-| **Sprint 10+** | B7 + B8 + B9 + B12 (`auto-loop`, `wiki-compiler`, `crew-director`, `a2a-bridge`) | Endgame; do not start until dependencies are solid |
+| **Sprint 5** | SOTA-2026 Overhaul (`token-optimizer` + `prompt-auto-activator` + checkpoint discipline) | ✅ Shipped 2026-04-28 (RC milestone; first cross-host record on canonical event `user_prompt_submit`; Gemini excluded by design) |
+| **Sprint 6** | A4 + B3 Orchestration Log + Cost Warden | Audit-grade per-session log + budget enforcement |
+| **Sprint 7** | A5 + B4 forge-shell | Persistent bash primitive |
+| **Sprint 8** | A6 + B5 routine-auditor | Self-governance |
+| **Sprint 9** | B6 router-overseer | Agent-as-a-Tool dispatcher |
+| **Sprint 10** | B10 path-scoped-rules + B11 host-quirk-translator | Operator quality-of-life pass |
+| **Sprint 11+** | B7 + B8 + B9 + B12 (`auto-loop`, `wiki-compiler`, `crew-director`, `a2a-bridge`) | Endgame; do not start until dependencies are solid |
 
-**Sprint 2 / 3 / 4 are detailed with copy-pasteable Codex execution prompts in `docs/SPRINT_BACKLOG.md`.**
+**Sprint 2 / 3 / 4 are detailed with copy-pasteable Codex execution prompts in `docs/SPRINT_BACKLOG.md`. Sprint 5 SOTA-2026 spec and micro-plan are archived at `docs/specs/2026-04-27-sota-2026-overhaul.md` and `docs/plans/2026-04-27-sota-2026-overhaul.md`.**
 
 ---
 
