@@ -18,6 +18,22 @@
       ],
       "timeout_ms": 5000,
       "status_message": "telemetry-guardian vetting tool invocation"
+    },
+    {
+      "id": "prompt-auto-activator",
+      "description": "Inspect user prompt for opt-in keyword triggers (caveman, terse, checkpoint) and emit an advisory recommending the matching skill. Advisory only; never blocks.",
+      "event": "user_prompt_submit",
+      "matcher": "",
+      "handler": {
+        "type": "command",
+        "command": "bash ~/Projects/_agent_forge/skills/global/prompt-auto-activator/auto-activator.sh"
+      },
+      "targets": [
+        "claude",
+        "codex"
+      ],
+      "timeout_ms": 3000,
+      "status_message": "prompt-auto-activator scanning user prompt for skill triggers"
     }
   ],
   "claude": [

@@ -60,6 +60,7 @@ Write to `docs/plans/YYYY-MM-DD-<slug>.md`. Include at the top:
 - Link to the approved spec.
 - Whether execution will be sequential (`tdd-engineer`) or parallel (`subagent-dispatcher`).
 - Total task count and rough effort estimate.
+- If `dev/active/<slug>/` does not exist, create it and seed `tasks.md` from the plan's task IDs.
 
 ### Phase 6 — Human gate
 Present the plan for review. On approval, name the next skill explicitly. On rejection, loop back to the failed phase.
@@ -108,3 +109,18 @@ Verification:
 - Do not run tests.
 - Do not dispatch subagents — that is `subagent-dispatcher`.
 - Do not revise the spec — return to `spec-architect`.
+
+## Checkpoint Discipline
+
+For any plan with more than one micro-task, the executor maintains a transient working tree at `dev/active/<slug>/` containing:
+
+- `plan.md` — pointer or copy reference to `docs/plans/<slug>.md`.
+- `context.md` — scratch context dumps, intermediate diffs, evidence not durable enough for the spec.
+- `tasks.md` — live task ledger marking which `T-<nn>` is in flight.
+- `handoff.md` — rolling cursor written after each verification-gate pass.
+
+Cadence: write or update `handoff.md` after each verification command exits 0, and immediately before any `context-engineer` compaction. Do not bind the cadence to a fixed task count.
+
+Lifecycle: created at task start by the executor; deleted at task close by `branch-finisher`. The directory is `.gitignore`d so transient state stays local.
+
+Coexistence: the durable plan lives at `docs/plans/<slug>.md`; the cross-host pointer of record is `MEMORY.md active_tasks` (rewriteable, archivist-owned). Never promote the contents of `dev/active/<slug>/` into the durable plan or into `MEMORY.md` automatically — promotion is an explicit `branch-finisher` or `sprint-harvester` step.

@@ -721,6 +721,38 @@
       }
     },
     {
+      "name": "prompt-auto-activator",
+      "display_name": "prompt-auto-activator",
+      "scope": "global",
+      "project": null,
+      "capability_class": "workflow",
+      "canonical_skill": "skills/global/prompt-auto-activator/SKILL.md",
+      "targets": [
+        "claude",
+        "codex"
+      ],
+      "delivery_projects": [
+        "jarvis",
+        "RoboNaaz",
+        "ZorroClaw",
+        "homelab",
+        "factory",
+        "playlist-archive"
+      ],
+      "claude": {
+        "mode": "command",
+        "generated": true,
+        "command_name": "prompt-auto-activator",
+        "agent_name": null
+      },
+      "codex": {
+        "generated": true,
+        "global_skill": true,
+        "project_skill": true,
+        "custom_agent": false
+      }
+    },
+    {
       "name": "quality-gate",
       "display_name": "quality-gate",
       "scope": "global",
@@ -1030,6 +1062,45 @@
         "global_skill": true,
         "project_skill": true,
         "custom_agent": true
+      }
+    },
+    {
+      "name": "token-optimizer",
+      "display_name": "token-optimizer",
+      "scope": "global",
+      "project": null,
+      "capability_class": "workflow",
+      "canonical_skill": "skills/global/token-optimizer/SKILL.md",
+      "targets": [
+        "claude",
+        "codex",
+        "gemini"
+      ],
+      "delivery_projects": [
+        "jarvis",
+        "RoboNaaz",
+        "ZorroClaw",
+        "homelab",
+        "factory",
+        "playlist-archive"
+      ],
+      "claude": {
+        "mode": "command",
+        "generated": true,
+        "command_name": "token-optimizer",
+        "agent_name": null
+      },
+      "gemini": {
+        "mode": "command",
+        "generated": true,
+        "command_name": "token-optimizer",
+        "agent_name": null
+      },
+      "codex": {
+        "generated": true,
+        "global_skill": true,
+        "project_skill": true,
+        "custom_agent": false
       }
     },
     {

@@ -25,3 +25,6 @@ exports/
 # Local runtime and sync state
 runtime/*
 !runtime/validation-matrix.json
+
+# Transient per-task working trees (execution-planner Checkpoint Discipline)
+dev/

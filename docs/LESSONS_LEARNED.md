@@ -1,5 +1,5 @@
 # Lessons Learned
-Last updated: 2026-04-27 (Sprint 3: Memory Bridge)
+Last updated: 2026-04-28 (RC milestone: SOTA-2026 ship + ledger triage — 9 entries promoted, 7 remain active)
 
 This file is the append-first knowledge anchor for Agent Forge.
 
@@ -62,7 +62,7 @@ This file is the append-first knowledge anchor for Agent Forge.
 - `Architectural Decision:` Keep the live probe strict and report `pass: false` when Codex cannot confirm visibility, but pair that result with direct filesystem evidence before deciding the generator is broken.
 - `Evidence:` `runtime/validation/codex/20260423-194504/`, generated Jarvis `.agents/` and `.codex/` surfaces, and `~/.agents/skills/sprint-harvester`
 - `Promotion Target:` `docs/TRIAD_RUNTIME_VALIDATION.md`
-- `Status:` active
+- `Status:` promoted (encoded in `validate-triad-runtime.py` `host_sandbox_blocked()` marker list and `filesystem-escalated` method; behavior is now load-bearing across all four shipped sprints)
 
 ### 2026-04-23 - Implement Multi-Fault Validation Escalation For Sandboxed Probes
 
@@ -72,7 +72,7 @@ This file is the append-first knowledge anchor for Agent Forge.
 - `Architectural Decision:` Use a two-phase "strict then escalated" probe model. Report strict `pass: false` if it fails sandboxed, but run an escalated probe (`--dangerously-bypass-approvals-and-sandbox`) to prove file visibility.
 - `Evidence:` Updated `scripts/omni_factory.py` with `host_sandbox_blocked` logic and `escalated_pass` metrics.
 - `Promotion Target:` `docs/TRIAD_RUNTIME_VALIDATION.md`
-- `Status:` active
+- `Status:` promoted (two-phase strict-then-escalated probe is the canonical Codex validation path; encoded in `validate-triad-runtime.py`)
 
 ### 2026-04-23 - Assimilate Workflow Discipline Natively Instead Of Importing Third-Party Plugins
 
@@ -82,7 +82,7 @@ This file is the append-first knowledge anchor for Agent Forge.
 - `Architectural Decision:` Added seven new global workflow skills (`spec-architect`, `execution-planner`, `tdd-engineer`, `root-cause-analyst`, `verification-gate`, `subagent-dispatcher`, `branch-finisher`) plus `skill-author` as the meta-skill for future skill authoring. Extended `code-review-doctrine` with a receiving-feedback discipline section. Added a "Workflow Discipline Chain" block to `AGENTS.md` listing the default sequence. Four team manifests (`planning-team`, `delivery-team`, `assessment-team`, `improvement-team`) now reference the new skills in their `preferred_entries` and tightened their `stop_condition` and `handoff_artifacts` to match.
 - `Evidence:` New SKILL.md files under `skills/global/`, updated team manifests under `teams/`, updated `AGENTS.md` Workflow Discipline Chain section, regenerated `registry.json`, passing `scripts/verify-agent-forge.py`.
 - `Promotion Target:` `docs/CONOPS.md` §Capability Model — once the new skills are proven across two or three governed projects, elevate the chain from AGENTS.md into a first-class CONOPS section.
-- `Status:` active
+- `Status:` promoted (Workflow Discipline Chain block is in `AGENTS.md` and the eight skills propagate to all six governed projects on every sync; "extract methodology, don't take a plugin dependency" is now the standing rule for OSS integration)
 
 ### 2026-04-24 - Triad Runtime Validator Promoted To Permanent Gate; Global Skills Propagate To All Governed Projects By Default
 
@@ -92,7 +92,7 @@ This file is the append-first knowledge anchor for Agent Forge.
 - `Architectural Decision:` Three changes. (a) In `scripts/omni_factory.py`, when a global skill omits `delivery_projects`, default to every governed project listed in `projects.json`. Support `["*"]` as an explicit wildcard equivalent, and keep `[]` as the explicit opt-out for user-home-only skills. (b) Added `_resolve_project_root` so `--project <name>` translates through `projects.json` rather than assuming `projects_root/name` — this was a latent bug that only surfaced when we synced the `factory` project (root `ZorroForge/factory`). (c) New `scripts/validate-triad-runtime.py` is now the mandatory final gate after any canonical skill/team/MCP/hook change. It probes each host's live CLI and records expected-vs-observed skill counts, falling back to filesystem evidence for sandbox-blocked hosts per the 2026-04-23 escalation doctrine. `AGENTS.md` Rules now names the triad validator as the final gate; `docs/TRIAD_RUNTIME_VALIDATION.md` replaces the old manual-prompt runbook with the scripted path and keeps the prompts as a documented fallback.
 - `Evidence:` `scripts/omni_factory.py` (lines around 251 and 256 for default propagation, wildcard, and `_resolve_project_root`); `scripts/validate-triad-runtime.py`; first live run artifact `runtime/validation/triad/20260424-050553/summary.json` (overall `pass: true`; Gemini `cli` 27/26 observed; Claude `cli` 39/26 observed; Codex `filesystem-escalated` 26/26 with `sandbox_blocked: true`); `runtime/validation-matrix.json` triad_runtime.jarvis entry. Post-fix sync confirms all 8 new skills land in all 6 governed projects × 3 hosts (144/144 surfaces present).
 - `Promotion Target:` `docs/CONOPS.md` §Capability Model for the propagation default; `docs/CONOPS.md` §Runtime Validation for the new triad-gate requirement. Promote after the gate has caught at least one real regression in production use.
-- `Status:` active
+- `Status:` promoted (both rules are in `AGENTS.md` Rules; the gate has caught two real silent-correctness regressions since — Gemini hook-alias drift 2026-04-26 and Codex hook event-key drift 2026-04-27)
 
 ### 2026-04-24 - Unified Hook Lifecycle Across Claude Codex Gemini; Telemetry Guardian As Universal Pre-Tool Veto
 
@@ -122,7 +122,7 @@ This file is the append-first knowledge anchor for Agent Forge.
 - `Architectural Decision:` This is a workflow discipline, not a doctrine change. (a) Prefer narrow tool calls — one question per Bash invocation when inspecting state across many files or projects; reserve compound `&&`/`;` chains for short related steps where rolling back partial completion is fine. (b) Keep tool output bounded — multi-step `find`/`jq`/`python -c` summaries are convenient but trade resilience for terseness. When iterating across all governed projects (six × multiple files), use a `for` loop that prints one short line per project rather than collating everything in a single `cat`/`ls` blob. (c) When the prior tool result reads `[Tool result missing due to internal error]`, the next tool call must be a small read-only re-ground, not a retry of the failed invocation. (d) Update `AGENTS.md` operator guidance with the >5-minute silent-stall heuristic so future operators know how to unblock without losing the working tree state.
 - `Evidence:` Two stalls in the 2026-04-25 session — one after the post-sync memory-surface inspection, one after the archivist unit-test chain. In both cases the work itself completed (verifier later confirmed all 18 generated files; archivist audit log at `~/Projects/jarvis/.forge_state/archivist.log` showed the test entries had been written). The user reported "no token usage" for >3 hours both times — consistent with stuck I/O rather than active reasoning. Recovery in both cases required an external interrupt + new prompt, after which the agent re-grounded from disk and proceeded normally on smaller follow-up calls.
 - `Promotion Target:` `AGENTS.md` Rules — short rule about preferring narrow tool calls, plus an Operator Tips line about the >5-minute silent-stall heuristic. Promote after the next sprint confirms the discipline holds (i.e., no new silent stalls when narrow calls are used by default).
-- `Status:` active
+- `Status:` promoted (both rules are in `AGENTS.md`; the >5-min silent-stall heuristic is in the `Operator Tips` section; no new compound-call stalls observed in the four sprints since)
 
 ### 2026-04-26 - Host Event-Name Drift Is A Silent-Correctness Class; Surface Validation Alone Is Insufficient
 
@@ -132,7 +132,7 @@ This file is the append-first knowledge anchor for Agent Forge.
 - `Architectural Decision:` (a) Corrected `_EVENT_ALIASES["gemini"]` to PascalCase per the 2026-04 hooks reference. (b) Tightened `hook_surface_for()` in the triad validator to require both `guardian_present` (substring command-path check) AND `event_key_present` (the per-host expected event key is a top-level key in the rendered hooks payload). New `_EXPECTED_HOOK_EVENT_KEY = {claude: "PreToolUse", codex: "pre_tool_use", gemini: "BeforeTool"}` constant. (c) New `live-hook-prober` skill at `skills/global/live-hook-prober/` with `SKILL.md` (workflow class, all-host targets) + executable `prober.sh` (POSIX). Detects three escalation modes: `sandbox_blocked` (Codex bwrap), `trust_blocked` (Gemini workspace trust), `headless_permission_constraint` (Claude `-p` mode). (d) `validate-triad-runtime.py` gains `--probe-invocations` flag (default OFF). When ON, runs `live_hook_invocation_for(host, project_root)` after surface checks; matrix entries gain `live_hook_pass` + `live_hook_verdict`. (e) Live verification: Gemini probe returned `verdict: pass`, `observed: block`, exit 0 — the C1 fix is real, not just paper.
 - `Evidence:` `scripts/omni_factory.py` `_EVENT_ALIASES["gemini"]` block (corrected); `scripts/validate-triad-runtime.py` `_EXPECTED_HOOK_EVENT_KEY` + tightened `hook_surface_for` + new `live_hook_invocation_for` + `--probe-invocations` flag; `skills/global/live-hook-prober/SKILL.md` and `prober.sh`; commit `f2cea42` for the C1 fix; live Gemini probe artifact `runtime/validation/hook-probe/20260426-035313/gemini/`; triad surface artifact `runtime/validation/triad/20260426-035206/`.
 - `Promotion Target:` `docs/CONOPS.md` §Validation Gate — promote "every host-native semantic gets a live invocation probe alongside its surface check" once the same pattern lands for memory bridge (B2) and MCP namespace prefixing (A3). The pattern that worked twice (hook lifecycle, memory layer) is now load-bearing; this is the third confirmation.
-- `Status:` active
+- `Status:` promoted (curated allow-list pattern is now load-bearing across hooks, memory bridge, MCP prefixing, and prompt-auto-activator; `_EXPECTED_HOOK_EVENT_KEY` + per-record validator check enforces it in code)
 
 ### 2026-04-26 - Headless CLI Live-Probing Of Claude Has An Inherent Limitation; Document Rather Than Fight
 
@@ -142,7 +142,7 @@ This file is the append-first knowledge anchor for Agent Forge.
 - `Architectural Decision:` (a) `prober.sh` `run_claude()` uses `--permission-mode default` (NOT `--dangerously-skip-permissions`) with a short 30s timeout. On hang or permission-denied, returns `headless_permission_constraint` and escalates. (b) Validator integration accepts escalated as pass for the gate (matches Codex sandbox-block doctrine) so the triad doesn't FAIL on inherent CLI limitations. (c) Roadmap dependency added: real Claude live-probing is gated on `forge-shell` (B4) which provides a persistent shell session that `claude -p` cannot. (d) `SKILL.md` gains a "Known limitations" section documenting all three escalation modes and the harness-invocation warning.
 - `Evidence:` `skills/global/live-hook-prober/prober.sh` `run_claude()` with `--permission-mode default` + 30s timeout + headless_permission_constraint detection; `skills/global/live-hook-prober/SKILL.md` § Known limitations + Future work; two stuck `claude` PIDs (11660, killed) observed during the sprint; the leftover-child stall pattern reproduces reliably in this harness.
 - `Promotion Target:` `AGENTS.md` Operator Tips — add a short rule "do not invoke long-running CLI tool calls transitively through a Claude Code session's Bash tool; run them in a real terminal or as a Routine". Promote after the next sprint confirms the rule (Sprint 2 / Hook Lifecycle V2 will likely surface more long-running probe calls).
-- `Status:` active
+- `Status:` promoted (rule is in `AGENTS.md` Operator Tips; the constraint is documented in `live-hook-prober/SKILL.md` § Known limitations and three sprints have confirmed it holds)
 
 ### 2026-04-27 - Codex Hook Event Keys Drifted To PascalCase; Validate Every Active Hook Record
 
@@ -152,7 +152,7 @@ This file is the append-first knowledge anchor for Agent Forge.
 - `Architectural Decision:` `policies/hooks.json` is now v3 with explicit `handler` objects. `scripts/omni_factory.py` normalizes v2 records, maps Codex `pre_tool_use` to `PreToolUse`, exposes a full canonical event allow-list, translates `timeout_ms` per host, and renders Gemini hooks in the current nested `hooks` shape. `scripts/validate-triad-runtime.py` now computes `expected_hook_records` for each host and fails if any active record's native event key is missing. Non-command handler examples are present but disabled until host-safe sentinels exist; Claude renders all five handler types, while current Codex/Gemini docs only justify active command rendering.
 - `Evidence:` `docs/SPRINT2_DESIGN.md`; `tests/test_hooks_v3.py` RED/GREEN (`python3 -m unittest tests.test_hooks_v3`, exit 0 after patch); `policies/hooks.json` v3; generated Jarvis surfaces show Claude `PreToolUse`, Codex `PreToolUse`, Gemini `BeforeTool`; `python3 scripts/verify-agent-forge.py` exit 0; `runtime/validation/triad/20260427-084059/summary.json` (`overall pass=true`, expected 30 skills, all hosts `hook_pass=true memory_pass=true`, Codex `expected_event_keys:["PreToolUse"]` and `sandbox_blocked:true` with filesystem evidence).
 - `Promotion Target:` `docs/CONOPS.md` §Validation Gate — promote "every cross-host semantic surface gets a curated allow-list and per-record validator check" after the same pattern is applied to MCP namespace prefixing.
-- `Status:` active
+- `Status:` promoted (MCP namespace prefixing landed 2026-04-27 with the same allow-list pattern; `validate-triad-runtime.py` enforces per-record native event-key validation across all four shipped sprints)
 
 ### 2026-04-27 - Bridge Native Memory Conservatively; Sidecars Beat False Claims
 
@@ -172,4 +172,14 @@ This file is the append-first knowledge anchor for Agent Forge.
 - `Architectural Decision:` `global-mcp.json` v2 now carries a semantic `prefix` (for example `forge.factory`) plus a derived host-safe `server_alias` (`forge-factory`). `validate-triad-runtime.py` records `mcp_pass` only after the host config surface parses, the expected alias is present, and the seeded stdio server returns the expected tools over real MCP framing. Manual `mcp get/list` commands remain a secondary spot check, not the canonical release gate.
 - `Evidence:` `global-mcp.json` v2 seeded `forge-factory`; `scripts/mcp/forge_factory_server.py`; `tests/test_mcp_namespace.py`; `python3 -m unittest tests.test_hooks_v3 tests.test_memory_bridge tests.test_mcp_namespace` exit 0; `python3 scripts/verify-agent-forge.py` exit 0; `runtime/validation/triad/20260427-234006/summary.json` all hosts `hook+ mem+ bridge+ mcp+`; `claude mcp get forge-factory` saw the project config but still reported `Failed to connect`, while the triad smoke and host runtime probe proved the underlying stdio server path.
 - `Promotion Target:` `docs/HOST_INTEGRATIONS.md` and `docs/TRIAD_RUNTIME_VALIDATION.md`
+- `Status:` promoted (server-alias prefixing is encoded in `global-mcp.json` v2; `mcp_pass` gate is in `validate-triad-runtime.py`; CONOPS.md §Unified MCP Governance documents the canonical authoring rule)
+
+### 2026-04-28 - user_prompt_submit Is Claude+Codex-Only; Auto-Activator Owns Its Own Skill
+
+- `Date:` 2026-04-28
+- `Context:` SOTA 2026 Overhaul shipped the first hook record bound to canonical event `user_prompt_submit`, and authored two new global skills: `token-optimizer` (terse-mode discipline) and `prompt-auto-activator` (the advisory hook owner). Web recon plus inspection of `_EVENT_ALIASES` confirmed `user_prompt_submit` maps to Claude `UserPromptSubmit` and Codex `UserPromptSubmit`, but Gemini's alias resolves to `None` — Gemini CLI 0.39 has no equivalent event. The relayed brief proposed bolting an `auto-activator.sh` onto `telemetry-guardian`, which would have violated the canonical one-skill-one-purpose rule.
+- `Lesson:` Two lessons. (1) Cross-host hook records that depend on `user_prompt_submit` semantics must explicitly exclude Gemini until the alias map gains a real Gemini target — not because the rendering will silently fail, but because the targets list is the documentation of intent for the next operator. Re-verify against current Gemini CLI release notes before extending the targets. (2) When a brief proposes attaching a new responsibility to an existing skill that already owns one purpose, push back: spawn a new skill rather than diluting the existing one. The skill-author "one purpose per skill" rule is doctrine, not stylistic preference.
+- `Architectural Decision:` (a) `policies/hooks.json` `shared` array gains one record `prompt-auto-activator` with `event: user_prompt_submit`, `targets: ["claude", "codex"]`, `command` handler pointing at `skills/global/prompt-auto-activator/auto-activator.sh`. No schema upgrade — the canonical event was already in `_EVENT_ALIASES`. (b) Two new global skills shipped with canonical Omni-Factory frontmatter: `token-optimizer` (workflow class, all three targets, defines the terse contract) and `prompt-auto-activator` (workflow class, Claude and Codex only, owns the advisory script). (c) `context-engineer` and `execution-planner` SKILL.md files gained additive `## Checkpoint Discipline` sections that point at a transient `dev/active/<slug>/` working tree. The directory is `.gitignore`d; the durable plan stays at `docs/plans/<slug>.md`; the cross-host pointer remains `MEMORY.md active_tasks` (rewriteable, archivist-owned). Cadence binds to verification-gate passes, not a fixed task count. (d) Gemini exclusion is a 2026-04-28 fact, recorded here per the 2026-04-26 host-event-name-drift doctrine.
+- `Evidence:` `policies/hooks.json` (new `prompt-auto-activator` record in `shared`); `skills/global/token-optimizer/SKILL.md`; `skills/global/prompt-auto-activator/SKILL.md` and `auto-activator.sh` (mode 0755, `bash -n` clean); `skills/global/context-engineer/SKILL.md` (new `## Checkpoint Discipline`); `skills/global/execution-planner/SKILL.md` (new `## Checkpoint Discipline` + Phase 5 bullet); `tests/test_hooks_v3.py` (two new test methods covering the user_prompt_submit render and Gemini exclusion); `.gitignore` (excludes `dev/`); `docs/specs/2026-04-27-sota-2026-overhaul.md` (verbatim brief archive); `docs/plans/2026-04-27-sota-2026-overhaul.md` (11-task micro-plan).
+- `Promotion Target:` `docs/HOST_INTEGRATIONS.md` once a second non-Gemini-bound canonical event ships and the cross-host targets pattern proves itself a third time.
 - `Status:` active

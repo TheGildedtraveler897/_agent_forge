@@ -1,8 +1,36 @@
 # Agent Forge Handoff
 
-Last updated: 2026-04-27
+Last updated: 2026-04-28 (RC milestone)
 
 ## What Changed
+
+### Sprint 5 / RC Milestone: SOTA-2026 Overhaul + Lessons-Ledger Triage (2026-04-28, Claude)
+
+Sprint 5 ships the SOTA-2026 overhaul (checkpoint discipline, terse-mode capability, prompt-auto-activator hook), syncs all six governed projects, runs the full triad validator green, and triages the lessons ledger to clear the second-backlog problem before the next-evolution work.
+
+This is the **Release Candidate** milestone: every shippable backlog item is done; only platform-blocked items remain (and they will not block forever via reachable engineering — they need real machines, kernel-level changes, or upstream CLI behavior changes). The factory is ready for the next-evolution sprint (extracting `obra/superpowers`, `gsd-build/get-shit-done`, and the Reddit GSD framework as native skills under canonical Omni-Factory governance — a separate clean pass).
+
+#### Changes Made
+
+1. **Two new global skills shipped.** `token-optimizer` (workflow, all three hosts) defines the terse-mode contract; `prompt-auto-activator` (workflow, Claude+Codex only) owns the user-prompt-submit advisory hook.
+2. **Canonical event `user_prompt_submit` is now exercised by a real record.** `policies/hooks.json` `shared` array gained `prompt-auto-activator` with `command` handler at `skills/global/prompt-auto-activator/auto-activator.sh`. Gemini is excluded (alias `None`); the constraint is recorded in the lesson ledger so the next operator re-verifies against current Gemini CLI release notes before extending targets.
+3. **Checkpoint discipline added to `context-engineer` and `execution-planner`.** Additive `## Checkpoint Discipline` sections; the durable plan stays at `docs/plans/<slug>.md`, the cross-host pointer remains `MEMORY.md active_tasks`, and a transient `dev/active/<slug>/` working tree (`.gitignore`d) holds the rolling cursor. Cadence binds to verification-gate passes, not a fixed task count.
+4. **`tests/test_hooks_v3.py` covers the new render contract.** Two new methods: `test_user_prompt_submit_renders_for_claude_and_codex` and `test_user_prompt_submit_filtered_from_gemini`. Five tests OK.
+5. **Sync to all six governed projects done.** Claude, Codex, and Gemini surfaces refreshed for `jarvis`, `RoboNaaz`, `ZorroClaw`, `homelab`, `factory`, `playlist-archive`. Spot-check on `jarvis` confirms Claude+Codex carry the new `UserPromptSubmit` key and `prompt-auto-activator` command path; Gemini correctly omits both.
+6. **Triad runtime validator green.** `validate-triad-runtime.py --project jarvis` reports `overall=PASS` with Claude `cli` 33/33, Codex `filesystem-escalated` 33/33 (`sandbox_blocked: true` per the documented host blocker), Gemini `filesystem` 32/32 (one fewer because `prompt-auto-activator` excludes Gemini). All hosts `hook+ mem+ bridge+ mcp+`. Artifact: `runtime/validation/triad/20260428-190104/`.
+7. **Lessons-ledger triage complete.** 16 entries reviewed; 9 promoted (lesson is now enforced in code or in `AGENTS.md`/`CONOPS.md` as a Rule), 7 remain active (operational context that still shapes future decisions, or doctrine-promotion still pending). The ledger is no longer drifting into a second backlog.
+8. **Content-freshness audit clean.** All four expert skills (`infra-architect`, `corporate-controller`, `legal-counsel`, `brand-guardian`) already delegate to runtime web search; no embedded date-stamped facts. The single hit (`evidence-packager` example rows dated 2025) is illustrative template content, not load-bearing.
+9. **`docs/specs/2026-04-27-sota-2026-overhaul.md` archives the relayed brief verbatim**, plus the four operator-confirmed architectural deviations from the literal request.
+10. **`docs/plans/2026-04-27-sota-2026-overhaul.md` records the 11-task micro-plan** with verification commands.
+
+Evidence:
+- Verifier: `python3 scripts/verify-agent-forge.py` exit 0 (post registry refresh).
+- Tests: `python3 -m unittest tests.test_hooks_v3 -v` 5 OK.
+- Triad runtime artifact: `runtime/validation/triad/20260428-190104/summary.json` (`overall pass=true`, all hosts `hook+ mem+ bridge+ mcp+`; Codex remains `filesystem-escalated` with `sandbox_blocked: true`).
+- Hook surface spot check on `jarvis`: Claude `prompt-auto-activator=True UserPromptSubmit_key=True`, Codex same, Gemini both `False`.
+- Auto-activator smoke test: `printf '/caveman' | bash auto-activator.sh` returns one JSON advisory line, exit 0.
+
+Operational note: `prompt-auto-activator` is the first cross-host record bound to canonical event `user_prompt_submit`. Live invocation through Claude headless remains constrained per the 2026-04-26 doctrine; live-probe verification is operator-driven from a real terminal, not from this Bash tool.
 
 ### Sprint 4: MCP Namespace Prefixing & Routing (2026-04-27, Codex)
 
@@ -172,38 +200,54 @@ Finished the final standardization pass needed to make the omni-factory model in
 
 ## Current State
 
-- **Registry:** generated compatibility artifact derived from canonical sources
-- **Capabilities:** canonical `SKILL.md` capabilities with host-agnostic metadata plus `sprint-harvester`
-- **Teams:** canonical team manifests, with improvement-team now including lesson harvesting
-- **Hosts:** Claude, Codex, and Gemini delivery all wired through one sync engine
-- **Knowledge anchor:** `docs/LESSONS_LEARNED.md` holds durable lessons before doctrine promotion
-- **MCP:** canonical governance layer is live with one seeded shared stdio server (`forge-factory`) and host-safe alias rendering
-- **Validation:** structural verifier is green; triad validation now records `hook_pass`, `memory_pass`, `bridge_pass`, and `mcp_pass` per host
-- **Suitcase status:** export/deploy path still present and should now describe host-agnostic surfaces instead of the retired Claude-first model
-- **Pickup path:** `docs/NEXT_AGENT_PROMPT.md` is the intended operator handoff artifact for Claude or Gemini
+- **Milestone:** Release Candidate (2026-04-28). All shippable backlog cleared; only platform-blocked items remain (see below).
+- **Registry:** generated compatibility artifact derived from canonical sources; refreshed 2026-04-28.
+- **Capabilities:** 30 canonical global skills with host-agnostic metadata. Sprint 5 added `token-optimizer` and `prompt-auto-activator`.
+- **Teams:** canonical team manifests, with improvement-team now including lesson harvesting and memory-archivist.
+- **Hosts:** Claude, Codex, and Gemini delivery all wired through one sync engine.
+- **Knowledge anchor:** `docs/LESSONS_LEARNED.md` holds durable lessons; 9 of 16 entries promoted, 7 remain active.
+- **Hooks:** four active cross-host records (`pre-tool-execution-guardian`, six `memory-bridge` per-host records, and `prompt-auto-activator`). Two canonical events exercised: `pre_tool_use` (all hosts), `user_prompt_submit` (Claude+Codex only). `session_start` and `stop` carry the memory-bridge records.
+- **MCP:** canonical governance layer is live with one seeded shared stdio server (`forge-factory`) and host-safe alias rendering.
+- **Validation:** structural verifier green; triad validation records `hook_pass`, `memory_pass`, `bridge_pass`, and `mcp_pass` per host. Latest jarvis run 33/33 Claude+Codex, 32/32 Gemini (correct — `prompt-auto-activator` excludes Gemini).
+- **Suitcase status:** export/deploy path present and host-agnostic; not yet exercised on a real fresh Debian VM or macOS host.
+- **Pickup path:** `docs/NEXT_AGENT_PROMPT.md` is the intended operator handoff artifact for Claude or Gemini.
 
-## Remaining Weaknesses
+## Remaining Weaknesses (Platform-Blocked)
 
-1. **Host-native MCP management UIs are not equivalent proof surfaces** — project-local `mcp get/list` behavior still differs across Claude, Codex, and Gemini even when the rendered surfaces and direct stdio smoke are correct.
-2. **No real Debian VM proof** — export/deploy/bootstrap flows still need a full fresh-machine operator run.
+These items are not in-engineering reach within this generation. They need real machines, kernel-level changes, upstream CLI behavior changes, or operator-driven proof runs. They are documented here so the next-evolution sprint does not block on them.
+
+1. **Host-native MCP management UIs are not equivalent proof surfaces** — project-local `mcp get/list` behavior still differs across Claude, Codex, and Gemini even when the rendered surfaces and direct stdio smoke are correct. The triad validator's `mcp_pass` is the canonical gate; host UIs are spot-check only.
+2. **No real Debian VM proof** — export/deploy/bootstrap flows still need a full fresh-machine operator run on a real VM.
 3. **No real macOS proof** — MacPorts bootstrap path remains untested.
-4. **Claude live hook probing remains constrained** — the triad validator probes Claude skill surfaces, but headless `claude -p` cannot prove hooks without either bypassing hooks or hanging on interactive permission.
-5. **Gemini live hook probing is opt-in** — the triad validator covers Gemini surfaces by default; real hook invocation proof remains behind `--probe-invocations` because it fires actual CLI tool calls.
-6. **This machine has a Codex sandbox blocker** — the live `jarvis` probe completed, but Codex could not inspect local shell/file surfaces because its internal sandbox hit `bwrap: loopback: Failed RTM_NEWADDR: Operation not permitted`.
-7. **Team manifests are still conceptual** — orchestration remains manual/operator-driven.
-8. **Content freshness** — domain skills still embed date-sensitive knowledge that requires periodic refresh.
+4. **Claude live hook probing is constrained by headless CLI behavior** — per the 2026-04-26 doctrine, headless `claude -p` cannot prove hooks without bypassing them or stalling on interactive permission. Real Claude live-probe needs an interactive session or the `forge-shell` capability (post-RC roadmap).
+5. **Gemini live hook probing is opt-in** — `--probe-invocations` fires actual CLI tool calls and is operator-driven, not a default-on triad gate.
+6. **This machine has a Codex sandbox blocker** — `bwrap: loopback: Failed RTM_NEWADDR` prevents Codex from inspecting local shell/file surfaces. The triad validator escalates to filesystem evidence per the 2026-04-23 doctrine.
+7. **Team manifests are still conceptual** — orchestration remains manual/operator-driven. Real team-as-runtime is a next-generation capability, not RC polish.
 
-## Manual Follow-Up Items
+## Resolved Backlog Items
 
-1. Exercise `bootstrap-project.sh --existing` against a real existing repo
-2. Run a real Debian VM proof and a real macOS proof
-3. Broaden MCP proof depth from direct stdio smoke to true host-native tool invocation parity where the CLIs expose a stable project-local MCP inspection path
-4. Resolve the Codex `bwrap` sandbox issue on this machine and rerun the strict `jarvis` probe
-5. Improve Claude and Gemini live-invocation proof depth without relying on headless CLI behavior that bypasses or stalls hooks
-6. Periodically promote or supersede entries from `docs/LESSONS_LEARNED.md` instead of letting the ledger become a second backlog
+- ~~Content freshness~~ — audited 2026-04-28; expert skills correctly delegate to runtime web search, no embedded stale facts.
+- ~~Periodic ledger triage~~ — done 2026-04-28; 9 entries promoted, 7 active, 0 superseded.
+
+## Manual Follow-Up Items (Operator-Driven)
+
+1. Exercise `bootstrap-project.sh --existing` against a real existing repo.
+2. Run a real Debian VM proof and a real macOS proof.
+3. Broaden MCP proof depth from direct stdio smoke to true host-native tool invocation parity where the CLIs expose a stable project-local MCP inspection path.
+4. Resolve the Codex `bwrap` sandbox issue on this machine and rerun the strict `jarvis` probe.
+5. Improve Claude and Gemini live-invocation proof depth without relying on headless CLI behavior that bypasses or stalls hooks.
+
+## Next Evolution (Post-RC Sprint)
+
+Extract `obra/superpowers`, `gsd-build/get-shit-done`, and the Reddit "Get Shit Done" framework as native skills under canonical Omni-Factory governance. Per the 2026-04-23 promoted lesson, methodology is the asset; do not take plugin dependencies. Native extraction preserves cross-host portability across Claude, Codex, and Gemini, which is the explicit design goal.
+
+Scope sketch (separate clean pass, not in this RC):
+
+1. Inventory the three sources for unique methodology that is not already in the existing 8-skill workflow chain.
+2. Author each new methodology as a discrete `skills/global/<name>/SKILL.md` with canonical frontmatter.
+3. Extend the validator and tests for any new canonical patterns introduced.
+4. Sync to governed projects, run triad gate, ledger-triage the lessons that came out of the extraction.
 
 ## Final Verdict
 
-**Agent Forge now has the right canonical shape for an omni-factory with an explicit anti-entropy loop.**
-
-It is no longer defensible to describe the repo as "Claude adapters plus some Codex skills." The source of truth now lives in capability metadata, team manifests, project catalog, MCP inventory, hook policy, and a durable lesson ledger, with host-native surfaces generated outward from there.
+**Agent Forge has reached its Release Candidate milestone.** The canonical authoring surfaces are stable, the cross-host renderer is hardened, the validation gate is multi-layered, the knowledge anchor is groomed, and the operator handoff is current. The remaining weaknesses are platform-blocked, not in-engineering reach. The factory is ready for the OSS-extraction sprint that the operator's stated end-goal requires.

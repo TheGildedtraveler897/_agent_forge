@@ -41,6 +41,31 @@ class HookV3RenderingTests(unittest.TestCase):
         self.assertEqual(omni_factory.native_hook_event("gemini", "pre_tool_use"), "BeforeTool")
         self.assertEqual(omni_factory.native_hook_event("gemini", "stop"), "SessionEnd")
 
+    def test_user_prompt_submit_renders_for_claude_and_codex(self) -> None:
+        claude_payload = omni_factory.claude_hook_payload()
+        codex_payload = omni_factory.codex_hook_payload()
+
+        self.assertIn("UserPromptSubmit", claude_payload)
+        self.assertIn("UserPromptSubmit", codex_payload["hooks"])
+
+        def _has_auto_activator(entries: list) -> bool:
+            for entry in entries:
+                serialized = repr(entry)
+                if "prompt-auto-activator" in serialized or "auto-activator.sh" in serialized:
+                    return True
+            return False
+
+        self.assertTrue(_has_auto_activator(claude_payload["UserPromptSubmit"]))
+        self.assertTrue(_has_auto_activator(codex_payload["hooks"]["UserPromptSubmit"]))
+
+    def test_user_prompt_submit_filtered_from_gemini(self) -> None:
+        gemini_payload = omni_factory.gemini_hook_payload()
+        serialized = repr(gemini_payload)
+
+        self.assertNotIn("prompt-auto-activator", serialized)
+        self.assertNotIn("auto-activator.sh", serialized)
+        self.assertNotIn("UserPromptSubmit", serialized)
+
 
 if __name__ == "__main__":
     unittest.main()

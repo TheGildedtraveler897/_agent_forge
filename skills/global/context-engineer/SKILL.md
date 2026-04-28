@@ -60,3 +60,9 @@ Build idempotent download scripts for YouTube (yt-dlp) and Spotify (spotipy).
 - spotipy script exports metadata for a test playlist
 - Both scripts are idempotent (re-run produces no duplicates)
 ```
+
+## Checkpoint Discipline
+
+When a session is being compacted, also write a rolling handoff to `dev/active/<slug>/handoff.md` if the directory exists. The handoff captures the last verification-gate result, the next micro-task ID from the active plan, and any unresolved questions. The durable plan stays at `docs/plans/<slug>.md`; the handoff is a transient cursor only.
+
+Pointer of record is `MEMORY.md active_tasks` (the only rewriteable section, owned by `memory-archivist`). The handoff file is local-only — the repo `.gitignore` excludes `dev/`. Do not promote handoff content to `docs/HANDOFF.md` until the task closes; that promotion is the `branch-finisher` or `sprint-harvester` step, not a compaction step.
