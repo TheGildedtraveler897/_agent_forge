@@ -187,22 +187,20 @@ Finished the final standardization pass needed to make the omni-factory model in
 1. **Host-native MCP management UIs are not equivalent proof surfaces** — project-local `mcp get/list` behavior still differs across Claude, Codex, and Gemini even when the rendered surfaces and direct stdio smoke are correct.
 2. **No real Debian VM proof** — export/deploy/bootstrap flows still need a full fresh-machine operator run.
 3. **No real macOS proof** — MacPorts bootstrap path remains untested.
-4. **No automated Claude runtime validator yet** — Claude still relies on a documented manual runtime pass rather than an in-repo probe script.
-5. **No automated Gemini runtime validator yet** — Gemini runtime validation is still runbook-driven.
+4. **Claude live hook probing remains constrained** — the triad validator probes Claude skill surfaces, but headless `claude -p` cannot prove hooks without either bypassing hooks or hanging on interactive permission.
+5. **Gemini live hook probing is opt-in** — the triad validator covers Gemini surfaces by default; real hook invocation proof remains behind `--probe-invocations` because it fires actual CLI tool calls.
 6. **This machine has a Codex sandbox blocker** — the live `jarvis` probe completed, but Codex could not inspect local shell/file surfaces because its internal sandbox hit `bwrap: loopback: Failed RTM_NEWADDR: Operation not permitted`.
 7. **Team manifests are still conceptual** — orchestration remains manual/operator-driven.
 8. **Content freshness** — domain skills still embed date-sensitive knowledge that requires periodic refresh.
 
 ## Manual Follow-Up Items
 
-1. Regenerate and commit `registry.json` from `scripts/omni_factory.py render-registry`
-2. Run `scripts/verify-agent-forge.py` after the doc and registry updates are committed
-3. Exercise `bootstrap-project.sh --existing` against a real existing repo
-4. Run a real Debian VM proof and a real macOS proof
-5. Broaden MCP proof depth from direct stdio smoke to true host-native tool invocation parity where the CLIs expose a stable project-local MCP inspection path
-6. Resolve the Codex `bwrap` sandbox issue on this machine and rerun the strict `jarvis` probe
-7. Add automated Claude and Gemini runtime probes so all three hosts have comparable proof depth
-8. Periodically promote or supersede entries from `docs/LESSONS_LEARNED.md` instead of letting the ledger become a second backlog
+1. Exercise `bootstrap-project.sh --existing` against a real existing repo
+2. Run a real Debian VM proof and a real macOS proof
+3. Broaden MCP proof depth from direct stdio smoke to true host-native tool invocation parity where the CLIs expose a stable project-local MCP inspection path
+4. Resolve the Codex `bwrap` sandbox issue on this machine and rerun the strict `jarvis` probe
+5. Improve Claude and Gemini live-invocation proof depth without relying on headless CLI behavior that bypasses or stalls hooks
+6. Periodically promote or supersede entries from `docs/LESSONS_LEARNED.md` instead of letting the ledger become a second backlog
 
 ## Final Verdict
 

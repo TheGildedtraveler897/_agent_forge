@@ -5,22 +5,42 @@
     {
       "name": "result-auditor",
       "responsibility": "Compare the outcome against the stated goal and acceptance criteria. Gate completion claims through verification-gate and refuse hedging language.",
-      "inputs": ["result", "acceptance criteria", "brief", "fresh verification output"],
-      "outputs": ["goal-fit findings", "verification attestation"],
+      "inputs": [
+        "result",
+        "acceptance criteria",
+        "brief",
+        "fresh verification output"
+      ],
+      "outputs": [
+        "goal-fit findings",
+        "verification attestation"
+      ],
       "stop_condition": "No hedging language present; fresh evidence attached; every acceptance criterion mapped to an output line."
     },
     {
       "name": "regression-reviewer",
       "responsibility": "Look for risks, regressions, and verification gaps introduced by the change.",
-      "inputs": ["result", "diff", "test output"],
-      "outputs": ["regression findings"],
+      "inputs": [
+        "result",
+        "diff",
+        "test output"
+      ],
+      "outputs": [
+        "regression findings"
+      ],
       "stop_condition": "The major keep-or-fix risks are documented."
     },
     {
       "name": "scorecard-writer",
       "responsibility": "Produce a compact scorecard that a human or follow-on model can act on immediately.",
-      "inputs": ["goal-fit findings", "regression findings"],
-      "outputs": ["scorecard", "release or rollback recommendation"],
+      "inputs": [
+        "goal-fit findings",
+        "regression findings"
+      ],
+      "outputs": [
+        "scorecard",
+        "release or rollback recommendation"
+      ],
       "stop_condition": "The next action is obvious without re-reviewing the whole artifact set."
     }
   ],
@@ -32,16 +52,22 @@
     "release or rollback recommendation"
   ],
   "claude_mapping": {
-    "primitives": ["slash commands", "subagents when review surfaces should stay separate"],
+    "primitives": [
+      "slash commands",
+      "subagents when review surfaces should stay separate"
+    ],
     "preferred_entries": [
       "verification-gate",
       "quality-gate",
-      "doctrine-review",
+      "code-review-doctrine",
       "root-cause-analyst"
     ]
   },
   "codex_mapping": {
-    "primitives": ["skills", "delegated runtime reviewers when useful"],
+    "primitives": [
+      "skills",
+      "delegated runtime reviewers when useful"
+    ],
     "preferred_entries": [
       "verification-gate",
       "quality-gate",
@@ -50,7 +76,11 @@
     ]
   },
   "gemini_mapping": {
-    "primitives": ["commands", "skills", "subagents when review surfaces should stay separate"],
+    "primitives": [
+      "commands",
+      "skills",
+      "subagents when review surfaces should stay separate"
+    ],
     "preferred_entries": [
       "verification-gate",
       "quality-gate",

@@ -11,7 +11,11 @@
         "type": "command",
         "command": "bash ~/Projects/_agent_forge/skills/global/telemetry-guardian/guardian.sh"
       },
-      "targets": ["claude", "codex", "gemini"],
+      "targets": [
+        "claude",
+        "codex",
+        "gemini"
+      ],
       "timeout_ms": 5000,
       "status_message": "telemetry-guardian vetting tool invocation"
     }
@@ -26,7 +30,9 @@
         "type": "command",
         "command": "python3 ~/Projects/_agent_forge/skills/global/memory-bridge/bridge.py outbound --project . --host claude"
       },
-      "targets": ["claude"],
+      "targets": [
+        "claude"
+      ],
       "async": true,
       "timeout_ms": 10000,
       "status_message": "memory-bridge outbound to Claude auto-memory"
@@ -40,7 +46,9 @@
         "type": "command",
         "command": "python3 ~/Projects/_agent_forge/skills/global/memory-bridge/bridge.py inbound --project . --host claude"
       },
-      "targets": ["claude"],
+      "targets": [
+        "claude"
+      ],
       "async": true,
       "timeout_ms": 30000,
       "status_message": "memory-bridge inbound from Claude auto-memory"
@@ -57,7 +65,9 @@
         "headers": {},
         "allowed_env_vars": []
       },
-      "targets": ["claude"],
+      "targets": [
+        "claude"
+      ],
       "timeout_ms": 30000
     },
     {
@@ -74,7 +84,9 @@
           "file_path": "${tool_input.file_path}"
         }
       },
-      "targets": ["claude"],
+      "targets": [
+        "claude"
+      ],
       "timeout_ms": 30000
     },
     {
@@ -88,7 +100,9 @@
         "prompt": "Review the hook input JSON and return a yes/no JSON decision.",
         "model": "fast"
       },
-      "targets": ["claude"],
+      "targets": [
+        "claude"
+      ],
       "timeout_ms": 30000
     },
     {
@@ -101,7 +115,9 @@
         "type": "agent",
         "prompt": "Inspect the changed files and report whether a policy issue exists."
       },
-      "targets": ["claude"],
+      "targets": [
+        "claude"
+      ],
       "timeout_ms": 60000
     }
   ],
@@ -115,7 +131,9 @@
         "type": "command",
         "command": "python3 ~/Projects/_agent_forge/skills/global/memory-bridge/bridge.py outbound --project . --host codex"
       },
-      "targets": ["codex"],
+      "targets": [
+        "codex"
+      ],
       "async": true,
       "timeout_ms": 10000,
       "status_message": "memory-bridge outbound to Codex sidecar"
@@ -129,7 +147,9 @@
         "type": "command",
         "command": "python3 ~/Projects/_agent_forge/skills/global/memory-bridge/bridge.py inbound --project . --host codex"
       },
-      "targets": ["codex"],
+      "targets": [
+        "codex"
+      ],
       "async": true,
       "timeout_ms": 30000,
       "status_message": "memory-bridge inbound from Codex sidecar"
@@ -145,7 +165,9 @@
         "type": "command",
         "command": "python3 ~/Projects/_agent_forge/skills/global/memory-bridge/bridge.py outbound --project . --host gemini"
       },
-      "targets": ["gemini"],
+      "targets": [
+        "gemini"
+      ],
       "async": true,
       "timeout_ms": 10000,
       "status_message": "memory-bridge outbound to Gemini sidecar"
@@ -159,7 +181,9 @@
         "type": "command",
         "command": "python3 ~/Projects/_agent_forge/skills/global/memory-bridge/bridge.py inbound --project . --host gemini"
       },
-      "targets": ["gemini"],
+      "targets": [
+        "gemini"
+      ],
       "async": true,
       "timeout_ms": 30000,
       "status_message": "memory-bridge inbound from Gemini sidecar"

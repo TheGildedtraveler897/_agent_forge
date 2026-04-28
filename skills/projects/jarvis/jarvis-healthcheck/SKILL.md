@@ -4,6 +4,7 @@ description: Full-stack health diagnostic for Jarvis. Runs 6 layers covering CLI
 context_cost: heavy
 model_tier: sonnet
 capability_class: workflow
+targets: ["claude", "codex", "gemini"]
 ---
 
 # jarvis-healthcheck

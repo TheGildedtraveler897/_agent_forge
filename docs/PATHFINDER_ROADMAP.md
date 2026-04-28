@@ -1,6 +1,6 @@
 # Omni-Factory Pathfinder Roadmap
 
-**Last regenerated:** 2026-04-26 (Human Interface + Sprint Handoff pass).
+**Last regenerated:** 2026-04-28 (Stop The Line production audit polish).
 
 ## Read order
 
@@ -117,7 +117,7 @@ Operator-facing guided tour for first-time operators. Lives at `skills/global/on
 
 Read-only and observational. Does not modify canonical sources, host surfaces, or `bootstrap-project.sh`. Audience-tone discipline encoded in the SKILL.md (no sycophancy, no condescension, jargon-translated-on-first-use). Designed to be invoked directly by the operator after `bootstrap-project.sh`; an integration-hook seam is documented in `docs/OPERATOR_TEMPLATES.md` for a future Codex sprint to wire `bootstrap-project.sh --guided`.
 
-Lives on side branch `feat/onboarding-guide` until Codex completes Sprint 3 — then the merge to master happens cleanly.
+Current branch state: this factory line is on `feat/onboarding-guide` with Sprint 3 and Sprint 4 work already layered on top. Finish through the normal branch-finisher path rather than treating onboarding as a separate pending side branch.
 
 ### B1. `live-hook-prober` — ✅ Shipped 2026-04-26
 

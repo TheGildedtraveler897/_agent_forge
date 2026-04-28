@@ -4,6 +4,7 @@ description: Audit a repo, script set, or configuration for portability risks su
 context_cost: light
 model_tier: any
 capability_class: workflow
+targets: ["claude", "codex", "gemini"]
 delivery_projects: ["jarvis"]
 claude_command_name: portability-audit
 gemini_command_name: portability-audit

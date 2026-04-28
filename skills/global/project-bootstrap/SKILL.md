@@ -4,6 +4,7 @@ description: Bootstrap a new project under ~/Projects with Agent Forge governanc
 context_cost: light
 model_tier: any
 capability_class: workflow
+targets: ["claude", "codex", "gemini"]
 delivery_projects: ["jarvis"]
 ---
 

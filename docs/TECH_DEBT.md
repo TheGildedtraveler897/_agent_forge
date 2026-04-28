@@ -1,19 +1,21 @@
 # TECH_DEBT
 
-This file records the most important remaining gaps as of 2026-04-27, after the hook lifecycle v3 sprint shipped and the stabilization proof at `runtime/validation/triad/20260427-085402/summary.json` passed.
+This file records the most important remaining gaps as of 2026-04-28, after the memory-bridge and MCP namespace-routing sprints shipped and the Sprint 4 proof at `runtime/validation/triad/20260427-234006/summary.json` passed.
 
 ## Recently Resolved (no longer debt)
 
 - **Claude runtime validator** — shipped 2026-04-24 as part of `scripts/validate-triad-runtime.py`. Probes the live `claude` CLI; falls back to filesystem on failure.
 - **Gemini runtime validator** — same triad-validator script also probes the live `gemini` CLI.
-- **Universal pre-tool guardrail** — `telemetry-guardian` shipped 2026-04-24 with `policies/hooks.json` v2 + three host renderers; live deny list covering `--no-verify`, force-push to protected branches, wildcard home deletion, unscoped `terraform destroy`, whole-disk `dd`, recursive 777.
+- **Universal pre-tool guardrail** — `telemetry-guardian` shipped 2026-04-24 and now renders through `policies/hooks.json` v3 handler records with three host renderers; live deny list covering `--no-verify`, force-push to protected branches, wildcard home deletion, unscoped `terraform destroy`, whole-disk `dd`, recursive 777.
 - **Universal cross-host memory layer** — `MEMORY.md` + `.forge_state/` shipped 2026-04-25 with `policies/memory.json` schema + `memory-archivist` skill + `memory_surface_for` triad gate.
+- **Cross-host memory bridge** — `memory-bridge` shipped 2026-04-27 with host-local outbound/inbound bridge state, async session lifecycle hooks, and `bridge_pass` in the triad validator.
+- **MCP namespace routing** — `global-mcp.json` v2 shipped 2026-04-27 with the seeded `forge-factory` stdio server, host-safe aliases, trust-gated project routing, and `mcp_pass` in the triad validator.
 - **Codex sandbox-marker drift** — `host_sandbox_blocked()` in the triad validator now recognizes the newer Codex error strings (`needs access to create user namespaces`, `shell tool failed before command execution`, etc.) so sandbox-blocked Codex runs still escalate to filesystem-escalated evidence.
 - **Hook lifecycle v3 + Codex event-key drift** — `policies/hooks.json` now uses explicit handler objects, Codex native keys render as PascalCase (`PreToolUse`, `SessionStart`, `Stop`), and `hook_surface_for()` checks every active hook record's native event key.
 
 ## Open Debt
 
-- No real shared MCP server has been added to `global-mcp.json`, so cross-host MCP injection is still structurally wired but operationally unproven (Architectural Upgrade #3 in `docs/PATHFINDER_ROADMAP.md`).
+- Host-native MCP management UIs are not equivalent proof surfaces; `mcp_pass` currently means rendered config alias plus direct stdio `tools/list` smoke, not guaranteed parity across `mcp get/list` commands.
 - Non-command hook handlers (`http`, `mcp_tool`, `prompt`, `agent`) are schema-modeled and dormant, but not live-dispatch proven. Sprint 2 deliberately validated command hooks only until host-safe sentinels exist.
 - The Codex runtime validator performs live execution, but it still does not prove every generated command or agent invocation path; it confirms enumeration, not invocation correctness.
 - On this machine, Codex runtime inspection is regularly blocked by `bwrap` namespace restrictions; the validator escalates to filesystem-escalated evidence per documented doctrine, but a sandbox-friendly Codex probe would be cleaner.
@@ -26,13 +28,12 @@ This file records the most important remaining gaps as of 2026-04-27, after the 
 
 ## Follow-On Work
 
-1. Pick up Sprint 3 / Architectural Upgrade A2 + Capability B2: host memory bridge around the existing universal `MEMORY.md` layer.
-2. Add the first real shared MCP server and validate all three host renderers after the memory bridge lands (paves the way for Architectural Upgrade #3, MCP namespace prefixing).
-3. Resolve or work around the local Codex `bwrap` sandbox failure for cleaner runtime proof.
-4. Exercise `bootstrap-project.sh --existing` on a real existing repo.
-5. Exercise the suitcase path on a fresh Debian VM and a fresh macOS machine.
-6. Push `_agent_forge` to a GitHub remote so the weekly watchdog routine can be scheduled.
-7. Promote or supersede ledger entries in `docs/LESSONS_LEARNED.md` before they turn into a second backlog.
+1. Broaden MCP proof depth from direct stdio smoke to true host-native tool invocation parity where the CLIs expose stable project-local inspection paths.
+2. Resolve or work around the local Codex `bwrap` sandbox failure for cleaner runtime proof.
+3. Exercise `bootstrap-project.sh --existing` on a real existing repo.
+4. Exercise the suitcase path on a fresh Debian VM and a fresh macOS machine.
+5. Push `_agent_forge` to a GitHub remote so the weekly watchdog routine can be scheduled.
+6. Promote or supersede ledger entries in `docs/LESSONS_LEARNED.md` before they turn into a second backlog.
 
 ## Notes For The Next Session
 

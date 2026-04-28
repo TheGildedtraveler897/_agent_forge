@@ -4,6 +4,7 @@ description: Convert research or repo exploration into a compact evidence pack w
 context_cost: light
 model_tier: any
 capability_class: workflow
+targets: ["claude", "codex", "gemini"]
 ---
 
 # Evidence Packager

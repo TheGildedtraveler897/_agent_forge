@@ -4,6 +4,7 @@ description: System health and dependency auditor. Ensures the Suitcase Doctrine
 context_cost: medium
 model_tier: any
 capability_class: workflow
+targets: ["claude", "codex", "gemini"]
 ---
 
 # jarvis-audit

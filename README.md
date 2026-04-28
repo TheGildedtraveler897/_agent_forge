@@ -135,9 +135,9 @@ The problem if you want to use *all three*: every host's configuration files hav
 | `skills/projects/<project>/<id>/SKILL.md` | Project-local capability | Same shape; `project: <name>` set automatically. |
 | `teams/<name>.json` | Multi-agent team manifest | `roles`, `collapse_condition`, `escalate_condition`, `handoff_artifacts`, per-host `preferred_entries`. |
 | `projects.json` | Governed project catalog | List of `{name, root, required_files}`. |
-| `global-mcp.json` | Shared MCP server inventory | `servers` map; currently empty by design until first real shared server. |
-| `policies/hooks.json` | Hook lifecycle records | v2: `shared[]` + per-host arrays of `{id, event, matcher, command, targets, timeout_ms, status_message}`. |
-| `policies/memory.json` | Memory section schema | v1: `sections[]` of `{id, name, append_only, host_writers, host_readers, description}`, `retention`, `secrets_policy`. |
+| `global-mcp.json` | Shared MCP server inventory | v2: `servers` map with semantic `prefix`, host-safe aliases, transport/auth/trust metadata, project routing, and tool filters. Seeded with `forge-factory`. |
+| `policies/hooks.json` | Hook lifecycle records | v3: `shared[]` + per-host arrays of `{id, event, matcher, handler, targets, timeout_ms, status_message}`. |
+| `policies/memory.json` | Memory section schema | v2: `sections[]`, `retention`, `secrets_policy`, and a `bridge` block for host-local memory synchronization. |
 
 ### Generated host surfaces
 
@@ -146,7 +146,7 @@ The problem if you want to use *all three*: every host's configuration files hav
 | **Claude** | `~/.claude/{agents,commands}` | `<project>/.claude/{agents,commands,skills,settings.json}`, `<project>/.mcp.json` |
 | **Codex** | `~/.agents/skills` | `<project>/.agents/skills`, `<project>/.codex/{agents,config.toml,hooks.json}` |
 | **Gemini** | `~/.gemini/{agents,commands,skills}`, `~/.gemini/GEMINI.md` | `<project>/GEMINI.md`, `<project>/.gemini/{agents,commands,skills,settings.json}` |
-| **Cross-host** | n/a | `<project>/MEMORY.md`, `<project>/.forge_state/{README.md,manifest.json,archivist.log}` |
+| **Cross-host** | n/a | `<project>/MEMORY.md`, `<project>/.forge_state/{README.md,manifest.json,archivist.log,bridge.json,bridge.log}` |
 
 ### The validation pyramid
 
@@ -158,7 +158,7 @@ Level 3 — Live invocation gate (deepest, slowest, most truthful)
 
 Level 2 — Triad surface gate (mandatory after every canonical change)
   validate-triad-runtime.py --project <name>
-  Asks each host's CLI to enumerate skills; checks hook surface, memory surface.
+  Asks each host's CLI to enumerate skills; checks hook, memory, bridge, and MCP surfaces.
   Codex sandbox-blocked falls back to filesystem-escalated evidence.
 
 Level 1 — Structural verifier (cheapest, run constantly)
@@ -238,15 +238,15 @@ All three hosts read this file: Claude/Codex via the AGENTS.md Read Order entry;
 
 **Why this shape.** A single canonical file is the simplest possible cross-host shared state. No complex sync logic; no eventual-consistency edge cases; no per-host translation. Section anchors are stable identifiers so the archivist can find the right insertion point regardless of how human-prose flowing text changes around them. The append-first discipline guarantees that older sessions' learnings are never silently destroyed by newer ones.
 
-**What's still incomplete.** The bridge to each host's *native* auto-memory — so a fact Claude learns and saves into its own auto-memory automatically reaches our canonical `MEMORY.md` — is **not yet shipped**. That's Sprint 3 (Capability B2 `memory-bridge`).
+**Bridge status.** The `memory-bridge` skill now synchronizes canonical `MEMORY.md` outward to host-local memory targets and imports new host-local notes back through `memory-archivist`. Claude uses its true machine-local auto-memory index; Codex and Gemini use clearly named project sidecars because neither host exposes the same stable project fact-memory primitive.
 
 ### 3. The `telemetry-guardian` universal pre-tool veto
 
 **What it solves.** Three hosts, three different ways to register a "block dangerous commands" hook, three opportunities to forget one. Without a universal guardrail, an overeager AI agent can `git push --force origin main`, `rm -rf $HOME`, or `terraform destroy` without scope — and no one stops it.
 
-**How it works.** `policies/hooks.json` v2 has a `shared` array. The seeded record there is `pre-tool-execution-guardian` with `command: bash ~/Projects/_agent_forge/skills/global/telemetry-guardian/guardian.sh`. The omni-factory renderer translates this single record into:
+**How it works.** `policies/hooks.json` v3 has a `shared` array with explicit `handler` objects. The seeded record there is `pre-tool-execution-guardian` with `handler.command: bash ~/Projects/_agent_forge/skills/global/telemetry-guardian/guardian.sh`. The omni-factory renderer translates this single record into:
 - Claude `<project>/.claude/settings.json` `hooks.PreToolUse`.
-- Codex `<project>/.codex/hooks.json` `hooks.pre_tool_use`.
+- Codex `<project>/.codex/hooks.json` `hooks.PreToolUse`.
 - Gemini `<project>/.gemini/settings.json` `hooks.BeforeTool`.
 
 When any host attempts a Bash tool call, the guardian script reads the JSON invocation on stdin, matches the command against a deny list, and either exits 0 (allow) or 1 (block). The deny list:
@@ -288,7 +288,7 @@ Bypass is via `AGENT_FORGE_GUARDIAN=off` for that session. Every bypass and ever
 **How they work.** Two changes shipped in Sprint 1 (commits `f2cea42` + `a15200f`):
 
 - `_EVENT_ALIASES["gemini"]` corrected: `pre_tool_use → BeforeTool`, `post_tool_use → AfterTool`, `session_start → SessionStart`, `stop → SessionEnd`.
-- `hook_surface_for()` in the validator now also requires the per-host expected event key (`PreToolUse` / `pre_tool_use` / `BeforeTool`) to be a top-level key in the rendered hooks payload, not just a substring of any value somewhere in the JSON.
+- `hook_surface_for()` in the validator now also requires the per-host expected event key (`PreToolUse` / `PreToolUse` / `BeforeTool`) to be a top-level key in the rendered hooks payload, not just a substring of any value somewhere in the JSON.
 - A new skill `live-hook-prober` (`skills/global/live-hook-prober/prober.sh`) fires a real `git commit --no-verify` on the target host and observes whether the seeded guardian hook actually intercepts it.
 - The triad validator gains a `--probe-invocations` flag (default OFF, opt-in because each probe is a real CLI call). When set, after the surface checks pass, it runs the live probe per host.
 
@@ -330,7 +330,7 @@ cd ~/Projects/_agent_forge
 
 # 6. Triad-test the result. Surface check:
 python3 scripts/validate-triad-runtime.py --project <your-project>
-#   Expected: overall PASS, all three hosts hook+ mem+, expected count 29.
+#   Expected: overall PASS, all three hosts hook+ mem+ bridge+ mcp+, expected count 31.
 
 #    Live invocation gate (opt-in, slower, real CLI calls):
 python3 scripts/validate-triad-runtime.py --project <your-project> --probe-invocations
@@ -426,7 +426,7 @@ The skill is now visible in all three hosts' CLI under the project.
 
 ### Add a new cross-host hook
 
-Edit `policies/hooks.json` `shared` array. The schema is in `docs/HOST_INTEGRATIONS.md` § Unified Hook Lifecycle. The factory will translate the event into Claude `PreToolUse` / Codex `pre_tool_use` / Gemini `BeforeTool` automatically. Re-sync all governed projects, run the verifier and triad validator.
+Edit `policies/hooks.json` `shared` array. The schema is in `docs/HOST_INTEGRATIONS.md` § Unified Hook Lifecycle. The factory will translate the event into Claude `PreToolUse` / Codex `PreToolUse` / Gemini `BeforeTool` automatically. Re-sync all governed projects, run the verifier and triad validator.
 
 ### Add a new memory section
 
@@ -438,7 +438,7 @@ Add an entry to `projects.json` with `name`, `root`, and `required_files`. Run `
 
 ### Add a shared MCP server
 
-Edit `global-mcp.json`. The MCP namespace prefixing renderer (Sprint 4 in `docs/SPRINT_BACKLOG.md`) is the canonical place for cross-host translation. Until that ships, the file is structurally wired but operationally untested with real entries.
+Edit `global-mcp.json`. The MCP namespace prefixing renderer translates semantic prefixes into host-safe server aliases and enforces trust-gated project routing. The seeded local `forge-factory` stdio server is the reference shape for adding more shared servers without credentials.
 
 ---
 
@@ -469,25 +469,26 @@ _agent_forge/
 │   └── memory.json               ← canonical memory section schema
 │
 ├── projects.json                 ← governed project catalog
-├── global-mcp.json               ← shared MCP server inventory (intentionally empty until first server)
+├── global-mcp.json               ← shared MCP server inventory (seeded with forge-factory)
 ├── registry.json                 ← generated compatibility output (do not hand-edit)
 │
 ├── skills/
-│   ├── global/                   ← portable cross-project skills (29 of them)
+│   ├── global/                   ← portable cross-project skills (26 of them)
 │   │   ├── branch-finisher/
 │   │   ├── brand-guardian/
 │   │   ├── code-review-doctrine/
 │   │   ├── company-onboarder/
 │   │   ├── context-engineer/
 │   │   ├── corporate-controller/
-│   │   ├── doctrine-review/      (slash commands referenced from team manifests)
 │   │   ├── evidence-packager/
 │   │   ├── execution-planner/
 │   │   ├── infra-architect/
 │   │   ├── legal-counsel/
 │   │   ├── live-hook-prober/     ← deepest validation gate (Sprint 1, 2026-04-26)
 │   │   ├── memory-archivist/     ← session-scoped state writer (Sprint Apr-25)
+│   │   ├── memory-bridge/        ← host-local memory bridge (Sprint Apr-27)
 │   │   ├── multi-agent-governor/
+│   │   ├── onboarding-guide/
 │   │   ├── portability-auditor/
 │   │   ├── project-bootstrap/
 │   │   ├── quality-gate/
@@ -506,7 +507,7 @@ _agent_forge/
 ├── scripts/
 │   ├── omni_factory.py           ← the canonical generator
 │   ├── verify-agent-forge.py     ← structural verifier
-│   ├── validate-triad-runtime.py ← runtime gate (CLI enumeration + hook + memory + live invocation)
+│   ├── validate-triad-runtime.py ← runtime gate (CLI enumeration + hook + memory + bridge + MCP)
 │   ├── validate-codex-runtime.py ← strict Codex-only probe
 │   ├── bootstrap-workstation.sh  ← installs Claude / Codex / Gemini CLIs
 │   ├── bootstrap-project.sh      ← scaffolds a new governed project
@@ -556,8 +557,8 @@ The factory is in a strong position on the canonical-first axis. It is honestly 
 
 1. **Codex sandbox is bubblewrap-fragile on Linux.** `bwrap: loopback: Failed RTM_NEWADDR: Operation not permitted` and `needs access to create user namespaces` are recurring errors. The triad validator escalates to filesystem-evidence per documented doctrine when this fires; the live invocation probe escalates to `sandbox_blocked`. This is documented and accepted.
 2. **Headless `claude -p` cannot live-probe hooks.** With `--dangerously-skip-permissions`, the entire pre-tool hook system is bypassed (false positive). Without it, the CLI hangs waiting on a permission prompt that has no interactive stdin to deliver. The live-hook-prober treats this as `escalated`. Real Claude live-probing requires either an interactive session or a pre-approved permission rule for the test command — both out of scope for an automated triad gate. Roadmap fix: Capability B4 (`forge-shell`) provides the persistent shell context that closes this.
-3. **No real shared MCP server has landed yet.** `global-mcp.json` is intentionally empty until the first real shared server lands. The MCP renderer is structurally wired but operationally unproven with real entries. Sprint 4 (Architectural Upgrade A3) is the moment this becomes real.
-4. **Cross-host auto-memory bridge is not yet shipped.** `MEMORY.md` is the canonical cross-host file, but the bridge to each host's *native* auto-memory store is not built. A fact Claude saves into its own auto-memory does not propagate to Gemini or to our canonical file. Sprint 3 (Capability B2 `memory-bridge`) is the fix.
+3. **Host MCP management UIs are not parity proof.** `global-mcp.json` now ships the seeded local `forge-factory` server and `mcp_pass` verifies rendered aliases plus direct stdio `tools/list`. Host-native `mcp get/list` commands still differ enough that they remain secondary spot checks.
+4. **The memory bridge is conservative by design.** Claude has a true native auto-memory path, while Codex and Gemini use project sidecars because current host docs do not expose equivalent stable project fact-memory stores. The sidecars are evidence, not claims of native auto-load parity.
 5. **Tool-result delivery stalls** in agent harnesses are real. Two distinct mechanisms have been observed: bridge fragility on bulky compound-bash output, and leftover-subprocess-tree leaks on long-running CLI invocations. The mitigation rules are in §Governance discipline.
 6. **No git remote yet.** The factory is local-only. The watchdog routine documented in `docs/TECH_DEBT.md` is blocked on a public git remote being available.
 7. **Real Debian VM and macOS suitcase proofs still pending.** The path is structurally wired but has not yet been exercised end-to-end on a fresh machine by a real operator.

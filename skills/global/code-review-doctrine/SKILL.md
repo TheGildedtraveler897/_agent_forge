@@ -4,6 +4,7 @@ description: Review code changes for doctrine violations, portability regression
 context_cost: light
 model_tier: any
 capability_class: workflow
+targets: ["claude", "codex", "gemini"]
 delivery_projects: ["jarvis"]
 claude_command_name: doctrine-review
 gemini_command_name: doctrine-review

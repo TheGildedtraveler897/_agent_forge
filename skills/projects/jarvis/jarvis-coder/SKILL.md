@@ -4,6 +4,7 @@ description: Lead Builder for Jarvis. Writes lean, portable, doctrine-aligned co
 context_cost: medium
 model_tier: any
 capability_class: expert
+targets: ["claude", "codex", "gemini"]
 codex_sandbox_mode: workspace-write
 ---
 

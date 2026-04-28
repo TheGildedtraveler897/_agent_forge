@@ -32,6 +32,7 @@ GEMINI_COMMAND_MARKER = "agent_forge_managed = true"
 CODEX_AGENT_MARKER = "agent_forge_managed = true"
 MARKDOWN_MANAGED_COMMENT = "<!-- Managed by Agent Forge omni-factory. Do not edit by hand. -->"
 BOOTSTRAP_REPLACE_MARKER = "Managed by Agent Forge bootstrap. The sync script will replace this stub."
+CAPABILITY_TARGETS = ("claude", "codex", "gemini")
 
 
 @dataclass(frozen=True)
@@ -320,6 +321,46 @@ def discover_capabilities() -> list[Capability]:
     return capabilities
 
 
+def validate_skill_frontmatter() -> tuple[list[str], list[str]]:
+    errors: list[str] = []
+    warnings: list[str] = []
+    for skill_path in sorted(ROOT.glob("skills/**/SKILL.md")):
+        meta = parse_frontmatter(skill_path.read_text())
+        rel = skill_path.relative_to(ROOT).as_posix()
+        capability_id = skill_path.parent.name
+
+        name = meta.get("name")
+        if not name:
+            errors.append(f"{rel} frontmatter missing required field 'name'")
+        elif name != capability_id:
+            errors.append(f"{rel} frontmatter name '{name}' must match folder '{capability_id}'")
+
+        description = meta.get("description")
+        if not isinstance(description, str) or not description.strip():
+            errors.append(f"{rel} frontmatter missing required field 'description'")
+
+        capability_class = meta.get("capability_class")
+        if capability_class not in {"workflow", "expert", "reference"}:
+            errors.append(f"{rel} frontmatter missing or invalid 'capability_class'")
+
+        targets = meta.get("targets")
+        hosts = meta.get("hosts")
+        if targets is None and hosts is None:
+            errors.append(f"{rel} frontmatter missing required field 'targets'")
+            continue
+        if targets is None and hosts is not None:
+            warnings.append(f"{rel} uses legacy 'hosts'; prefer canonical 'targets'")
+            targets = hosts
+        if not isinstance(targets, list) or not targets or not all(isinstance(item, str) for item in targets):
+            errors.append(f"{rel} frontmatter 'targets' must be a non-empty string list")
+            continue
+        invalid_targets = [target for target in targets if target not in CAPABILITY_TARGETS]
+        if invalid_targets:
+            errors.append(f"{rel} frontmatter has invalid targets: {invalid_targets}")
+
+    return errors, warnings
+
+
 def load_projects() -> list[ProjectSpec]:
     data = load_json(PROJECTS_CATALOG_PATH)
     projects: list[ProjectSpec] = []
@@ -348,6 +389,35 @@ def load_team_entries() -> list[dict[str, Any]]:
             }
         )
     return teams
+
+
+def validate_team_manifest_references(capabilities: list[Capability]) -> list[str]:
+    errors: list[str] = []
+    global_skill_ids = {capability.capability_id for capability in capabilities if capability.scope == "global"}
+    project_skill_ids = {capability.capability_id for capability in capabilities if capability.scope == "project-local"}
+    mapping_keys = ("claude_mapping", "codex_mapping", "gemini_mapping")
+
+    for path in sorted((ROOT / "teams").glob("*.json")):
+        data = load_json(path)
+        rel = path.relative_to(ROOT).as_posix()
+        for mapping_key in mapping_keys:
+            preferred = (data.get(mapping_key) or {}).get("preferred_entries") or []
+            if not isinstance(preferred, list):
+                errors.append(f"{rel} {mapping_key}.preferred_entries must be a list")
+                continue
+            for entry in preferred:
+                if entry in global_skill_ids:
+                    continue
+                if entry in project_skill_ids:
+                    errors.append(
+                        f"{rel} {mapping_key}.preferred_entries references project-local skill '{entry}'"
+                    )
+                else:
+                    errors.append(
+                        f"{rel} {mapping_key}.preferred_entries references unknown skill '{entry}'"
+                    )
+
+    return errors
 
 
 def build_registry(capabilities: list[Capability], projects: list[ProjectSpec]) -> dict[str, Any]:
@@ -1666,18 +1736,31 @@ def verify() -> int:
         else:
             fail(f"Missing required path: {path.relative_to(ROOT)}")
 
-    for skill in discover_capabilities():
-        ok(f"Capability metadata OK: {skill.capability_id}")
+    skill_metadata_errors, skill_metadata_warnings = validate_skill_frontmatter()
+    for message in skill_metadata_errors:
+        fail(message)
+    for message in skill_metadata_warnings:
+        warn(message)
 
-    generated_registry = build_registry(discover_capabilities(), load_projects())
-    if REGISTRY_PATH.exists():
-        current = load_json(REGISTRY_PATH)
-        if current == generated_registry:
-            ok("registry.json matches generated compatibility registry")
-        else:
-            fail("registry.json is out of date with canonical omni-factory sources")
+    capabilities: list[Capability] = []
+    try:
+        capabilities = discover_capabilities()
+    except Exception as exc:
+        fail(f"Capability discovery failed: {exc}")
     else:
-        fail("Missing registry.json")
+        for skill in capabilities:
+            ok(f"Capability metadata OK: {skill.capability_id}")
+
+    if capabilities:
+        generated_registry = build_registry(capabilities, load_projects())
+        if REGISTRY_PATH.exists():
+            current = load_json(REGISTRY_PATH)
+            if current == generated_registry:
+                ok("registry.json matches generated compatibility registry")
+            else:
+                fail("registry.json is out of date with canonical omni-factory sources")
+        else:
+            fail("Missing registry.json")
 
     try:
         errors, warnings = validate_mcp_inventory()
@@ -1690,6 +1773,9 @@ def verify() -> int:
             fail(message)
         for message in warnings:
             warn(message)
+
+    for message in validate_team_manifest_references(capabilities):
+        fail(message)
 
     for team in load_team_entries():
         ok(f"Team manifest present: {team['name']}")

@@ -5,36 +5,68 @@
     {
       "name": "gap-prioritizer",
       "responsibility": "Rank findings by leverage, urgency, and repeatability.",
-      "inputs": ["findings report", "scorecard", "handoff"],
-      "outputs": ["prioritized gap list"],
+      "inputs": [
+        "findings report",
+        "scorecard",
+        "handoff"
+      ],
+      "outputs": [
+        "prioritized gap list"
+      ],
       "stop_condition": "The highest-value next improvements are ordered clearly."
     },
     {
       "name": "remediation-designer",
       "responsibility": "Turn prioritized gaps into a concrete remediation path.",
-      "inputs": ["prioritized gap list", "repo state"],
-      "outputs": ["improvement plan"],
+      "inputs": [
+        "prioritized gap list",
+        "repo state"
+      ],
+      "outputs": [
+        "improvement plan"
+      ],
       "stop_condition": "A builder knows exactly what to tighten next."
     },
     {
       "name": "doctrine-updater",
       "responsibility": "Capture durable process changes in the framework docs and runbooks.",
-      "inputs": ["improvement plan", "relevant docs"],
-      "outputs": ["doctrine/doc update checklist"],
+      "inputs": [
+        "improvement plan",
+        "relevant docs"
+      ],
+      "outputs": [
+        "doctrine/doc update checklist"
+      ],
       "stop_condition": "The next run benefits from the learning instead of repeating the same mistake."
     },
     {
       "name": "sprint-harvester",
       "responsibility": "Convert validated sprint lessons into normalized knowledge-anchor entries and promotion candidates.",
-      "inputs": ["improvement plan", "repo diff", "validation artifacts", "handoff"],
-      "outputs": ["lesson ledger append block", "promotion candidates"],
+      "inputs": [
+        "improvement plan",
+        "repo diff",
+        "validation artifacts",
+        "handoff"
+      ],
+      "outputs": [
+        "lesson ledger append block",
+        "promotion candidates"
+      ],
       "stop_condition": "Durable lessons are captured in the ledger without silently rewriting doctrine."
     },
     {
       "name": "memory-archivist",
       "responsibility": "Capture session-scoped state (verified build commands, project quirks, in-flight tasks, recent decisions, known failures) into the project's MEMORY.md so the next host or session inherits it.",
-      "inputs": ["session context", "verified facts", "host signal", "improvement plan"],
-      "outputs": ["MEMORY.md append entries", "archivist audit log"],
+      "inputs": [
+        "session context",
+        "verified facts",
+        "host signal",
+        "improvement plan"
+      ],
+      "outputs": [
+        "MEMORY.md append entries",
+        "archivist audit log"
+      ],
       "stop_condition": "Session-scoped state has been captured into MEMORY.md without overlap into the durable lesson ledger."
     }
   ],
@@ -48,7 +80,10 @@
     "promotion candidates"
   ],
   "claude_mapping": {
-    "primitives": ["slash commands", "subagents when improvement threads split cleanly"],
+    "primitives": [
+      "slash commands",
+      "subagents when improvement threads split cleanly"
+    ],
     "preferred_entries": [
       "quality-gate",
       "context-engineer",
@@ -59,7 +94,10 @@
     ]
   },
   "codex_mapping": {
-    "primitives": ["skills", "delegated runtime agents when the write surfaces are disjoint"],
+    "primitives": [
+      "skills",
+      "delegated runtime agents when the write surfaces are disjoint"
+    ],
     "preferred_entries": [
       "quality-gate",
       "context-engineer",
@@ -70,7 +108,11 @@
     ]
   },
   "gemini_mapping": {
-    "primitives": ["commands", "skills", "subagents when improvement threads split cleanly"],
+    "primitives": [
+      "commands",
+      "skills",
+      "subagents when improvement threads split cleanly"
+    ],
     "preferred_entries": [
       "quality-gate",
       "context-engineer",

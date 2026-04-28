@@ -1,5 +1,5 @@
 # Agent Forge CONOPS
-Last updated: 2026-04-25
+Last updated: 2026-04-28
 
 ## Mission
 
@@ -83,7 +83,7 @@ Gemini:
 - Codex `.codex/config.toml`
 - Gemini `.gemini/settings.json`
 
-The file is currently intentionally empty. The injection logic exists before the first real shared server is added so the governance path is established early.
+The file now uses schema v2 and includes the seeded local stdio `forge-factory` server. Canonical records carry semantic prefixes, host-safe aliases, transport/auth/trust metadata, project routing, and tool filters. The runtime gate validates MCP by checking rendered host config plus a direct stdio `tools/list` smoke; host-native MCP management UIs are useful spot checks but are not the canonical proof surface.
 
 ## Bootstrap And Sync Flow
 

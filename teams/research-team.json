@@ -5,22 +5,40 @@
     {
       "name": "research-scout",
       "responsibility": "Gather the minimum useful source set from local context and primary sources.",
-      "inputs": ["question", "repo state", "known references"],
-      "outputs": ["source list", "raw findings"],
+      "inputs": [
+        "question",
+        "repo state",
+        "known references"
+      ],
+      "outputs": [
+        "source list",
+        "raw findings"
+      ],
       "stop_condition": "The important source surface is covered and obvious dead ends are excluded."
     },
     {
       "name": "source-triager",
       "responsibility": "Sort findings into confirmed facts, conflicts, and uncertainty.",
-      "inputs": ["source list", "raw findings"],
-      "outputs": ["triaged findings", "conflict list"],
+      "inputs": [
+        "source list",
+        "raw findings"
+      ],
+      "outputs": [
+        "triaged findings",
+        "conflict list"
+      ],
       "stop_condition": "A planner can see what is true, what is disputed, and what still needs verification."
     },
     {
       "name": "evidence-packager",
       "responsibility": "Compress research into a reusable evidence pack without narrative bloat.",
-      "inputs": ["triaged findings", "conflict list"],
-      "outputs": ["evidence pack"],
+      "inputs": [
+        "triaged findings",
+        "conflict list"
+      ],
+      "outputs": [
+        "evidence pack"
+      ],
       "stop_condition": "A downstream planner can work from the artifact without re-reading the source hunt."
     }
   ],
@@ -32,14 +50,20 @@
     "unresolved questions"
   ],
   "claude_mapping": {
-    "primitives": ["slash commands", "subagents when source splitting helps"],
+    "primitives": [
+      "slash commands",
+      "subagents when source splitting helps"
+    ],
     "preferred_entries": [
       "evidence-packager",
       "context-engineer"
     ]
   },
   "codex_mapping": {
-    "primitives": ["skills", "delegated runtime agents when source volume is high"],
+    "primitives": [
+      "skills",
+      "delegated runtime agents when source volume is high"
+    ],
     "preferred_entries": [
       "evidence-packager",
       "context-engineer"

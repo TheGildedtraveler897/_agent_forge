@@ -4,6 +4,7 @@ description: Compact broad tasks into the smallest artifact set that still prese
 context_cost: light
 model_tier: any
 capability_class: workflow
+targets: ["claude", "codex", "gemini"]
 ---
 
 # Context Engineer

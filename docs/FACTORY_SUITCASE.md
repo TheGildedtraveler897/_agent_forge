@@ -76,7 +76,7 @@ What still needs real-world proof:
 
 - fresh Debian VM operator run
 - fresh macOS operator run
-- first shared MCP server carried through export, deploy, and live runtime validation
+- seeded `forge-factory` MCP server carried through export, deploy, and live runtime validation on a fresh machine
 
 ## Bootstrap After Deploy
 

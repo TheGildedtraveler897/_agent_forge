@@ -4,6 +4,7 @@ description: Jarvis Phase 1 operating doctrine. Enforces subscription-first, loc
 context_cost: medium
 model_tier: any
 capability_class: expert
+targets: ["claude", "codex", "gemini"]
 codex_sandbox_mode: workspace-write
 ---
 

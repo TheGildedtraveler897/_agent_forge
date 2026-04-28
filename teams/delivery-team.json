@@ -5,22 +5,42 @@
     {
       "name": "architect-planner",
       "responsibility": "Clarify scope, constraints, interfaces, and acceptance criteria before implementation.",
-      "inputs": ["user goal", "repo state", "governance rules"],
-      "outputs": ["implementation plan"],
+      "inputs": [
+        "user goal",
+        "repo state",
+        "governance rules"
+      ],
+      "outputs": [
+        "implementation plan"
+      ],
       "stop_condition": "The work is decision-complete enough for a builder to execute."
     },
     {
       "name": "builder-implementer",
       "responsibility": "Make the scoped code, config, or doc changes while staying inside the plan. Execute under tdd-engineer discipline; dispatch via subagent-dispatcher when tasks are independent.",
-      "inputs": ["micro-task plan", "repo files"],
-      "outputs": ["change summary", "updated code or docs", "RED/GREEN evidence per task"],
+      "inputs": [
+        "micro-task plan",
+        "repo files"
+      ],
+      "outputs": [
+        "change summary",
+        "updated code or docs",
+        "RED/GREEN evidence per task"
+      ],
       "stop_condition": "RED observed, GREEN verified, REFACTOR clean, fresh evidence logged for every task in the plan."
     },
     {
       "name": "reviewer-tester",
       "responsibility": "Review changes for regressions, risk, and missing tests or verification. Gate completion claims through verification-gate.",
-      "inputs": ["diff", "changed files", "test output"],
-      "outputs": ["findings report", "verification attestation"],
+      "inputs": [
+        "diff",
+        "changed files",
+        "test output"
+      ],
+      "outputs": [
+        "findings report",
+        "verification attestation"
+      ],
       "stop_condition": "Verification-gate five-step assertion satisfied; no hedging language in the completion claim."
     }
   ],
@@ -34,20 +54,24 @@
     "findings or verification report"
   ],
   "claude_mapping": {
-    "primitives": ["subagents", "slash commands"],
+    "primitives": [
+      "subagents",
+      "slash commands"
+    ],
     "preferred_entries": [
       "execution-planner",
       "tdd-engineer",
       "subagent-dispatcher",
       "verification-gate",
       "branch-finisher",
-      "code-review-doctrine",
-      "jarvis-system",
-      "jarvis-coder"
+      "code-review-doctrine"
     ]
   },
   "codex_mapping": {
-    "primitives": ["skills", "delegated runtime agents"],
+    "primitives": [
+      "skills",
+      "delegated runtime agents"
+    ],
     "preferred_entries": [
       "execution-planner",
       "tdd-engineer",
@@ -58,7 +82,11 @@
     ]
   },
   "gemini_mapping": {
-    "primitives": ["commands", "skills", "subagents"],
+    "primitives": [
+      "commands",
+      "skills",
+      "subagents"
+    ],
     "preferred_entries": [
       "execution-planner",
       "tdd-engineer",

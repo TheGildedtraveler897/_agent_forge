@@ -4,6 +4,7 @@ description: Pre-commit code reviewer. Runs git diff and flags doctrine violatio
 context_cost: medium
 model_tier: any
 capability_class: workflow
+targets: ["claude", "codex", "gemini"]
 ---
 
 # jarvis-reviewer
