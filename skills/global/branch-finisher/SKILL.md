@@ -47,6 +47,7 @@ Only after Step 2 passes, present four options:
 Only after Step 4's verification passes:
 - Remove worktrees associated with the merged branch if present.
 - Remove local branches safely.
+- If a transient `dev/active/<slug>/` working tree exists for this task, delete it. This is the cleanup half of the lifecycle documented in `execution-planner` § Checkpoint Discipline. The directory is `.gitignore`d and holds `cursor.json` plus optional handoff scratch state; the durable plan at `docs/plans/<slug>.md` and the cross-host pointer in `MEMORY.md active_tasks` survive untouched.
 - Do not touch unrelated branches or worktrees.
 
 ## Red-flag patterns to refuse

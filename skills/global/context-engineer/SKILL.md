@@ -63,6 +63,6 @@ Build idempotent download scripts for YouTube (yt-dlp) and Spotify (spotipy).
 
 ## Checkpoint Discipline
 
-When a session is being compacted, also write a rolling handoff to `dev/active/<slug>/handoff.md` if the directory exists. The handoff captures the last verification-gate result, the next micro-task ID from the active plan, and any unresolved questions. The durable plan stays at `docs/plans/<slug>.md`; the handoff is a transient cursor only.
+When a session is being compacted, first read `dev/active/<slug>/cursor.json` if it exists, then write a human-readable `dev/active/<slug>/handoff.md`. The handoff captures the last verification-gate result, the next micro-task ID from the active plan, and any unresolved questions. The durable plan stays at `docs/plans/<slug>.md`; the handoff is a transient compaction output only.
 
-Pointer of record is `MEMORY.md active_tasks` (the only rewriteable section, owned by `memory-archivist`). The handoff file is local-only — the repo `.gitignore` excludes `dev/`. Do not promote handoff content to `docs/HANDOFF.md` until the task closes; that promotion is the `branch-finisher` or `sprint-harvester` step, not a compaction step.
+Pointer of record is `MEMORY.md active_tasks` (the only rewriteable section, owned by `memory-archivist`). Routine progress updates should touch the tiny `cursor.json`, not rewrite `handoff.md` after every step. The handoff file is local-only — the repo `.gitignore` excludes `dev/`. Do not promote handoff content to `docs/HANDOFF.md` until the task closes; that promotion is the `branch-finisher` or `sprint-harvester` step, not a compaction step.

@@ -60,7 +60,7 @@ Write to `docs/plans/YYYY-MM-DD-<slug>.md`. Include at the top:
 - Link to the approved spec.
 - Whether execution will be sequential (`tdd-engineer`) or parallel (`subagent-dispatcher`).
 - Total task count and rough effort estimate.
-- If `dev/active/<slug>/` does not exist, create it and seed `tasks.md` from the plan's task IDs.
+- If `dev/active/<slug>/` does not exist, create it, seed `tasks.md` from the plan's task IDs, and initialize `cursor.json` with `python3 scripts/continuity_cursor.py start --slug <slug> --plan docs/plans/YYYY-MM-DD-<slug>.md --task T-01 --next-action "<short next action>"`.
 
 ### Phase 6 — Human gate
 Present the plan for review. On approval, name the next skill explicitly. On rejection, loop back to the failed phase.
@@ -114,13 +114,16 @@ Verification:
 
 For any plan with more than one micro-task, the executor maintains a transient working tree at `dev/active/<slug>/` containing:
 
+- `cursor.json` — tiny machine-readable resume state, maintained with `scripts/continuity_cursor.py`.
 - `plan.md` — pointer or copy reference to `docs/plans/<slug>.md`.
 - `context.md` — scratch context dumps, intermediate diffs, evidence not durable enough for the spec.
 - `tasks.md` — live task ledger marking which `T-<nn>` is in flight.
-- `handoff.md` — rolling cursor written after each verification-gate pass.
+- `handoff.md` — optional human-readable compaction output.
 
-Cadence: write or update `handoff.md` after each verification command exits 0, and immediately before any `context-engineer` compaction. Do not bind the cadence to a fixed task count.
+Cadence: update `cursor.json` after each meaningful state transition and after each verification command exits. Write `handoff.md` only for explicit `/handoff`, explicit `/checkpoint`, context-risk, rate-limit-risk, or immediately before any `context-engineer` compaction. Do not bind the cadence to a fixed task count.
+
+Token discipline: `cursor.json` is the default continuity artifact and should stay tiny. It records only pointers and state: current task, last completed task, dirty files, last verification command/result, next action, blocker note, and timestamp. Do not capture transcripts by default.
 
 Lifecycle: created at task start by the executor; deleted at task close by `branch-finisher`. The directory is `.gitignore`d so transient state stays local.
 
-Coexistence: the durable plan lives at `docs/plans/<slug>.md`; the cross-host pointer of record is `MEMORY.md active_tasks` (rewriteable, archivist-owned). Never promote the contents of `dev/active/<slug>/` into the durable plan or into `MEMORY.md` automatically — promotion is an explicit `branch-finisher` or `sprint-harvester` step.
+Coexistence: the durable plan lives at `docs/plans/<slug>.md`; the cross-host pointer of record is `MEMORY.md active_tasks` (rewriteable, archivist-owned). Host-local plan tools are not sufficient continuity surfaces unless mirrored into `dev/active/<slug>/cursor.json`. Never promote the contents of `dev/active/<slug>/` into the durable plan or into `MEMORY.md` automatically — promotion is an explicit `branch-finisher` or `sprint-harvester` step.

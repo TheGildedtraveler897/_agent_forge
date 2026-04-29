@@ -94,6 +94,7 @@ def host_sandbox_blocked(text: str) -> bool:
         "shell tool failed before command execution",
         "shell tool is blocked by the sandbox",
         "sandbox network setup path",
+        "Codex's Linux sandbox uses bubblewrap",
     )
     return any(m in text for m in markers)
 

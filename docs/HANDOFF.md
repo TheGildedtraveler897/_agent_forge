@@ -1,8 +1,29 @@
 # Agent Forge Handoff
 
-Last updated: 2026-04-28 (RC milestone)
+Last updated: 2026-04-29 (RC Polish + audit-reconciliation sprint)
 
 ## What Changed
+
+### Sprint: RC Polish + Audit-Reconciliation (2026-04-29, Claude Opus 4.7)
+
+A polish-and-audit sprint following the RC milestone. Closed three doc-drift items, recorded two new lessons, and exercised the bootstrap-project.sh `--existing` path that had been pending operator validation.
+
+#### Changes Made
+
+1. **Doc reconciliation (Track C, commit `9604e74`).** `docs/PATHFINDER_ROADMAP.md` Sprint 5 row updated from "A4 + B3 Orchestration Log + Cost Warden" to "SOTA-2026 Overhaul" (the actual shipped Sprint 5); cascading renumbering for Sprints 6–11+. `docs/SPRINT_BACKLOG.md` status table updated: Sprints 3, 4, 5 marked shipped. `docs/TECH_DEBT.md` adds Sprint 5 + lessons-ledger triage to "Recently Resolved" and removes the now-completed ledger-triage item from "Follow-On Work"; header refreshed to RC milestone.
+2. **`feat/onboarding-guide` branch deleted.** Was 0 commits ahead, 2 behind master. Work fully integrated via commit `2a573a6` ("feat: onboarding-guide build-out"). Used `git branch -d` (safe variant) which confirmed integration before deleting.
+3. **Track B3: `dev/active/` cleanup reference added to `branch-finisher`.** Step 5 — Cleanup now explicitly names `dev/active/<slug>/` deletion at task close, closing the lifecycle loop documented in `execution-planner` § Checkpoint Discipline.
+4. **Track B1: defensive Codex sandbox marker added.** `host_sandbox_blocked()` in `validate-triad-runtime.py` gains `"Codex's Linux sandbox uses bubblewrap"` as a stable warning-header detector. The current marker list correctly caught Codex v0.125.0's bwrap blocker on the 2026-04-28 run; the new marker is preventive maintenance against future wording drift in the rest of the sentence.
+5. **Track B2: bootstrap-project.sh `--existing` exercised against a fake project.** Test artifact `~/Projects/bootstrap-test-existing/` (cleaned up after) confirmed the script's `--existing` mode unconditionally overwrites `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `docs/CONOPS.md`, `docs/HANDOFF.md`. Custom files (e.g. `src/main.py`) preserved correctly. This is a real footgun for any operator running `--existing` against a curated tree; recorded as 2026-04-29 lesson "bootstrap-project.sh --existing Unconditionally Overwrites Governance Docs".
+6. **Two new lessons recorded.** 2026-04-29 entries added to `docs/LESSONS_LEARNED.md`: (a) the bootstrap finding above, with promotion targets in the script and the operator runbook; (b) the audit-reconciliation pattern that caught real sprint-numbering drift one day after the RC milestone. Header counts now 15 promoted, 3 active, 0 superseded.
+7. **Track A (watchdog activation) deferred.** Operator-gated on GitHub repo creation. The watchdog routine spec at `docs/TECH_DEBT.md:44-126` is ready to schedule once the operator pushes `_agent_forge` to a GitHub remote.
+
+Evidence:
+- Commit `9604e74` "Reconcile sprint docs with shipped RC state" (Track C).
+- Verifier: `python3 scripts/verify-agent-forge.py` exit 0.
+- Tests: `python3 -m unittest tests.test_hooks_v3 tests.test_memory_bridge tests.test_mcp_namespace -v` 17 OK.
+- Triad runtime artifact: `runtime/validation/triad/20260429-223331/summary.json` (`overall pass=true`, Claude `cli` 33/33, Codex `filesystem-escalated` 33/33 with `sandbox_blocked: true`, Gemini `filesystem` 32/32).
+- Bootstrap test artifact captured md5 deltas before cleanup.
 
 ### Sprint 5 / RC Milestone: SOTA-2026 Overhaul + Lessons-Ledger Triage (2026-04-28, Claude)
 
