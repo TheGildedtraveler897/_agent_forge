@@ -1964,6 +1964,52 @@ def verify() -> int:
                     else:
                         fail(f"Bridge log missing: {bridge_log.relative_to(PROJECTS_ROOT)}")
 
+    distillation_policy_path = ROOT / "policies" / "distillation.json"
+    if distillation_policy_path.exists():
+        try:
+            distillation_payload = load_json(distillation_policy_path)
+        except Exception as exc:
+            fail(f"policies/distillation.json does not parse: {exc}")
+        else:
+            ok("policies/distillation.json parses")
+            if distillation_payload.get("version") != 1:
+                fail(f"policies/distillation.json unsupported version: {distillation_payload.get('version')}")
+            valid_rules = {"archive_promoted_entries", "keep_recent_sprints", "keep_recent_runs"}
+            target_ids: list[str] = []
+            for target in (distillation_payload.get("targets") or []):
+                tid = target.get("id")
+                target_ids.append(tid)
+                for key in ("id", "path", "rule"):
+                    if not target.get(key):
+                        fail(f"policies/distillation.json target missing '{key}': {target}")
+                if target.get("rule") not in valid_rules:
+                    fail(f"policies/distillation.json target '{tid}' has unknown rule '{target.get('rule')}'. Valid: {sorted(valid_rules)}")
+                src_path = ROOT / target.get("path", "")
+                if not src_path.exists():
+                    fail(f"policies/distillation.json target '{tid}' source path missing: {target.get('path')}")
+                archive_rel = target.get("archive_path")
+                if archive_rel:
+                    archive_path = ROOT / archive_rel
+                    if archive_path.exists():
+                        body = ROOT.joinpath(target["path"]).read_text() if (ROOT / target["path"]).is_file() else ""
+                        archive_body = archive_path.read_text()
+                        index_re = re.compile(r"^- (\d{4}-\d{2}-\d{2}) — (.+?) → .+? \(archived\)$", re.MULTILINE)
+                        for date, title in index_re.findall(body):
+                            expected = f"### {date} - {title}"
+                            if expected not in archive_body:
+                                fail(f"distillation index pointer for {date} - {title} not found in {archive_rel}")
+            if "lessons_ledger" not in target_ids:
+                fail("policies/distillation.json must define a 'lessons_ledger' target")
+            if "handoff_log" not in target_ids:
+                fail("policies/distillation.json must define a 'handoff_log' target")
+            thresholds = distillation_payload.get("session_load_thresholds") or {}
+            fail_at = thresholds.get("fail_at_bytes")
+            if isinstance(fail_at, int):
+                for rel in (thresholds.get("applies_to") or []):
+                    p = ROOT / rel
+                    if p.exists() and p.stat().st_size >= fail_at:
+                        warn(f"distillation: {rel} is {p.stat().st_size} bytes (fail_at={fail_at}); consider running lesson-distiller / handoff-archiver")
+
     return status
 
 
