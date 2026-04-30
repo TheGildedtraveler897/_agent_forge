@@ -25,7 +25,8 @@ Purpose: turn an approved spec (from `spec-architect`) into a task-by-task imple
 4. **Complete code blocks.** No `...`, no `TBD`, no `// implementation here`. If the exact code cannot be written into the plan, the task is not yet decision-complete — refine the spec.
 5. **Embedded RED test.** Every task that produces production code includes a named failing test as step one. The test path and test name must be explicit.
 6. **Verification command.** Every task ends with the exact command to run to prove the task is done.
-7. **Terminal handoff.** On approval, hand off to `tdd-engineer` (sequential execution) or `subagent-dispatcher` (parallel execution). Do not invoke implementation skills from here.
+7. **Branch preflight.** Non-trivial implementation work must not run on `main` or `master`. Include `scripts/enforce-branch-discipline.sh` in the plan preflight, and create or switch to a named task branch before execution begins.
+8. **Terminal handoff.** On approval, hand off to `tdd-engineer` (sequential execution) or `subagent-dispatcher` (parallel execution). Do not invoke implementation skills from here.
 
 ## Workflow
 
@@ -60,6 +61,7 @@ Write to `docs/plans/YYYY-MM-DD-<slug>.md`. Include at the top:
 - Link to the approved spec.
 - Whether execution will be sequential (`tdd-engineer`) or parallel (`subagent-dispatcher`).
 - Total task count and rough effort estimate.
+- Branch name and branch preflight command.
 - If `dev/active/<slug>/` does not exist, create it, seed `tasks.md` from the plan's task IDs, and initialize `cursor.json` with `python3 scripts/continuity_cursor.py start --slug <slug> --plan docs/plans/YYYY-MM-DD-<slug>.md --task T-01 --next-action "<short next action>"`.
 
 ### Phase 6 — Human gate
@@ -123,6 +125,8 @@ For any plan with more than one micro-task, the executor maintains a transient w
 Cadence: update `cursor.json` after each meaningful state transition and after each verification command exits. Write `handoff.md` only for explicit `/handoff`, explicit `/checkpoint`, context-risk, rate-limit-risk, or immediately before any `context-engineer` compaction. Do not bind the cadence to a fixed task count.
 
 Token discipline: `cursor.json` is the default continuity artifact and should stay tiny. It records only pointers and state: current task, last completed task, dirty files, last verification command/result, next action, blocker note, and timestamp. Do not capture transcripts by default.
+
+Branch discipline: before any handoff, rate-limit stop, model swap, or end-of-day pause, commit and push the task branch. Record the branch, latest commit hash, next task, and intentional dirty state in `cursor.json` or `handoff.md`.
 
 Lifecycle: created at task start by the executor; deleted at task close by `branch-finisher`. The directory is `.gitignore`d so transient state stays local.
 
