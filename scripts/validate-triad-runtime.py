@@ -578,6 +578,77 @@ def mcp_surface_for(host: str, project_root: Path) -> dict:
     }
 
 
+def distillation_surface_for(host: str, project_root: Path) -> dict:
+    """Verify the bounded-decay layer (policies/distillation.json) for this host.
+
+    Distillation is canonical-side rather than host-rendered, but each host's
+    matrix entry checks the same canonical state so the per-host pass tags
+    stay uniform. A pass means: policy file parses, all declared targets exist,
+    no auto-loaded ledger exceeds the configured fail_at byte threshold, and
+    every one-line index pointer in the trimmed ledger resolves to an entry
+    in the archive file (when the archive exists).
+    """
+    policy_path = ROOT / "policies" / "distillation.json"
+    if not policy_path.exists():
+        return {"pass": False, "host": host, "reason": "policies/distillation.json missing"}
+
+    try:
+        policy = json.loads(policy_path.read_text())
+    except Exception as exc:
+        return {"pass": False, "host": host, "reason": f"policy parse error: {exc}"}
+
+    if policy.get("version") != 1:
+        return {"pass": False, "host": host, "reason": f"unsupported policy version {policy.get('version')}"}
+
+    issues: list[str] = []
+    target_ids: list[str] = []
+    for target in (policy.get("targets") or []):
+        tid = target.get("id")
+        target_ids.append(tid)
+        src = ROOT / target.get("path", "")
+        if not src.exists():
+            issues.append(f"target {tid} source missing: {target.get('path')}")
+            continue
+        archive_rel = target.get("archive_path")
+        if archive_rel:
+            archive = ROOT / archive_rel
+            if archive.exists() and src.is_file():
+                body = src.read_text()
+                archive_body = archive.read_text()
+                index_re = re.compile(r"^- (\d{4}-\d{2}-\d{2}) — (.+?) → .+? \(archived\)$", re.MULTILINE)
+                for date, title in index_re.findall(body):
+                    expected = f"### {date} - {title}"
+                    if expected not in archive_body:
+                        issues.append(f"index pointer {date} - {title} not found in {archive_rel}")
+
+    if "lessons_ledger" not in target_ids:
+        issues.append("policy missing 'lessons_ledger' target")
+    if "handoff_log" not in target_ids:
+        issues.append("policy missing 'handoff_log' target")
+
+    thresholds = policy.get("session_load_thresholds") or {}
+    fail_at = thresholds.get("fail_at_bytes")
+    over_threshold: list[dict] = []
+    if isinstance(fail_at, int):
+        for rel in (thresholds.get("applies_to") or []):
+            p = ROOT / rel
+            if p.exists():
+                size = p.stat().st_size
+                if size >= fail_at:
+                    over_threshold.append({"path": rel, "size": size, "fail_at": fail_at})
+
+    pass_ = not issues and not over_threshold
+    return {
+        "pass": pass_,
+        "host": host,
+        "policy_path": str(policy_path.relative_to(ROOT)),
+        "target_ids": target_ids,
+        "issues": issues,
+        "over_threshold": over_threshold,
+        "fail_at_bytes": fail_at,
+    }
+
+
 def live_hook_invocation_for(
     host: str,
     project_root: Path,
@@ -671,6 +742,7 @@ def update_matrix(project_name: str, summary: dict) -> None:
                 "memory_pass": r.get("memory_surface", {}).get("pass", False),
                 "bridge_pass": r.get("memory_bridge", {}).get("pass", False),
                 "mcp_pass": r.get("mcp_surface", {}).get("pass", False),
+                "distillation_pass": r.get("distillation_surface", {}).get("pass", False),
                 **(
                     {
                         "live_hook_pass": r["live_hook"].get("pass", False),
@@ -742,6 +814,12 @@ def main() -> int:
         if not mcp_res["pass"]:
             res["pass"] = False
             res.setdefault("missing", []).append(f"mcp-surface:{mcp_res.get('reason') or mcp_res.get('smoke_reason') or 'mcp surface not reachable'}")
+        distill_res = distillation_surface_for(host, project_root)
+        res["distillation_surface"] = distill_res
+        if not distill_res["pass"]:
+            res["pass"] = False
+            reason = distill_res.get("reason") or (distill_res.get("issues") or distill_res.get("over_threshold") or ["unknown"])[0]
+            res.setdefault("missing", []).append(f"distillation-surface:{reason}")
         live_tag = ""
         if args.probe_invocations and res["pass"]:
             live_dir = evidence_dir / "live-hook"
@@ -759,7 +837,8 @@ def main() -> int:
         mem_tag = "mem+" if memory_res["pass"] else "mem-"
         bridge_tag = "bridge+" if bridge_res["pass"] else "bridge-"
         mcp_tag = "mcp+" if mcp_res["pass"] else "mcp-"
-        print(f"[{status}] {host:7s} method={res['method']:22s} missing={len(res['missing'])}/{res['expected_count']}  {hook_tag} {mem_tag} {bridge_tag} {mcp_tag}{live_tag}")
+        distill_tag = "distill+" if distill_res["pass"] else "distill-"
+        print(f"[{status}] {host:7s} method={res['method']:22s} missing={len(res['missing'])}/{res['expected_count']}  {hook_tag} {mem_tag} {bridge_tag} {mcp_tag} {distill_tag}{live_tag}")
         results[host] = res
 
     overall = all(r["pass"] for r in results.values()) if results else False

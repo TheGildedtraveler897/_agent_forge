@@ -116,6 +116,19 @@ Full schema, rendered surface paths, and the add-or-remove-a-section workflow li
 - Codex reaches it through `AGENTS.md`, generated agent instructions, and runtime-validation prompts.
 - Harvesters append normalized entries there first; doctrine files only change when a lesson is broad enough to promote.
 
+## Knowledge Distillation (Bounded Decay)
+
+Append-first ledgers grow unbounded over time. Auto-loaded knowledge files (`docs/LESSONS_LEARNED.md`, `docs/HANDOFF.md`) need a paired bounded-decay pass so their session-load footprint stays small while wisdom is preserved verbatim.
+
+`policies/distillation.json` (schema v1) authors the retention contract. Two skills implement it:
+
+- `lesson-distiller` archives `Status: promoted` entries from the lesson ledger to `docs/archive/LESSONS_PROMOTED.md`, replacing each in the main file with a one-line index pointer. The integrity gate is **promotion-claim verification**: every backtick-quoted file path in the entry's promotion parenthetical must resolve on disk. If verification fails, the entry stays in the main ledger and is reported as a flag.
+- `handoff-archiver` moves older `### Sprint:` sections from `docs/HANDOFF.md` to `docs/archive/SPRINTS.md`, leaving a compact summary table at the top of `## What Changed`. The latest N (default 1) sprints stay; operator-state sections (`## Current State`, `## Remaining Weaknesses`, `## Next Evolution`, `## Final Verdict`) are never archived.
+
+The validator records `distillation_pass` per host. Pass requires policy parses, all targets exist, no auto-loaded ledger exceeds `session_load_thresholds.fail_at_bytes`, and every one-line index pointer resolves to an entry in the corresponding archive file. Distillation cadence binds to RC/milestone events via the `branch-finisher` skill; both skills require `--yes` to apply changes (dry-run otherwise).
+
+This is the bounded-decay counterpart to append-first: the harvester captures, the archivist appends, and the distiller compacts once doctrine has absorbed the lesson.
+
 ## Unified MCP Governance
 
 `global-mcp.json` is the only place shared MCP servers are declared. The sync engine translates those declarations into:

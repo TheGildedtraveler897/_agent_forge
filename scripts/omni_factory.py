@@ -1990,8 +1990,9 @@ def verify() -> int:
                 archive_rel = target.get("archive_path")
                 if archive_rel:
                     archive_path = ROOT / archive_rel
-                    if archive_path.exists():
-                        body = ROOT.joinpath(target["path"]).read_text() if (ROOT / target["path"]).is_file() else ""
+                    src_full = ROOT / target["path"]
+                    if archive_path.exists() and src_full.is_file():
+                        body = src_full.read_text()
                         archive_body = archive_path.read_text()
                         index_re = re.compile(r"^- (\d{4}-\d{2}-\d{2}) — (.+?) → .+? \(archived\)$", re.MULTILINE)
                         for date, title in index_re.findall(body):

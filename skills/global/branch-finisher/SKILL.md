@@ -52,6 +52,14 @@ Only after Step 4's verification passes:
 - If a transient `dev/active/<slug>/` working tree exists for this task, delete it. This is the cleanup half of the lifecycle documented in `execution-planner` § Checkpoint Discipline. The directory is `.gitignore`d and holds `cursor.json` plus optional handoff scratch state; the durable plan at `docs/plans/<slug>.md` and the cross-host pointer in `MEMORY.md active_tasks` survive untouched.
 - Do not touch unrelated branches or worktrees.
 
+### Step 6 — Milestone distillation hook
+Only when finishing a sprint or RC milestone branch (e.g., a `Sprint N` or `RC ...` integration), and only after Step 4 verification has passed:
+- Run `python3 ~/Projects/_agent_forge/skills/global/lesson-distiller/distiller.py dry-run --target lessons` and present the projected archival list and byte delta.
+- Run `python3 ~/Projects/_agent_forge/skills/global/handoff-archiver/archiver.py dry-run` and present the projected sprint-section archival list and byte delta.
+- Do **not** apply either pass without typed operator confirmation. Both skills require `--yes` to write; without it, they exit non-zero and print the dry-run preview.
+- Only re-run `validate-triad-runtime.py` after the operator has either applied or skipped the distillation pass. The validator's `distillation_pass` gate will warn (or fail) if the auto-loaded ledgers exceed the byte threshold defined in `policies/distillation.json`.
+- Do not attempt distillation outside a milestone integration. Distillation is the bounded-decay counterpart to append-first, not a routine cleanup step.
+
 ## Red-flag patterns to refuse
 
 - Offering merge when tests have not been re-run on the current state.

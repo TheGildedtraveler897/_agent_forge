@@ -385,6 +385,45 @@
       }
     },
     {
+      "name": "handoff-archiver",
+      "display_name": "handoff-archiver",
+      "scope": "global",
+      "project": null,
+      "capability_class": "workflow",
+      "canonical_skill": "skills/global/handoff-archiver/SKILL.md",
+      "targets": [
+        "claude",
+        "codex",
+        "gemini"
+      ],
+      "delivery_projects": [
+        "jarvis",
+        "RoboNaaz",
+        "ZorroClaw",
+        "homelab",
+        "factory",
+        "playlist-archive"
+      ],
+      "claude": {
+        "mode": "command",
+        "generated": true,
+        "command_name": "handoff-archiver",
+        "agent_name": null
+      },
+      "gemini": {
+        "mode": "command",
+        "generated": true,
+        "command_name": "handoff-archiver",
+        "agent_name": null
+      },
+      "codex": {
+        "generated": true,
+        "global_skill": true,
+        "project_skill": true,
+        "custom_agent": false
+      }
+    },
+    {
       "name": "infra-architect",
       "display_name": "infra-architect",
       "scope": "global",
@@ -460,6 +499,45 @@
         "global_skill": true,
         "project_skill": true,
         "custom_agent": true
+      }
+    },
+    {
+      "name": "lesson-distiller",
+      "display_name": "lesson-distiller",
+      "scope": "global",
+      "project": null,
+      "capability_class": "workflow",
+      "canonical_skill": "skills/global/lesson-distiller/SKILL.md",
+      "targets": [
+        "claude",
+        "codex",
+        "gemini"
+      ],
+      "delivery_projects": [
+        "jarvis",
+        "RoboNaaz",
+        "ZorroClaw",
+        "homelab",
+        "factory",
+        "playlist-archive"
+      ],
+      "claude": {
+        "mode": "command",
+        "generated": true,
+        "command_name": "lesson-distiller",
+        "agent_name": null
+      },
+      "gemini": {
+        "mode": "command",
+        "generated": true,
+        "command_name": "lesson-distiller",
+        "agent_name": null
+      },
+      "codex": {
+        "generated": true,
+        "global_skill": true,
+        "project_skill": true,
+        "custom_agent": false
       }
     },
     {
