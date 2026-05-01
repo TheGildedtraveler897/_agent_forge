@@ -210,5 +210,48 @@ class PolicyShapeTests(unittest.TestCase):
         self.assertIn("triad_runs", ids)
 
 
+class BidirectionalIntegrityTests(unittest.TestCase):
+    """verify must catch both directions: orphan-pointers AND orphan-archive-entries.
+
+    The orphan-archive direction was added after a real git-rebase corruption
+    silently dropped 9 of 14 index pointers from LESSONS_LEARNED.md while
+    leaving all 14 entries in the archive. The original verify() reported
+    ok=true because it only checked pointers -> archive.
+    """
+
+    def test_verify_state_returns_both_directions(self) -> None:
+        result = distiller.verify_state()
+        self.assertIn("archive_entries", result)
+        self.assertIn("archive_entries_orphaned", result)
+        self.assertIn("archive_entries_missing", result)
+
+    def test_parse_entries_finds_archive_entries(self) -> None:
+        # Required helper for the orphan-archive check; if parse_entries
+        # changes shape, the bidirectional verify breaks silently.
+        archive_body = """# Archive
+
+### 2026-04-23 - Sample Orphan
+
+- `Date:` 2026-04-23
+- `Status:` promoted
+"""
+        archive_entries = distiller.parse_entries(archive_body)
+        self.assertEqual(len(archive_entries), 1)
+        self.assertEqual(archive_entries[0]["date"], "2026-04-23")
+        self.assertEqual(archive_entries[0]["title"], "Sample Orphan")
+
+    def test_live_state_passes_both_directions(self) -> None:
+        # The real ledger + archive must pass both checks. If this fails,
+        # the ledger has drifted out of sync with its archive.
+        result = distiller.verify_state()
+        self.assertTrue(
+            result["ok"],
+            msg=f"verify_state failed: missing={result.get('archive_entries_missing')}, "
+                f"orphaned={result.get('archive_entries_orphaned')}",
+        )
+        self.assertEqual(result.get("archive_entries_orphaned"), [])
+        self.assertEqual(result.get("archive_entries_missing"), [])
+
+
 if __name__ == "__main__":
     unittest.main()

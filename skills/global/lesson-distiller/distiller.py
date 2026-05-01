@@ -377,8 +377,8 @@ def verify_state() -> dict:
 
     archive_body = archive_path.read_text() if archive_path.exists() else ""
 
-    # Every one-line index pointer (entry replaced with `- DATE — TITLE → DOCTRINE (archived)`)
-    # must correspond to an entry in the archive file.
+    # Forward direction: every one-line index pointer in the main file must
+    # correspond to an entry in the archive file.
     index_re = re.compile(r"^- (\d{4}-\d{2}-\d{2}) — (.+?) → .+? \(archived\)$", re.MULTILINE)
     pointers = index_re.findall(body)
     missing_in_archive: list[str] = []
@@ -387,11 +387,26 @@ def verify_state() -> dict:
         if expected_heading not in archive_body and expected_heading.replace(" - ", " — ") not in archive_body:
             missing_in_archive.append(f"{date} - {title}")
 
+    # Reverse direction: every entry in the archive file must have a one-line
+    # index pointer in the main file. Without this, an entry can be silently
+    # orphaned in the archive (e.g., when a git rebase partially applies a
+    # distillation diff). The forward check alone reported ok=true even though
+    # 9 of 14 entries were unreachable from the main ledger; this is the gap
+    # that closes that class of bug.
+    archive_entries = parse_entries(archive_body)
+    pointer_lookup = {(date, title) for date, title in pointers}
+    orphaned_in_archive: list[str] = []
+    for entry in archive_entries:
+        if (entry["date"], entry["title"]) not in pointer_lookup:
+            orphaned_in_archive.append(f"{entry['date']} - {entry['title']}")
+
     return {
-        "ok": not issues and not missing_in_archive,
+        "ok": not issues and not missing_in_archive and not orphaned_in_archive,
         "issues": issues,
         "index_pointers": len(pointers),
+        "archive_entries": len(archive_entries),
         "archive_entries_missing": missing_in_archive,
+        "archive_entries_orphaned": orphaned_in_archive,
         "main_size_bytes": len(body),
         "archive_size_bytes": len(archive_body),
         "warn_at_bytes": (policy.get("session_load_thresholds") or {}).get("warn_at_bytes"),
