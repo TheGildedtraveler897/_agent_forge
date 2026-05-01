@@ -26,7 +26,8 @@ Purpose: turn an approved spec (from `spec-architect`) into a task-by-task imple
 5. **Embedded RED test.** Every task that produces production code includes a named failing test as step one. The test path and test name must be explicit.
 6. **Verification command.** Every task ends with the exact command to run to prove the task is done.
 7. **Branch preflight.** Non-trivial implementation work must not run on `main` or `master`. Include `scripts/enforce-branch-discipline.sh` in the plan preflight, and create or switch to a named task branch before execution begins.
-8. **Terminal handoff.** On approval, hand off to `tdd-engineer` (sequential execution) or `subagent-dispatcher` (parallel execution). Do not invoke implementation skills from here.
+8. **Plan-quality audit.** Before execution begins, route the completed plan through `plan-quality-auditor`. Implementation may start only after a `PASS` verdict or explicit human override of documented warnings.
+9. **Terminal handoff.** On approval and plan-quality pass, hand off to `tdd-engineer` (sequential execution) or `subagent-dispatcher` (parallel execution). Do not invoke implementation skills from here.
 
 ## Workflow
 
@@ -43,15 +44,65 @@ For each task write:
 - **ID:** `T-<nn>`
 - **Goal:** one sentence.
 - **Files:** exact paths.
+- **Plan metadata:** `must_haves`, `wave`, `depends_on`, `file_ownership`, `source_coverage`, and `context_budget` where relevant.
 - **RED test:** file path + test name + what assertion fails and why (skip only for non-code tasks such as documentation or configuration with no code path).
 - **GREEN steps:** the simplest change that makes the test pass. Complete code blocks only.
 - **REFACTOR notes:** optional cleanup to do only after GREEN is observed.
 - **Verification command:** exact shell command or equivalent and the expected output/exit code.
 - **Dependencies:** IDs of tasks that must complete first.
 
+### Plan Metadata Contract
+
+Every non-trivial plan includes a compact metadata block. Use plain Markdown with fenced YAML; do not invent a new parser unless a future spec requires it.
+
+```yaml
+must_haves:
+  truths:
+    - "<observable truth>"
+  artifacts:
+    - path: "<relative/path>"
+      provides: "<why this artifact matters>"
+  key_links:
+    - from: "<artifact or subsystem>"
+      to: "<artifact or subsystem>"
+      via: "<connection mechanism>"
+wave: 1
+depends_on: []
+file_ownership:
+  - path: "<relative/path>"
+    owner_task: "T-01"
+source_coverage:
+  acceptance_criteria:
+    - criterion: "<criterion id or text>"
+      covered_by_tasks: ["T-01"]
+  decisions:
+    - "D-01"
+context_budget:
+  expected_files: 3
+  expected_tasks: 2
+  split_required: false
+```
+
+Field rules:
+
+- `must_haves.truths` names observable end-state facts the plan must make true.
+- `must_haves.artifacts` names files, generated surfaces, runtime artifacts, or docs that must exist.
+- `must_haves.key_links` names wiring between artifacts and their consumers.
+- `wave` groups tasks that can run after earlier dependency waves complete.
+- `depends_on` lists prerequisite task IDs; keep it identical to each task's Dependencies line.
+- `file_ownership` prevents parallel workers from claiming the same mutable file.
+- `source_coverage.acceptance_criteria` maps every approved acceptance criterion to one or more task IDs.
+- `source_coverage.decisions` maps stable decision IDs from the spec, when present.
+- `context_budget` states whether the task set is small enough for one worker or must split.
+
 ### Phase 4 — Pre-emit audit
 Before writing the plan to disk, verify:
 - **Spec coverage scan.** Every acceptance criterion from the spec maps to at least one task ID.
+- **Must-have coverage scan.** Every truth, artifact, and key link in `must_haves` maps to at least one task and one verification command.
+- **Source coverage scan.** Every locked decision and non-goal constraint from the spec is represented in `source_coverage` or explicitly marked out of scope with human approval.
+- **Dependency/wave scan.** `depends_on` and `wave` ordering must not allow a task to run before its prerequisites exist.
+- **File ownership scan.** Parallelizable tasks must have disjoint `file_ownership`; any shared file forces sequential execution.
+- **Context budget scan.** If `context_budget.split_required` is true, split the plan before handoff.
 - **Placeholder scan.** No `TBD`, `...`, `fixme`, `placeholder` anywhere in the plan.
 - **Type consistency scan.** Function names, signatures, and file paths are identical wherever they appear.
 - **Independence check.** If tasks are being handed to parallel agents, tasks that share a file or shared state must be marked sequential, not parallel.
@@ -62,10 +113,12 @@ Write to `docs/plans/YYYY-MM-DD-<slug>.md`. Include at the top:
 - Whether execution will be sequential (`tdd-engineer`) or parallel (`subagent-dispatcher`).
 - Total task count and rough effort estimate.
 - Branch name and branch preflight command.
+- The plan metadata contract block, either global for the plan or repeated per task when tasks differ materially.
+- A `plan-quality-auditor` handoff section naming the exact plan file and expected audit command or invocation.
 - If `dev/active/<slug>/` does not exist, create it, seed `tasks.md` from the plan's task IDs, and initialize `cursor.json` with `python3 scripts/continuity_cursor.py start --slug <slug> --plan docs/plans/YYYY-MM-DD-<slug>.md --task T-01 --next-action "<short next action>"`.
 
 ### Phase 6 — Human gate
-Present the plan for review. On approval, name the next skill explicitly. On rejection, loop back to the failed phase.
+Present the plan for review and `plan-quality-auditor` pass. On approval, name the next skill explicitly. On rejection or audit failure, loop back to the failed phase.
 
 ## Task Template
 
@@ -73,6 +126,32 @@ Present the plan for review. On approval, name the next skill explicitly. On rej
 ### T-01 — <one-sentence goal>
 Files: <exact/path/to/file.ext>, <exact/path/to/test_file.ext>
 Dependencies: none | T-<nn>
+
+Plan metadata:
+  must_haves:
+    truths:
+      - <observable truth>
+    artifacts:
+      - path: <relative/path>
+        provides: <why this artifact matters>
+    key_links:
+      - from: <artifact or subsystem>
+        to: <artifact or subsystem>
+        via: <connection mechanism>
+  wave: <integer>
+  depends_on: []
+  file_ownership:
+    - path: <relative/path>
+      owner_task: T-<nn>
+  source_coverage:
+    acceptance_criteria:
+      - criterion: <criterion id or text>
+        covered_by_tasks: [T-<nn>]
+    decisions: []
+  context_budget:
+    expected_files: <integer>
+    expected_tasks: <integer>
+    split_required: false
 
 RED test:
   File: <test file path>
