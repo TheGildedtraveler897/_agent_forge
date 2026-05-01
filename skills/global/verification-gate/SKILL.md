@@ -20,6 +20,7 @@ Purpose: sit between "I think it works" and "it works". Completion is an observa
 3. **Hedging is not evidence.** Words like "should work", "probably", "I believe", "it looks like", "Great!", and "Done!" are inadmissible as completion signals. If you catch yourself using them, restart this skill.
 4. **Exit code matters.** A zero exit code on a command that only prints a warning is still insufficient unless the command actually exercises the claim.
 5. **Subordinate-agent reports do not count.** If a dispatched subagent reported success, you must re-run the proof command yourself.
+6. **Claim scope matters.** Task-local claims stay in this skill. Feature, phase, sprint, or release completion claims require `goal-verifier` before completion is asserted.
 
 ## The Five-Step Assertion Protocol
 
@@ -31,12 +32,34 @@ Follow this in order, every time.
 4. **Map output to claim.** For each element of the claim, cite the line in the output that proves it. Unmapped claim elements must be dropped or re-verified.
 5. **Assert with evidence.** State the claim together with the mapped evidence. Bare assertions are rejected.
 
+## Claim Scope Routing
+
+Use this skill for task-local claims:
+
+- one failing test now passes
+- one bug fix is verified
+- one command produced the expected artifact
+- one micro-task's stated verification command passed
+
+Use `goal-verifier` before asserting feature, phase, sprint, or release completion:
+
+- a feature is done
+- a sprint shipped
+- a phase is complete
+- a release is ready
+- the original user-visible goal has been satisfied
+
+Passing tests prove only the assertions they exercise. They do not prove overall goal achievement unless `goal-verifier` maps every required goal truth to fresh proof.
+
 ## Workflow
 
 1. Collect the claim in one sentence.
-2. Apply the Five-Step Protocol.
-3. If any step fails, return the work to the appropriate upstream skill (`tdd-engineer` for red tests, `root-cause-analyst` for unexpected behavior, `execution-planner` for scope gaps).
-4. If every step passes, emit a **verification attestation** block, then hand off to `branch-finisher` if this is the end of a development branch.
+2. Decide whether the claim is task-local or goal-level using Claim Scope Routing.
+3. For task-local claims, apply the Five-Step Protocol.
+4. If any task-local step fails, return the work to the appropriate upstream skill (`tdd-engineer` for red tests, `root-cause-analyst` for unexpected behavior, `execution-planner` for scope gaps).
+5. If every task-local step passes, emit a **verification attestation** block.
+6. For feature, phase, sprint, or release claims, hand off to `goal-verifier` after task-local evidence is collected. Do not assert broad completion until `goal-verifier` returns a verified verdict.
+7. Hand off to `branch-finisher` only after the required task-local or goal-level verification path has passed and this is the end of a development branch.
 
 ## Verification Attestation Template
 
@@ -59,6 +82,7 @@ Attested by: verification-gate
 - "Based on the earlier run…"
 - "The subagent reported success."
 - "Looking at the code, it's obvious that…"
+- "The tests passed, so the feature is done."
 - "Done!", "Great!", "All set."
 
 If you find any of these in a draft completion message, stop and restart from step 1.
