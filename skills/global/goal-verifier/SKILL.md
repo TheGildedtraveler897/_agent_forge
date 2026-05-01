@@ -22,6 +22,7 @@ Purpose: prove whether completed work actually satisfies the approved goal. This
 5. **Tests prove only their assertions.** Passing tests support the specific behavior they exercise. They do not prove the overall goal unless every required truth maps to a strong assertion or direct artifact proof.
 6. **Uncertainty is explicit.** If a truth cannot be proven from available commands or artifacts, mark it as `UNCERTAIN WARNING`. Do not silently upgrade uncertainty into success.
 7. **Fix-plan handoff.** Every `FAILED BLOCKER` must name the missing truth, proof command or evidence path, likely owner, and next skill: `root-cause-analyst` for broken behavior or `execution-planner` for missing scope.
+8. **Manual truth routing.** If a required truth cannot be programmatically verified, produce operator-facing UAT steps. Unrun UAT remains `UNCERTAIN WARNING`, not `VERIFIED`.
 
 ## Inputs
 
@@ -94,7 +95,27 @@ Review the tests or proof commands that support the claim:
 - Reject smoke tests that do not touch the user-visible path being claimed.
 - Record which truths remain unproven by automated checks.
 
-### Step 6 - Emit Verdict
+### Step 6 - Route Manual Proof
+
+For each required truth that cannot be programmatically verified, produce operator-facing UAT steps. Keep each step concrete and focused on one deliverable.
+
+Each UAT step must include:
+
+- deliverable under review
+- operator action
+- expected result
+- evidence to capture
+- failure triage
+
+Failed UAT routes by cause:
+
+- Known broken behavior routes to `root-cause-analyst`.
+- Missing accepted scope, missing artifact, or no implementation path routes to `execution-planner`.
+- Unknown cause routes first to `root-cause-analyst` to identify whether the failure is behavioral or scope-related.
+
+Unrun UAT remains `UNCERTAIN WARNING`. Completed passing UAT can support `VERIFIED` only for the specific truth it exercised.
+
+### Step 7 - Emit Verdict
 
 Use the weakest applicable overall verdict:
 
@@ -124,6 +145,13 @@ Blockers:
 Warnings:
 - <none or uncertainty list>
 
+UAT steps:
+- Deliverable: <one deliverable>
+  Operator action: <manual action to perform>
+  Expected result: <observable pass condition>
+  Evidence to capture: <screenshot, command output, file path, or operator note>
+  Failure triage: <root-cause-analyst or execution-planner route>
+
 Proof commands:
 - <command, exit code, and what it proves>
 
@@ -139,6 +167,8 @@ Fix-plan handoff:
 - `VERIFIED` may hand off to `branch-finisher` when the branch is otherwise ready.
 - `FAILED BLOCKER` routes to `root-cause-analyst` when behavior is broken or contradictory.
 - `FAILED BLOCKER` routes to `execution-planner` when accepted scope is missing or was never planned.
+- Failed UAT routes to `root-cause-analyst` when the root cause appears behavioral or unknown.
+- Failed UAT routes to `execution-planner` when the root cause is missing accepted scope or an absent implementation path.
 - `UNCERTAIN WARNING` requires operator acknowledgement before any broad completion claim.
 
 ## Red-flag phrases to refuse
