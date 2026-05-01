@@ -385,6 +385,45 @@
       }
     },
     {
+      "name": "goal-verifier",
+      "display_name": "goal-verifier",
+      "scope": "global",
+      "project": null,
+      "capability_class": "workflow",
+      "canonical_skill": "skills/global/goal-verifier/SKILL.md",
+      "targets": [
+        "claude",
+        "codex",
+        "gemini"
+      ],
+      "delivery_projects": [
+        "jarvis",
+        "RoboNaaz",
+        "ZorroClaw",
+        "homelab",
+        "factory",
+        "playlist-archive"
+      ],
+      "claude": {
+        "mode": "command",
+        "generated": true,
+        "command_name": "goal-verifier",
+        "agent_name": null
+      },
+      "gemini": {
+        "mode": "command",
+        "generated": true,
+        "command_name": "goal-verifier",
+        "agent_name": null
+      },
+      "codex": {
+        "generated": true,
+        "global_skill": true,
+        "project_skill": true,
+        "custom_agent": false
+      }
+    },
+    {
       "name": "infra-architect",
       "display_name": "infra-architect",
       "scope": "global",
