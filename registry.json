@@ -190,6 +190,45 @@
       }
     },
     {
+      "name": "codebase-cartographer",
+      "display_name": "codebase-cartographer",
+      "scope": "global",
+      "project": null,
+      "capability_class": "workflow",
+      "canonical_skill": "skills/global/codebase-cartographer/SKILL.md",
+      "targets": [
+        "claude",
+        "codex",
+        "gemini"
+      ],
+      "delivery_projects": [
+        "jarvis",
+        "RoboNaaz",
+        "ZorroClaw",
+        "homelab",
+        "factory",
+        "playlist-archive"
+      ],
+      "claude": {
+        "mode": "command",
+        "generated": true,
+        "command_name": "codebase-cartographer",
+        "agent_name": null
+      },
+      "gemini": {
+        "mode": "command",
+        "generated": true,
+        "command_name": "codebase-cartographer",
+        "agent_name": null
+      },
+      "codex": {
+        "generated": true,
+        "global_skill": true,
+        "project_skill": true,
+        "custom_agent": false
+      }
+    },
+    {
       "name": "company-onboarder",
       "display_name": "company-onboarder",
       "scope": "global",
