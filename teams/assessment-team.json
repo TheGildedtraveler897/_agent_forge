@@ -58,6 +58,8 @@
     ],
     "preferred_entries": [
       "verification-gate",
+      "goal-verifier",
+      "plan-quality-auditor",
       "quality-gate",
       "code-review-doctrine",
       "root-cause-analyst"
@@ -70,6 +72,8 @@
     ],
     "preferred_entries": [
       "verification-gate",
+      "goal-verifier",
+      "plan-quality-auditor",
       "quality-gate",
       "code-review-doctrine",
       "root-cause-analyst"
@@ -83,6 +87,8 @@
     ],
     "preferred_entries": [
       "verification-gate",
+      "goal-verifier",
+      "plan-quality-auditor",
       "quality-gate",
       "code-review-doctrine",
       "root-cause-analyst"

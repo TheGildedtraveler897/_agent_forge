@@ -52,6 +52,9 @@ This workspace is the canonical source of truth for portable multi-agent governa
 - Global skills default to delivery across every governed project listed in `projects.json`. Use `delivery_projects: ["*"]` to restate the default explicitly, a specific list (e.g. `["jarvis"]`) to narrow, or `delivery_projects: []` as the explicit opt-out for global-only skills.
 - Prefer narrow tool calls over heroic compound shell commands. One question per Bash invocation when inspecting state across many files or projects; reserve `&&` / `;` chains for short related steps where rolling back partial completion is fine. Compound commands with thick output (mixed stdout/stderr, large JSON, multi-section payloads) are more likely to hit harness-level tool-result delivery failures.
 - Treat `[Tool result missing due to internal error]` as a re-grounding signal, not a retry signal. The next tool call after a delivery failure must be a small read-only re-ground (`git status`, one `ls`, one `Read`) before any heavier work — never a retry of the failed compound command.
+- `master` and `main` are integration-only. Non-trivial implementation work must happen on a named task branch, and simultaneous agents must use separate branches unless they are deliberately pairing on the same work.
+- Before any handoff, rate-limit stop, model swap, or end-of-day pause, commit the current branch state and push it upstream. The handoff must name the branch, latest commit, next task, and any dirty state that intentionally remains.
+- Use `scripts/enforce-branch-discipline.sh` as the branch preflight for implementation work. It may be bypassed on `master`/`main` only for explicit integration or release actions.
 
 ## Operator Tips
 

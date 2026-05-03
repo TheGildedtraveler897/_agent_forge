@@ -83,7 +83,13 @@ def run_cmd(
         )
         return proc.returncode, proc.stdout, proc.stderr
     except subprocess.TimeoutExpired as exc:
-        return 124, exc.stdout or "", (exc.stderr or "") + f"\n[timeout after {timeout}s]"
+        def _coerce(b):
+            if b is None:
+                return ""
+            if isinstance(b, bytes):
+                return b.decode("utf-8", errors="replace")
+            return b
+        return 124, _coerce(exc.stdout), _coerce(exc.stderr) + f"\n[timeout after {timeout}s]"
 
 
 def host_sandbox_blocked(text: str) -> bool:

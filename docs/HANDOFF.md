@@ -1,8 +1,53 @@
 # Agent Forge Handoff
 
-Last updated: 2026-04-29 (RC Polish + audit-reconciliation sprint)
+Last updated: 2026-05-03 (GSD Native Assimilation — Codex T-01..T-13, Claude T-14..T-15 pickup)
 
 ## What Changed
+
+### Sprint: GSD Native Assimilation (2026-05-03, Codex T-01..T-13 + Claude Opus 4.7 T-14..T-15)
+
+Cross-agent sprint. Codex executed Phases 1–4 of the GSD assimilation plan (`docs/plans/2026-04-30-gsd-native-assimilation.md`); Claude picked up Phase 5 (T-14 sync + T-15 runtime gate) after Codex hit a token budget at T-13.
+
+#### Codex contribution (T-00..T-13, commits `861ad11`..`daf51e7`)
+
+1. **Five new global skills shipped:**
+   - `plan-quality-auditor` (T-01): pre-flight quality scoring for implementation/sprint/dispatch plans before execution.
+   - `goal-verifier` (T-04): verifies feature/sprint/release completion against original user-visible goal, not summaries or test reports.
+   - `quick-task-runner` (T-07): bounded-task lane that moves faster than full spec→plan workflow without bypassing branch discipline or verification.
+   - `workstream-manager` (T-08): splits concurrent agent/human work into safe branches, worktrees, owners, file-ownership lanes, and resumable continuity cursors.
+   - `codebase-cartographer` (T-11): structural mapping of repos before planning; brownfield codebase intelligence.
+2. **Seven existing skills modified:**
+   - `execution-planner` (T-02): GSD plan metadata fields added.
+   - `spec-architect` (T-03): decision IDs for traceability.
+   - `verification-gate` (T-05): wired to delegate to `goal-verifier` for goal-completion claims.
+   - `goal-verifier` (T-06): UAT routing.
+   - `subagent-dispatcher` (T-09): wave discipline with `depends_on` and `file_ownership` metadata.
+   - `branch-finisher` (T-10): atomic task history preserved across branch close.
+   - team manifests (T-12): `assessment-team`, `delivery-team`, `planning-team`, `research-team` all rewired to reference the new GSD skills.
+3. **Lesson recorded** (T-13, commit `daf51e7`): GSD native assimilation lesson appended to `docs/LESSONS_LEARNED.md`.
+
+#### Claude pickup (T-14..T-15, this commit)
+
+1. **T-14 — Refresh registry + sync 6 governed projects.**
+   - `python3 scripts/omni_factory.py render-registry > registry.json` (38,457 bytes).
+   - 18 sync commands sequential across `jarvis`, `RoboNaaz`, `ZorroClaw`, `homelab`, `factory`, `playlist-archive` × Claude/Codex/Gemini.
+   - All Claude + Codex syncs succeeded (12/12 rc=0). All Gemini per-project syncs returned rc=1 with the documented protective behavior `Refusing to overwrite unmanaged file: <project>/GEMINI.md` — the root `GEMINI.md` files are operator-curated. The `.gemini/skills/` content synced cleanly before the protective abort, so all 5 new GSD skills landed across all three host surfaces in all 6 projects.
+   - `python3 scripts/verify-agent-forge.py` exit 0 post-sync.
+2. **T-15 — Runtime gate + branch finish.**
+   - `python3 scripts/validate-triad-runtime.py --project jarvis`: `overall_pass: true`. Per-host: Claude `cli` 38/38, Codex `filesystem-escalated` 38/38 (`sandbox_blocked: true`, per documented escalation doctrine), Gemini `filesystem` 37/37 (one fewer because `prompt-auto-activator` excludes Gemini). All hosts `hook+ mem+ bridge+ mcp+`. Artifact: `runtime/validation/triad/20260503-095907/`.
+   - `python3 -m unittest tests.test_hooks_v3 tests.test_memory_bridge tests.test_mcp_namespace tests.test_branch_discipline -v`: 20 OK.
+   - `python3 scripts/verify-agent-forge.py` exit 0.
+3. **Bugfix discovered during T-15:** `scripts/validate-triad-runtime.py` `run_cmd()` raised `TypeError: can't concat str to bytes` when the gemini probe hit `subprocess.TimeoutExpired` — `exc.stderr` was bytes, the timeout-suffix was str. Fixed by coercing both `exc.stdout` and `exc.stderr` to str via UTF-8 decode before concatenation. This is a pre-existing bug, not a GSD regression; it surfaced because the gemini probe legitimately timed out on this run.
+
+#### Cross-agent handoff observations
+
+The pickup tested whether Agent Forge's handoff infrastructure supports seamless cross-agent continuity. **What worked:** the durable plan file at `docs/plans/2026-04-30-gsd-native-assimilation.md` named exact T-14/T-15 commands; git log + commit messages mapped 1:1 to plan tasks; the recorded T-13 lesson served as a "Codex's contribution recorded" marker. **What was missing:** Codex did not write a "paused at T-13; T-14 next" cursor into `<project>/MEMORY.md active_tasks` — the canonical rewriteable cross-host pointer designed for exactly this purpose was unused. A fresh agent on a new session would have to derive the pickup point from git log + plan file rather than a single-line cursor. New active lesson recorded in `docs/LESSONS_LEARNED.md` documenting the gap and recommending a doctrine update.
+
+Evidence:
+- Codex commits: `861ad11`..`daf51e7` (13 commits, all on origin pre-pickup).
+- Claude pickup commit: this one.
+- Triad runtime artifact: `runtime/validation/triad/20260503-095907/summary.json`.
+- Verifier exit 0; tests 20 OK.
 
 ### Sprint: RC Polish + Audit-Reconciliation (2026-04-29, Claude Opus 4.7)
 

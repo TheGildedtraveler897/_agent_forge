@@ -22,6 +22,7 @@ This file records the most important remaining gaps as of 2026-04-28 (RC milesto
 - The Codex runtime validator performs live execution, but it still does not prove every generated command or agent invocation path; it confirms enumeration, not invocation correctness.
 - On this machine, Codex runtime inspection is regularly blocked by `bwrap` namespace restrictions; the validator escalates to filesystem-escalated evidence per documented doctrine, but a sandbox-friendly Codex probe would be cleaner.
 - Governed project repos can remain dirty after sync because generated host surfaces are delivery targets. `_agent_forge` is the canonical authoring repo; do not hand-edit generated target surfaces to chase clean status.
+- `runtime/managed-state.json` is vulnerable to concurrent sync races. Parallel host syncs can read the file while another sync is rewriting it, producing transient `JSONDecodeError`; rerun host syncs sequentially until `omni_factory.py` uses atomic writes and file locking for this state file.
 - `bootstrap-project.sh --existing` and `--with-local-skills` still need deliberate live exercise.
 - Debian and macOS suitcase proofs are still pending with real operators, not just local smoke tests.
 - Team manifests remain conceptual; there is no executable orchestration layer yet (deferred deliberately — the Pathfinder roadmap `crew-director` capability is the future home for this).
@@ -35,6 +36,7 @@ This file records the most important remaining gaps as of 2026-04-28 (RC milesto
 3. Exercise `bootstrap-project.sh --existing` on a real existing repo.
 4. Exercise the suitcase path on a fresh Debian VM and a fresh macOS machine.
 5. Push `_agent_forge` to a GitHub remote so the weekly watchdog routine can be scheduled.
+6. Harden `scripts/omni_factory.py` managed-state reads/writes with atomic write plus file locking before reintroducing parallel host syncs.
 
 ## Notes For The Next Session
 

@@ -1,6 +1,6 @@
 ---
 name: branch-finisher
-description: Use at the end of a development branch to safely integrate, open a pull request, keep as-is, or discard. Enforces a tests-must-pass gate before offering options, a typed confirmation on destructive choices, post-merge re-verification, and refuses hook or signature bypass flags.
+description: Use at the end of a development branch to safely integrate, open a pull request, keep as-is, or discard while preserving atomic task history.
 capability_class: workflow
 targets: ["claude", "codex", "gemini"]
 context_cost: light
@@ -19,6 +19,8 @@ Purpose: close out a development branch safely. Merge, open a PR, keep as-is, or
 4. **Post-merge re-verification.** After a local merge, re-run the proof command on the base branch before cleaning up the feature branch or worktree. Do not delete anything until the merged state is clean.
 5. **No hook or signature bypass.** Never use `--no-verify`, `--no-gpg-sign`, `-c commit.gpgsign=false`, or equivalent flags unless the user has explicitly asked for a specific bypass and explained why.
 6. **No force push to the primary branch.** Refuse `--force` or `--force-with-lease` against the base branch. If asked, escalate for explicit human confirmation.
+7. **Feature branch required.** Implementation work must finish from a named task branch, not directly from `main` or `master`. Use `scripts/enforce-branch-discipline.sh` unless the action is an explicit integration or release step.
+8. **Atomic task history.** Prefer one meaningful commit per completed micro-task or quick task. Do not squash, amend, rewrite, or bundle unrelated task commits from this skill unless the user explicitly requests history surgery and accepts the risk. Atomicity never justifies hook bypass, signature bypass, force push, or primary-branch shortcuts.
 
 ## Workflow
 
@@ -26,6 +28,8 @@ Purpose: close out a development branch safely. Merge, open a PR, keep as-is, or
 1. Inspect working-tree status. Uncommitted changes must be either committed or explicitly acknowledged.
 2. Confirm the branch name and the remote it tracks.
 3. Identify and confirm the base branch.
+4. Confirm the current branch is not the base branch unless the requested action is integration-only.
+5. Inspect recent commits since the base branch and identify the latest task commit. If completed micro-tasks or quick tasks are missing focused commits, return to the executor to commit them before offering merge or PR options.
 
 ### Step 2 — Run the full test suite
 Execute the project's full verification command. Read the output and the exit code. A non-zero exit code halts the skill and returns the user to `tdd-engineer` or `root-cause-analyst` depending on the failure mode.
@@ -38,9 +42,9 @@ Only after Step 2 passes, present four options:
 4. **Discard the branch** (destructive — typed confirmation required).
 
 ### Step 4 — Execute the chosen option
-- **Merge:** fast-forward if possible, otherwise a merge commit with a descriptive message. After merging, re-run the full test suite on the merged state. Only then offer branch or worktree cleanup.
+- **Merge:** fast-forward if possible, otherwise a merge commit with a descriptive message. Preserve atomic task commits by default; do not squash or rewrite branch history from this skill unless explicitly requested. After merging, re-run the full test suite on the merged state. Only then offer branch or worktree cleanup.
 - **PR:** build the PR with a clear title (under ~70 characters) and a body containing summary and test plan. Do not auto-approve or auto-merge the PR.
-- **Keep as-is:** record the current state and exit the skill.
+- **Keep as-is:** record the current branch, upstream, latest task commit, latest commit, next task, and any intentional dirty state; push the branch if it has no upstream.
 - **Discard:** require typed confirmation of the branch name. Prefer recoverable actions (local branch delete) before unrecoverable ones (remote branch delete, reflog expiry).
 
 ### Step 5 — Cleanup
@@ -54,15 +58,19 @@ Only after Step 4's verification passes:
 
 - Offering merge when tests have not been re-run on the current state.
 - Assuming `main` or `master` is the base branch without checking.
+- Doing implementation work directly on `main` or `master`.
 - Accepting "yes" as a destructive confirmation.
 - Skipping post-merge re-verification because "the merge was clean".
 - Using a hook bypass flag because a hook is inconveniently slow.
 - Force-pushing to the base branch.
+- Squashing, amending, or rewriting atomic task commits just to make the branch look tidy.
+- Bundling unrelated completed tasks into one commit during branch closeout.
 
 ## Output
 
 - A summary line of the action taken.
 - The fresh proof-command output for both pre-action and post-action verification.
+- The branch name, upstream branch, latest task commit, and latest commit hash used for handoff or integration.
 - Any cleanup that was performed, listed explicitly.
 
 ## Non-goals
