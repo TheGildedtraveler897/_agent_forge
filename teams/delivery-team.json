@@ -59,10 +59,13 @@
       "slash commands"
     ],
     "preferred_entries": [
+      "quick-task-runner",
       "execution-planner",
       "tdd-engineer",
       "subagent-dispatcher",
+      "workstream-manager",
       "verification-gate",
+      "goal-verifier",
       "branch-finisher",
       "code-review-doctrine"
     ]
@@ -73,10 +76,13 @@
       "delegated runtime agents"
     ],
     "preferred_entries": [
+      "quick-task-runner",
       "execution-planner",
       "tdd-engineer",
       "subagent-dispatcher",
+      "workstream-manager",
       "verification-gate",
+      "goal-verifier",
       "branch-finisher",
       "code-review-doctrine"
     ]
@@ -88,10 +94,13 @@
       "subagents"
     ],
     "preferred_entries": [
+      "quick-task-runner",
       "execution-planner",
       "tdd-engineer",
       "subagent-dispatcher",
+      "workstream-manager",
       "verification-gate",
+      "goal-verifier",
       "branch-finisher",
       "code-review-doctrine"
     ]

@@ -59,8 +59,10 @@
       "subagents when planning surface is large"
     ],
     "preferred_entries": [
+      "codebase-cartographer",
       "spec-architect",
       "execution-planner",
+      "plan-quality-auditor",
       "context-engineer",
       "quality-gate"
     ]
@@ -71,8 +73,10 @@
       "delegated runtime agents when role separation matters"
     ],
     "preferred_entries": [
+      "codebase-cartographer",
       "spec-architect",
       "execution-planner",
+      "plan-quality-auditor",
       "context-engineer",
       "quality-gate"
     ]
@@ -84,8 +88,10 @@
       "subagents when planning surface is large"
     ],
     "preferred_entries": [
+      "codebase-cartographer",
       "spec-architect",
       "execution-planner",
+      "plan-quality-auditor",
       "context-engineer",
       "quality-gate"
     ]

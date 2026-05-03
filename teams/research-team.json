@@ -55,6 +55,7 @@
       "subagents when source splitting helps"
     ],
     "preferred_entries": [
+      "codebase-cartographer",
       "evidence-packager",
       "context-engineer"
     ]
@@ -65,6 +66,7 @@
       "delegated runtime agents when source volume is high"
     ],
     "preferred_entries": [
+      "codebase-cartographer",
       "evidence-packager",
       "context-engineer"
     ]
