@@ -170,7 +170,7 @@ Each hook record:
   "matcher": "Bash",
   "handler": {
     "type": "command",
-    "command": "bash ~/Projects/_agent_forge/skills/global/telemetry-guardian/guardian.sh"
+    "command": "python3 ~/Projects/_agent_forge/skills/global/telemetry-guardian/guardian.py"
   },
   "targets": ["claude", "codex", "gemini"],
   "timeout_ms": 5000,
@@ -210,14 +210,14 @@ Global user-home hook surfaces (`~/.claude/settings.json`, `~/.gemini/settings.j
 ### Adding a new hook
 
 1. Author the record in `policies/hooks.json` (usually under `shared`).
-2. If the command points to a script, put the script under the owning skill (for example, `skills/global/telemetry-guardian/guardian.sh`) and reference it with an absolute path or `~/Projects/_agent_forge/...`.
+2. If the command points to a script, put the script under the owning skill (for example, `skills/global/telemetry-guardian/guardian.py`) and reference it with an absolute path or `~/Projects/_agent_forge/...`. Prefer Python entry points so the hook fires natively on Windows Claude Code; keep a thin `.sh` POSIX forwarder if you also want a legacy bash invocation path.
 3. Re-run `sync-claude` / `sync-codex` / `sync-gemini` for every governed project.
 4. Re-run `verify-agent-forge.py` — it checks handler shape, target host names, known canonical events, command script paths, and async rules.
 5. Re-run `validate-triad-runtime.py` — it checks that each rendered host hook file contains every active hook record's expected native event key.
 
 ### Seeded hook: `pre-tool-execution-guardian`
 
-The factory ships one standard hook: the `telemetry-guardian` pre-tool veto. It calls `skills/global/telemetry-guardian/guardian.sh`, which reads the tool invocation on stdin, matches against a short deny list (`--no-verify`, force-push to protected branches, wildcard home deletion, unscoped `terraform destroy`, whole-disk `dd`, recursive 777 on home), and exits 1 to block or 0 to allow. Set `AGENT_FORGE_GUARDIAN=off` to bypass for a single session; bypasses are logged to `~/.agent-forge/guardian.log`.
+The factory ships one standard hook: the `telemetry-guardian` pre-tool veto. It calls `skills/global/telemetry-guardian/guardian.py`, which reads the tool invocation on stdin, matches against a short deny list (`--no-verify`, force-push to protected branches, wildcard home deletion, unscoped `terraform destroy`, whole-disk `dd`, recursive 777 on home), and exits 1 to block or 0 to allow. Set `AGENT_FORGE_GUARDIAN=off` to bypass for a single session; bypasses are logged to `~/.agent-forge/guardian.log`. A thin `guardian.sh` POSIX forwarder is also shipped for legacy bash callers.
 
 ## Universal State Layer
 
