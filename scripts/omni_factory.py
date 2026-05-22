@@ -1986,8 +1986,14 @@ def verify() -> int:
                 if target.get("rule") not in valid_rules:
                     fail(f"policies/distillation.json target '{tid}' has unknown rule '{target.get('rule')}'. Valid: {sorted(valid_rules)}")
                 src_path = ROOT / target.get("path", "")
+                # The triad_runs target points at runtime/validation/triad/ which is
+                # machine-local and absent on fresh installs. Treat its absence as a
+                # WARN (nothing to distill yet), not a FAIL.
                 if not src_path.exists():
-                    fail(f"policies/distillation.json target '{tid}' source path missing: {target.get('path')}")
+                    if target.get("rule") == "keep_recent_runs":
+                        warn(f"policies/distillation.json target '{tid}' source absent (no runs yet): {target.get('path')}")
+                    else:
+                        fail(f"policies/distillation.json target '{tid}' source path missing: {target.get('path')}")
                 archive_rel = target.get("archive_path")
                 if archive_rel:
                     archive_path = ROOT / archive_rel
