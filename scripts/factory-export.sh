@@ -10,51 +10,56 @@ BUNDLE_BASENAME="agent-forge-suitcase-${STAMP}"
 EXPORT_DIR="${OUTPUT_ROOT}/${BUNDLE_BASENAME}"
 ARCHIVE_TGZ="${OUTPUT_ROOT}/${BUNDLE_BASENAME}.tar.gz"
 ARCHIVE_ZIP="${OUTPUT_ROOT}/${BUNDLE_BASENAME}.zip"
-EXPORT_MODE="unset"   # "unset" = ask interactively; "clean" or "backup"
+EXPORT_MODE="unset"   # "unset" = ask interactively; "onboarding", "clean", or "backup"
 
-# Detect non-interactive stdin so we can fall back to "clean" silently.
+# Detect non-interactive stdin so we can fall back to "onboarding" silently.
 if [[ ! -t 0 ]]; then
-  EXPORT_MODE="clean"
+  EXPORT_MODE="onboarding"
 fi
 
 usage() {
   cat <<'EOF'
-Usage: factory-export.sh [--output-root DIR] [--name NAME] [--mode clean|backup]
+Usage: factory-export.sh [--output-root DIR] [--name NAME] [--mode onboarding|clean|backup]
 
 Build a portable Agent Forge suitcase snapshot.
 
 Export modes (interactive by default — you are asked if --mode is not passed):
 
-  clean   Portable factory capability only. Source-environment-specific residue
-          is stripped: session handoffs, accumulated tech-debt notes, and
-          machine-specific runtime logs are replaced with clean stubs.
-          Use this when moving the factory to a new machine or company.
-          (default when running non-interactively)
+  onboarding  Production-grade framework bundle for shipping to coworkers or
+              fresh machines. Includes all canonical skills, hooks, policies,
+              and framework docs. Excludes machine-local runtime state. Emits
+              a platform-specific START_HERE.txt at the bundle root.
+              (default when running non-interactively)
 
-  backup  Preserve current state faithfully, including session history and
-          accumulated notes. Use this for personal backups of your live factory.
+  clean       Same exclusions as onboarding plus stub-replace HANDOFF.md and
+              TECH_DEBT.md. Use when the working tree still carries operator
+              history that needs scrubbing for an outbound copy.
 
-Contents (both modes):
+  backup      Preserve current state faithfully, including session history
+              and accumulated notes. Use this for personal backups of your
+              live factory.
+
+Contents (all modes):
   - canonical _agent_forge source (skills, teams, governance docs, scripts, generated-host logic)
   - shared root doctrine docs
   - manifest and operator README
   - compressed .tar.gz and .zip archives
 
 Options:
-  --mode clean|backup   Export mode (asked interactively if omitted)
-  --output-root DIR     Override the export output directory
-  --name NAME           Override the archive basename
-  -h, --help            Show this message
+  --mode onboarding|clean|backup   Export mode (asked interactively if omitted)
+  --output-root DIR                Override the export output directory
+  --name NAME                      Override the archive basename
+  -h, --help                       Show this message
 EOF
 }
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --mode)
-      EXPORT_MODE="${2:?--mode requires clean or backup}"
+      EXPORT_MODE="${2:?--mode requires onboarding, clean, or backup}"
       case "${EXPORT_MODE}" in
-        clean|backup) ;;
-        *) echo "Unknown mode: ${EXPORT_MODE}  (must be clean or backup)" >&2; exit 1 ;;
+        onboarding|clean|backup) ;;
+        *) echo "Unknown mode: ${EXPORT_MODE}  (must be onboarding, clean, or backup)" >&2; exit 1 ;;
       esac
       shift 2
       ;;
@@ -81,14 +86,15 @@ done
 # Interactive mode selection if not specified
 if [[ "${EXPORT_MODE}" == "unset" ]]; then
   echo "Export mode:"
-  echo "  clean   — factory capability only, no prior-session history  (recommended for sharing / new machine)"
-  echo "  backup  — preserve current state including session notes and tech-debt log"
+  echo "  onboarding — production-grade framework bundle, no machine-local state  (recommended for sharing)"
+  echo "  clean      — like onboarding, plus stub-replace HANDOFF/TECH_DEBT if working tree still has history"
+  echo "  backup     — preserve current state including session notes and tech-debt log"
   echo
   while true; do
-    read -r -p "Select export mode [clean/backup]: " _mode
+    read -r -p "Select export mode [onboarding/clean/backup]: " _mode
     case "${_mode}" in
-      clean|backup) EXPORT_MODE="${_mode}"; break ;;
-      *) echo "Please type clean or backup." ;;
+      onboarding|clean|backup) EXPORT_MODE="${_mode}"; break ;;
+      *) echo "Please type onboarding, clean, or backup." ;;
     esac
   done
   echo
@@ -105,10 +111,12 @@ mkdir -p "${EXPORT_DIR}/shared-root/docs"
 echo "Building suitcase (mode: ${EXPORT_MODE})..."
 
 tar -C "${WORKSPACE_ROOT}" \
-  --exclude='./_agent_forge/.git' \
-  --exclude='./_agent_forge/exports' \
-  --exclude='./_agent_forge/runtime/managed-state.json' \
-  --exclude='./_agent_forge/runtime/validation' \
+  --exclude='_agent_forge/.git' \
+  --exclude='_agent_forge/exports' \
+  --exclude='_agent_forge/runtime/managed-state.json' \
+  --exclude='_agent_forge/runtime/validation' \
+  --exclude='_agent_forge/dev' \
+  --exclude='_agent_forge/dist' \
   -cf - _agent_forge | tar -C "${EXPORT_DIR}" -xf -
 
 # ── Clean-mode: strip source-environment-specific residue ────────────────────
@@ -153,13 +161,115 @@ STUB
   rm -rf "${EXPORTED_FACTORY}/runtime/validation"
 fi
 
-cp "${WORKSPACE_ROOT}/AGENTS.md" "${EXPORT_DIR}/shared-root/AGENTS.md"
-cp "${WORKSPACE_ROOT}/CLAUDE.md" "${EXPORT_DIR}/shared-root/CLAUDE.md"
-cp "${WORKSPACE_ROOT}/docs/gotchas.md" "${EXPORT_DIR}/shared-root/docs/gotchas.md"
-cp "${WORKSPACE_ROOT}/docs/port_ledger.md" "${EXPORT_DIR}/shared-root/docs/port_ledger.md"
+if [[ "${EXPORT_MODE}" == "onboarding" ]]; then
+  # Onboarding mode emits framework-only stubs for the shared root, not the
+  # source machine's parent-tree docs. This guarantees no COI residue from
+  # the operator's personal ~/Projects/AGENTS.md / CLAUDE.md leaks into the
+  # shipped bundle. Recipients populate their own shared root if they want one.
+  cat > "${EXPORT_DIR}/shared-root/AGENTS.md" <<'SHAREDEOF'
+# Shared Agent Contract
+
+This file is a placeholder. It exists so the bundle's shared-root/ layout
+is complete on extraction. If you maintain multiple governed projects
+under one parent directory, customize this file with your shared
+multi-agent contract.
+
+The canonical Agent Forge multi-agent contract lives at
+`_agent_forge/AGENTS.md` and is the authoritative source.
+SHAREDEOF
+
+  cat > "${EXPORT_DIR}/shared-root/CLAUDE.md" <<'SHAREDEOF'
+# Shared Claude Adapter
+
+Thin host adapter for Claude Code at the parent-directory level.
+Replace this with your own customizations if you run multiple
+governed projects under one parent tree.
+
+Claude Code's canonical boot adapter for the factory is
+`_agent_forge/CLAUDE.md`.
+SHAREDEOF
+
+  cat > "${EXPORT_DIR}/shared-root/docs/gotchas.md" <<'SHAREDEOF'
+# Cross-Project Gotchas
+
+Track durable cross-project quirks and workarounds here.
+The factory's own gotchas live in
+`_agent_forge/docs/LESSONS_LEARNED.md`.
+SHAREDEOF
+
+  cat > "${EXPORT_DIR}/shared-root/docs/port_ledger.md" <<'SHAREDEOF'
+# Port Ledger
+
+Track local port assignments across projects here to avoid collisions.
+Empty on a fresh install — populate as you allocate ports.
+SHAREDEOF
+else
+  # clean and backup modes preserve parent-tree shared docs if they exist.
+  if [[ -f "${WORKSPACE_ROOT}/AGENTS.md" ]]; then
+    cp "${WORKSPACE_ROOT}/AGENTS.md" "${EXPORT_DIR}/shared-root/AGENTS.md"
+  fi
+  if [[ -f "${WORKSPACE_ROOT}/CLAUDE.md" ]]; then
+    cp "${WORKSPACE_ROOT}/CLAUDE.md" "${EXPORT_DIR}/shared-root/CLAUDE.md"
+  fi
+  if [[ -f "${WORKSPACE_ROOT}/docs/gotchas.md" ]]; then
+    cp "${WORKSPACE_ROOT}/docs/gotchas.md" "${EXPORT_DIR}/shared-root/docs/gotchas.md"
+  fi
+  if [[ -f "${WORKSPACE_ROOT}/docs/port_ledger.md" ]]; then
+    cp "${WORKSPACE_ROOT}/docs/port_ledger.md" "${EXPORT_DIR}/shared-root/docs/port_ledger.md"
+  fi
+fi
 
 SOURCE_COMMIT="$(git -C "${AGENT_FORGE_ROOT}" rev-parse --short HEAD 2>/dev/null || echo "unknown")"
 GENERATED_AT_UTC="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+# START_HERE.txt at the bundle root — the first thing a recipient should read.
+cat > "${EXPORT_DIR}/START_HERE.txt" <<'STARTEOF'
+Agent Forge Portable Suitcase
+==============================
+
+WHAT THIS IS
+  A portable multi-agent governance framework for Claude Code, Codex,
+  and Gemini CLI. Generates host-native skills, hooks, and memory
+  surfaces from one canonical source.
+
+QUICKSTART (pick your platform)
+
+  Linux or macOS:
+    cd <unpacked-bundle>
+    ./_agent_forge/scripts/deploy-factory.sh
+
+  Windows (native PowerShell, no WSL required):
+    cd <unpacked-bundle>
+    pwsh -File .\_agent_forge\scripts\deploy-factory.ps1
+
+  Then in Claude Code, invoke the onboarding-guide skill for an
+  interactive walkthrough:
+    /onboarding-guide tour
+
+REQUIREMENTS
+  Linux / macOS: Python 3.10+, git, tar
+  macOS: MacPorts (NOT Homebrew)
+  Windows: Python 3.10+, git, PowerShell 5.1+ (ships with Windows 10+)
+
+  Plus at least one host CLI:
+    - Claude Code  (anthropic.com)
+    - OpenAI Codex CLI  (optional)
+    - Gemini CLI  (optional)
+
+DOCS
+  _agent_forge/README.md         — full project overview
+  _agent_forge/docs/QUICKSTART.md — first-run flow
+  _agent_forge/docs/CONOPS.md     — durable architecture
+  _agent_forge/AGENTS.md          — multi-agent contract
+
+VERIFY THE INSTALL
+  python3 _agent_forge/scripts/verify-agent-forge.py
+  Expect exit 0 with no [FAIL] lines.
+
+NEED HELP
+  After deploy, in Claude Code: /onboarding-guide tour
+  Skim _agent_forge/docs/QUICKSTART.md.
+STARTEOF
 
 cat > "${EXPORT_DIR}/README.md" <<EOF
 # Agent Forge Portable Suitcase
@@ -171,7 +281,7 @@ Export mode: ${EXPORT_MODE}
 Quick purpose: this bundle installs the Agent Forge framework onto a fresh machine so it is ready for multi-LLM project work after one deploy step and one workstation-bootstrap step.
 
 > **Export mode: ${EXPORT_MODE}**
-> $(if [[ "${EXPORT_MODE}" == "clean" ]]; then echo "Factory capability only. Session history and machine-specific notes have been replaced with clean stubs."; else echo "Full backup. Includes session history and accumulated notes from the source machine."; fi)
+> $(case "${EXPORT_MODE}" in onboarding) echo "Production-grade framework bundle. No machine-local runtime state included.";; clean) echo "Factory capability only. Session history and machine-specific notes have been replaced with clean stubs.";; *) echo "Full backup. Includes session history and accumulated notes from the source machine.";; esac)
 
 ## What This Bundle Contains
 
@@ -295,6 +405,13 @@ if export_mode == "clean":
     manifest["clean_mode_note"] = (
         "HANDOFF.md and TECH_DEBT.md replaced with clean stubs. "
         "All skills, teams, governance docs, and workflow docs preserved."
+    )
+if export_mode == "onboarding":
+    manifest["framework_only"] = True
+    manifest["onboarding_mode_note"] = (
+        "Production-grade framework bundle. Machine-local runtime state "
+        "(runtime/managed-state.json, runtime/validation/, dev/, dist/) excluded. "
+        "START_HERE.txt at bundle root has platform-specific quickstart."
     )
 with open(manifest_path, "w", encoding="utf-8") as fh:
     json.dump(manifest, fh, indent=2)
