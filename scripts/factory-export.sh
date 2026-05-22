@@ -222,6 +222,13 @@ fi
 SOURCE_COMMIT="$(git -C "${AGENT_FORGE_ROOT}" rev-parse --short HEAD 2>/dev/null || echo "unknown")"
 GENERATED_AT_UTC="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
+# BUNDLE_README.md at the bundle root — the inviting introduction for a coworker
+# meeting the factory for the first time. Pairs with START_HERE.txt (quickstart);
+# this file is the "what is this and why should you care" front door.
+if [[ -f "${AGENT_FORGE_ROOT}/BUNDLE_README.md" ]]; then
+  cp "${AGENT_FORGE_ROOT}/BUNDLE_README.md" "${EXPORT_DIR}/BUNDLE_README.md"
+fi
+
 # START_HERE.txt at the bundle root — the first thing a recipient should read.
 cat > "${EXPORT_DIR}/START_HERE.txt" <<'STARTEOF'
 Agent Forge Portable Suitcase
