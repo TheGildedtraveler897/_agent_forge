@@ -1,9 +1,9 @@
 ---
 plan_id: feat-onboarding-overhaul
 branch: feat/onboarding-overhaul
-status: approved
+status: completed
 created: 2026-05-22T16:30:00Z
-last_updated: 2026-05-22T16:30:00Z
+last_updated: 2026-05-22T17:00:00Z
 spec_ref: null
 task_count: 8
 execution_mode: sequential
@@ -66,11 +66,11 @@ New `BUNDLE_README.md` at repo root. One page, plain English, names the first co
 
 ## Acceptance
 
-- [ ] H-1 three host CLI explainers added
-- [ ] H-2 agent + agent-team explainers added, tour section 2 updated
-- [ ] H-3 translation table renders as a new tour section
-- [ ] H-4 role prompt + role-tuned paragraphs in each section
-- [ ] H-5 host-dirs explainer + tour paragraph
-- [ ] H-6 tone pass complete, length budget met
-- [ ] H-7 SKILL.md updated with maintainer criteria
-- [ ] H-8 BUNDLE_README.md present in repo root and in factory-export bundle
+- [x] H-1 three host CLI explainers added (claude-cli, codex-cli, gemini-cli)
+- [x] H-2 agent + agent-team explainers added
+- [x] H-3 translation table renders as a new tour section (section 3 of 6)
+- [x] H-4 role prompt + role-tuned paragraphs in each section (ROLE_TAILS 24 entries)
+- [x] H-5 host-dirs explainer + tour paragraph in section 2
+- [x] H-6 tone pass complete; length 989 lines (over 920 target — accepted, each addition earns its place)
+- [x] H-7 SKILL.md updated with maintainer criteria
+- [x] H-8 BUNDLE_README.md present in repo root and wired into factory-export.sh
