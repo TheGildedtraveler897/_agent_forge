@@ -720,15 +720,14 @@ EXPLAINERS = {
     ),
     "governed-project": (
         "A governed project is one declared in `projects.json` and managed by the factory. "
-        "Six are pre-wired today: jarvis, RoboNaaz, ZorroClaw, homelab, ZorroForge/factory, "
-        "playlist-archive. Adding a new one means: (1) add an entry to `projects.json` with "
-        "`name`, `root`, and `required_files`; (2) run `./scripts/bootstrap-project.sh --name "
-        "<name>`. The bootstrap creates the minimum required files, then immediately syncs the "
-        "factory's skills, hooks, MEMORY.md, and forge_state into the project's host-native "
-        "directories (`.claude/`, `.codex/`, `.agents/`, `.gemini/`). Generated surfaces are "
-        "never hand-edited; re-run sync after any canonical change. The `required_files` "
-        "declaration is what the verifier uses to confirm the project still has the minimum "
-        "footprint."
+        "On a fresh install, no projects are pre-wired — `projects.json` is an empty list. "
+        "Adding your first one means: (1) add an entry to `projects.json` with `name`, `root`, "
+        "and `required_files`; (2) run `./scripts/bootstrap-project.sh --name <name>`. The "
+        "bootstrap creates the minimum required files, then immediately syncs the factory's "
+        "skills, hooks, MEMORY.md, and forge_state into the project's host-native directories "
+        "(`.claude/`, `.codex/`, `.agents/`, `.gemini/`). Generated surfaces are never "
+        "hand-edited; re-run sync after any canonical change. The `required_files` declaration "
+        "is what the verifier uses to confirm the project still has the minimum footprint."
     ),
     "suitcase": (
         "The 'suitcase' is the portable export of the factory you can carry to a fresh machine "

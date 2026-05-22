@@ -39,7 +39,7 @@ Current baseline:
 - Governance validation already passed.
 - Three-layer Claude delivery model exists.
 - `.claude/skills` is governed.
-- `_agent_forge` and `homelab` are under git.
+- `_agent_forge` is under git.
 - The remaining leverage is framework quality, team design, context engineering, evals, and operator guidance.
 
 Your job:

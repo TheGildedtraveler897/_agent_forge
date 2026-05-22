@@ -168,7 +168,7 @@ Generated: ${GENERATED_AT_UTC}
 Source commit: ${SOURCE_COMMIT}
 Export mode: ${EXPORT_MODE}
 
-Quick purpose: this bundle installs the ZorroForge Agent Forge framework onto a fresh machine so it is ready for multi-LLM project work after one deploy step and one workstation-bootstrap step.
+Quick purpose: this bundle installs the Agent Forge framework onto a fresh machine so it is ready for multi-LLM project work after one deploy step and one workstation-bootstrap step.
 
 > **Export mode: ${EXPORT_MODE}**
 > $(if [[ "${EXPORT_MODE}" == "clean" ]]; then echo "Factory capability only. Session history and machine-specific notes have been replaced with clean stubs."; else echo "Full backup. Includes session history and accumulated notes from the source machine."; fi)

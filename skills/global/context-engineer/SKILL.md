@@ -41,7 +41,7 @@ Before (scattered across 2000 tokens of chat):
 
 After (compact task brief, ~200 tokens):
 ```
-# Task Brief: playlist-archive download scripts
+# Task Brief: example-app download scripts
 
 ## Goal
 Build idempotent download scripts for YouTube (yt-dlp) and Spotify (spotipy).
