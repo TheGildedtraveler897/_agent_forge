@@ -33,24 +33,26 @@ The skill ships an executable Python helper at `onboard.py` next to this file. I
 
 ### `tour` (default)
 
-Interactive guided walkthrough. Five sections; each follows the same shape:
+Interactive guided walkthrough. Six sections; each follows the same shape:
 
 1. **What it is** — one paragraph, plain English, jargon translated.
 2. **Why it exists** — one short paragraph naming the problem solved.
 3. **Live proof** — runs a command, shows the output, translates it.
 4. **What to do next** — explicit next command or "no action needed; this part is healthy".
+5. **Role-tuned closing paragraph** (when the operator picks a role) — one sentence per role addressing what this section means for a curious learner, a builder, an operator running a team rollout, or a decider evaluating adoption.
 
-The five sections:
+The six sections:
 
 | # | Section | Concept introduced |
 |---|---|---|
 | 1 | What is this folder? | The factory and its three host CLIs (Claude / Codex / Gemini). |
-| 2 | Three tools, one source of truth | The canonical-first → render-outward model. |
-| 3 | The seatbelt | `telemetry-guardian` and the deny list. |
-| 4 | The shared brain | `MEMORY.md` cross-host state layer. |
-| 5 | What to do next | State-aware: diagnostic if broken, ready-task if green. |
+| 2 | Three tools, one source of truth | The canonical-first → render-outward model, plus the four host-config directory names. |
+| 3 | Three vendors, three names | Cross-host translation table (skill → command/subagent, hook event aliases, MCP file types, memory native vs sidecar, boot files). |
+| 4 | The seatbelt | `telemetry-guardian` and the deny list. |
+| 5 | The shared brain | `MEMORY.md` cross-host state layer. |
+| 6 | What to do next | State-aware: diagnostic if broken, ready-task if green. |
 
-The tour adapts to the operator's reported experience. The first prompt asks one short question: have you used the three host CLIs before, yes / partially / no. The answer changes how much vocabulary translation is inserted into Sections 1–4.
+The tour adapts to two operator signals. The first prompt asks experience level — have you used the three host CLIs before, yes / partially / no — which gates how much vocabulary translation is inserted into each section. The second prompt asks role — curious learner, builder, operator running a team rollout, or decider evaluating adoption — which appends one role-tuned paragraph at the end of each section. Both prompts have a "skip" option that returns the linear, role-blind tour.
 
 ### `check`
 
@@ -60,7 +62,15 @@ Output: structured one-screen report with one of three colors per check (green /
 
 ### `explain <topic>`
 
-Single-concept explainer. Topics: `mcp`, `hook`, `memory`, `sandbox`, `triad-validator`, `guardian`, `factory`, `skill`, `bootstrap`. Each prints a 100–200 word plain-English explanation with one concrete example from the operator's actual repo state.
+Single-concept explainer. Topics:
+
+- **Tier-0 host CLIs:** `claude-cli`, `codex-cli`, `gemini-cli` — each names the vendor, the boot-file convention, the memory story (native vs sidecar), and ends with "When to pick this host."
+- **Core primitives:** `factory`, `skill`, `agent`, `agent-team`, `hook`, `mcp`, `memory`, `sandbox`, `guardian`.
+- **Cross-host plumbing:** `host-dirs` (the four `.claude/` / `.codex/` / `.agents/` / `.gemini/` directories and why they exist).
+- **Validation:** `triad-validator`, `validation-pyramid`.
+- **Lifecycle:** `bootstrap`, `governed-project`, `suitcase`.
+
+Each prints a 100–200 word plain-English explanation with one concrete example from the operator's actual repo state.
 
 ## Discipline / what this skill does NOT do
 
@@ -99,9 +109,16 @@ Exit codes:
 
 ## When to extend
 
-- **New section.** Each section is a function in `onboard.py` named `section_<n>_<topic>`. Add a new function and add it to the `TOUR_SECTIONS` list. Keep it under ~80 lines including translations.
-- **New `explain` topic.** Add an entry to the `EXPLAINERS` dict in `onboard.py`. One ~150-word string. Reference a specific file in the operator's repo state if possible.
+- **New section.** Each section is a function in `onboard.py` named `section_<n>_<topic>(level: str, role: str = "")`. Update the section numbering in `section_header()` calls and renumber the others (the renumbering is mechanical; keep section function names stable to avoid breaking `cmd_tour`). Add the new section's call site in `cmd_tour`. Add corresponding entries to `ROLE_TAILS` for each `(section_num, role)` pair the operator can reach. Keep it under ~80 lines including translations.
+- **New `explain` topic.** Add an entry to the `EXPLAINERS` dict in `onboard.py`. Place new entries alphabetically by key. One ~100–200 word string. Reference a specific file in the operator's repo state if possible. If the topic is a host-CLI variant, end with "When to pick this host: ..." so a new operator can choose.
 - **New diagnostic probe.** Add a function to the `PROBES` list. Each probe returns `(verdict, summary, fix_command)`. Verdicts are `"green"`, `"yellow"`, `"red"`.
+- **New host.** If a fourth host CLI is added in the future: add a row to the cross-host translation table in `section_3_translation`. Add a tier-0 explainer for it (e.g., `<host>-cli`). Add a corresponding column to the `_EVENT_ALIASES` map in `scripts/omni_factory.py`. The triad runtime validator extension is out of scope for this skill but tracked in `docs/HOST_INTEGRATIONS.md`.
+
+### Acceptance criteria for maintainers
+
+- The tour length, when read aloud at a normal pace, stays under ~10 minutes. If a contributor adds a section that pushes total length past that, split into two skills or move content into an `explain` topic.
+- Every agentic term used in the tour appears either in `EXPLAINERS` or in the on-screen jargon-translation aside. If a new term shows up untranslated, that is a regression.
+- Cross-host names (PreToolUse / BeforeTool, MCP config file types, etc.) must match the canonical → native mapping in `scripts/omni_factory.py:_EVENT_ALIASES` and in `docs/HOST_INTEGRATIONS.md`. The translation table is documentation, not authoring surface; if it drifts from the code, the code is right and the table needs updating.
 
 When extending, re-read the **Tone discipline** section above first. Tone drift is the most common way this skill degrades in maintenance.
 

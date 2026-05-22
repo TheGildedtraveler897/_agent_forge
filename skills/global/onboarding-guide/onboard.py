@@ -325,8 +325,68 @@ def adapt(level: str, full: str, brief: str) -> str:
     return brief if level in ("y", "p") else full
 
 
-def section_1_what_is_this(level: str) -> None:
-    section_header(1, 5, "What is this folder?")
+def ask_role() -> str:
+    print()
+    print(bold("One more quick question."))
+    print("Which best describes why you're here today?")
+    print("  c  curious — I want to understand what this is")
+    print("  b  builder — I want to extend or contribute")
+    print("  o  operator — I'm setting up the factory for a team")
+    print("  d  decider — I'm evaluating whether to adopt this")
+    print("  s  skip — just run the tour without role tuning")
+    print()
+    try:
+        ans = input("Answer [c/b/o/d/s, default c]: ").strip().lower()
+    except EOFError:
+        ans = ""
+    if ans not in ("c", "b", "o", "d", "s"):
+        ans = "c"
+    return ans
+
+
+# Role-tuned closing paragraphs. One per (section_number, role) pair.
+# Role 's' (skip) returns empty; sections render no closing paragraph for skippers.
+ROLE_TAILS: dict[tuple[int, str], str] = {
+    (1, "c"): "If you remember one thing from this section: it's a factory. You feed it definitions, it spits out three different configurations from one source.",
+    (1, "b"): "If you'll extend this: every canonical file under `skills/`, `policies/`, `teams/`, or `global-mcp.json` is hand-edited; everything under `<project>/.claude/`, `.codex/`, `.gemini/` is generated. Don't hand-edit generated files — they'll be overwritten on next sync.",
+    (1, "o"): "For team rollout: deploy this factory once per workstation via `scripts/deploy-and-bootstrap.sh`. Govern your team's projects by adding entries to `projects.json` and running `scripts/bootstrap-project.sh --name <name>` for each.",
+    (1, "d"): "Adoption decision frame: the factory's value is one-author/three-deliver. Cost is one Python engine + a handful of skills/ and policies/ files. No long-running service; no per-user backend.",
+    (2, "c"): "The takeaway: you write one file, and it shows up correctly in all three AI tools without you copying anything.",
+    (2, "b"): "Authoring rhythm: edit canonical (`skills/global/<name>/SKILL.md`), run `python3 scripts/omni_factory.py sync-{claude,codex,gemini} --project <name>` for the host you want to test against, then run `validate-triad-runtime.py` to prove all three saw it.",
+    (2, "o"): "Operationally, the three syncs are independent. You can deploy a Claude-only team today and add Codex/Gemini coverage later without re-authoring anything.",
+    (2, "d"): "Architectural diligence: the canonical → renderer → host-native chain means any new host can be added by writing one renderer. The factory is not Claude-coupled.",
+    (3, "c"): "You don't have to memorize this. If a coworker says 'Claude calls it a slash command' and you've seen Codex call it a skill, you'll know they mean the same thing.",
+    (3, "b"): "When you author a new skill, you write one `SKILL.md` with `capability_class: workflow` or `expert`. The renderer decides which native primitive it lands as on each host.",
+    (3, "o"): "When debugging cross-host drift, the table is your first stop: confirm the rendered file is in the right host-native location and uses the expected event/key name.",
+    (3, "d"): "The translation table is the contract that lets the factory survive a vendor renaming a primitive — only the renderer changes, never the authoring surface.",
+    (4, "c"): "You can ignore the deny-list details. The point: there's a short list of obviously bad commands the factory refuses on your behalf, on every host, before you can shoot yourself in the foot.",
+    (4, "b"): "Extending the guardian: edit `skills/global/telemetry-guardian/guardian.py` to add a deny-list entry, then re-sync. Keep the additions narrow — the seatbelt is intentionally dumb.",
+    (4, "o"): "For team rollout, document the bypass mechanism (`AGENT_FORGE_GUARDIAN=off`) and the log location (`~/.agent-forge/guardian.log`) so on-call can audit any bypass after the fact.",
+    (4, "d"): "Procurement framing: the guardian is a deterministic policy gate, not an ML classifier. Its deny list is auditable and reversible. Bypass is logged. That posture passes most security reviews.",
+    (5, "c"): "The shared brain is just one Markdown file. You can open it in any editor and read what the AI tools have learned about your project.",
+    (5, "b"): "When you want an agent to remember something across sessions, append it to `<project>/MEMORY.md` via the `memory-archivist` skill — never edit the anchor lines by hand.",
+    (5, "o"): "Bridge lifecycle hooks (`session_start` outbound, `stop` inbound) keep canonical `MEMORY.md` in sync with each host's native or sidecar memory target. The triad validator records `memory_pass` and `bridge_pass` as separate gates.",
+    (5, "d"): "The shared brain is opt-in append-first with a secrets-deny filter at write time. That's the property that lets a procurement reviewer say 'memory across vendors, with controls.'",
+    (6, "c"): "If everything is green, you can stop here. You've seen what this thing is and why it exists. Come back when you have a project to start on.",
+    (6, "b"): "Your next step: pick a project to extend, run `bootstrap-project.sh --name <name>`, and write your first skill. The `skill-author` skill is the meta-skill that helps you author skills correctly.",
+    (6, "o"): "Bake `verify-agent-forge.py` and `validate-triad-runtime.py --project <name>` into your team's CI before letting anyone merge canonical changes.",
+    (6, "d"): "The validation pyramid (structural verifier + triad runtime + optional invocation probe) is what you'd cite in a procurement review as the cross-vendor honest-broker proof.",
+}
+
+
+def role_tail(section_num: int, role: str) -> None:
+    """Print the role-tuned closing paragraph for a section, if any."""
+    if not role or role == "s":
+        return
+    text = ROLE_TAILS.get((section_num, role), "")
+    if not text:
+        return
+    print(dim(text))
+    print()
+
+
+def section_1_what_is_this(level: str, role: str = "") -> None:
+    section_header(1, 6, "What is this folder?")
     print(adapt(
         level,
         ("This folder is a 'governance factory.' It holds canonical definitions for skills,\n"
@@ -352,10 +412,11 @@ def section_1_what_is_this(level: str) -> None:
         except Exception:
             print(dim("Live proof: registry.json present but unreadable."))
     print()
+    role_tail(1, role)
 
 
-def section_2_one_source(level: str) -> None:
-    section_header(2, 5, "Three tools, one source of truth")
+def section_2_one_source(level: str, role: str = "") -> None:
+    section_header(2, 6, "Three tools, one source of truth")
     print(adapt(
         level,
         ("The thing that makes this factory worth using is fan-out. You edit one canonical\n"
@@ -381,10 +442,67 @@ def section_2_one_source(level: str) -> None:
                 count = sum(1 for _ in d.rglob("*") if _.is_file() or _.is_symlink())
                 print(dim(f"  {sub}/  ({count} entries)"))
     print()
+    print(adapt(
+        level,
+        ("One more thing about those four directory names. The factory writes to four "
+         "different host-config folders: `.claude/` (Claude), `.codex/` (Codex's modern "
+         "surface), `.agents/` (Codex's legacy skills convention, still in use), and "
+         "`.gemini/` (Gemini). One canonical source, four output shapes. If you ever see "
+         "drift between them, that's a bug — the triad runtime validator catches it before "
+         "it ships. Run `python3 skills/global/onboarding-guide/onboard.py explain host-dirs` "
+         "to see this written down."),
+        ("Four output dirs: `.claude/`, `.codex/`, `.agents/` (Codex legacy), `.gemini/`. "
+         "Drift between them = bug; triad validator gates it."),
+    ))
+    print()
+    role_tail(2, role)
 
 
-def section_3_seatbelt(level: str) -> None:
-    section_header(3, 5, "The seatbelt")
+def section_3_translation(level: str, role: str = "") -> None:
+    section_header(3, 6, "Three vendors, three names for the same thing")
+    print(adapt(
+        level,
+        ("Each of the three host CLIs ships its own terminology for the same primitives. "
+         "A 'skill' in Codex is a 'command' or a 'subagent' in Claude depending on its "
+         "class. A 'hook' fires on `PreToolUse` on Claude and Codex but on `BeforeTool` on "
+         "Gemini. The factory keeps one canonical name and translates outward, so you "
+         "rarely need to memorize the table — but seeing it once builds the mental map."),
+        ("Canonical concept → host-native name table. The factory does the translation; "
+         "this is for orientation."),
+    ))
+    print()
+    rows = [
+        ("Concept",               "Claude",           "Codex",            "Gemini"),
+        ("Skill (workflow)",      "command",          "skill",            "command"),
+        ("Skill (expert)",        "subagent",         "(none native)",    "subagent"),
+        ("Slash command syntax",  "/name",            "(no slash)",       "/name"),
+        ("Hook event pre-tool",   "PreToolUse",       "PreToolUse",       "BeforeTool"),
+        ("Hook event stop",       "Stop",             "Stop",             "SessionEnd"),
+        ("MCP config file",       ".mcp.json",        ".codex/cfg.toml",  ".gemini/settings.json"),
+        ("Memory native target",  "~/.claude/.../",   "(none)",           "(none)"),
+        ("Memory sidecar",        "(n/a, native)",    ".codex/memory/",   ".gemini/memory/"),
+        ("Boot file",             "CLAUDE.md",        "AGENTS.md",        "GEMINI.md"),
+    ]
+    widths = [max(len(row[i]) for row in rows) for i in range(4)]
+    for i, row in enumerate(rows):
+        line = "  ".join(row[c].ljust(widths[c]) for c in range(4))
+        if i == 0:
+            print(bold(line))
+            print(dim("  ".join("-" * widths[c] for c in range(4))))
+        else:
+            print(line)
+    print()
+    print(dim(
+        "Three vendors shipped similar primitives with their own names. The factory keeps\n"
+        "one source of truth, then renders out to each host's idiom. The table is for\n"
+        "orientation, not memorization — the factory does the translation."
+    ))
+    print()
+    role_tail(3, role)
+
+
+def section_4_seatbelt(level: str, role: str = "") -> None:
+    section_header(4, 6, "The seatbelt")
     print(adapt(
         level,
         ("Coding agents will run shell commands for you. That power is the point. It is also\n"
@@ -413,10 +531,11 @@ def section_3_seatbelt(level: str) -> None:
         except Exception:
             pass
     print()
+    role_tail(4, role)
 
 
-def section_4_shared_brain(level: str) -> None:
-    section_header(4, 5, "The shared brain")
+def section_5_shared_brain(level: str, role: str = "") -> None:
+    section_header(5, 6, "The shared brain")
     print(adapt(
         level,
         ("Each AI tool has its own way to remember things across sessions. Without coordination,\n"
@@ -446,10 +565,11 @@ def section_4_shared_brain(level: str) -> None:
             except Exception:
                 pass
     print()
+    role_tail(5, role)
 
 
-def section_5_what_now(level: str, probes: list[tuple[str, str, str, str]]) -> None:
-    section_header(5, 5, "What to do next")
+def section_6_what_now(level: str, probes: list[tuple[str, str, str, str]], role: str = "") -> None:
+    section_header(6, 6, "What to do next")
     reds = [(name, fix) for name, v, _, fix in probes if v == "red" and fix]
     yellows = [(name, fix) for name, v, _, fix in probes if v == "yellow" and fix]
 
@@ -510,9 +630,11 @@ def section_5_what_now(level: str, probes: list[tuple[str, str, str, str]]) -> N
         print(dim(f"  cat {FACTORY_ROOT}/README.md"))
         print(dim(f"  cat {FACTORY_ROOT}/docs/HANDOFF.md  # what just shipped"))
         print(dim(f"  cat {FACTORY_ROOT}/docs/SPRINT_BACKLOG.md  # what's coming next"))
+    print()
+    role_tail(6, role)
 
 
-def write_audit_log(level: str, sections_completed: int) -> None:
+def write_audit_log(level: str, sections_completed: int, role: str = "") -> None:
     """Best-effort audit log under the first governed project, if one exists."""
     projects = [p for p in _governed_projects() if (PROJECTS_ROOT / p["root"]).exists()]
     if not projects:
@@ -524,6 +646,7 @@ def write_audit_log(level: str, sections_completed: int) -> None:
     record = {
         "ts": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "experience_level": level,
+        "role": role,
         "sections_completed": sections_completed,
     }
     try:
@@ -568,7 +691,7 @@ def cmd_quick_summary(probes: list[tuple[str, str, str, str]]) -> None:
     for name, verdict, summary, _fix in probes:
         print(f"  {verdict_glyph(verdict)} {name}: {summary}")
     print()
-    section_5_what_now("s", probes)
+    section_6_what_now("s", probes, role="s")
     print()
     print(dim(f"For the full guided tour: python3 {Path(__file__).resolve()} tour"))
 
@@ -579,20 +702,22 @@ def cmd_tour(args: argparse.Namespace) -> int:
         cmd_quick_summary(probes)
         return 0
     print(bold("Agent Forge Onboarding Guide"))
-    print(dim("Five short sections. Plain English. Read-only — nothing you do here will modify your repo."))
+    print(dim("Six short sections. Plain English. Read-only — nothing you do here will modify your repo."))
     print()
     print(dim(f"Factory root: {FACTORY_ROOT}"))
     level = ask_experience()
+    role = ask_role()
 
     sections_completed = 0
     try:
-        section_1_what_is_this(level); sections_completed += 1
-        section_2_one_source(level);   sections_completed += 1
-        section_3_seatbelt(level);     sections_completed += 1
-        section_4_shared_brain(level); sections_completed += 1
-        section_5_what_now(level, probes); sections_completed += 1
+        section_1_what_is_this(level, role);   sections_completed += 1
+        section_2_one_source(level, role);     sections_completed += 1
+        section_3_translation(level, role);    sections_completed += 1
+        section_4_seatbelt(level, role);       sections_completed += 1
+        section_5_shared_brain(level, role);   sections_completed += 1
+        section_6_what_now(level, probes, role); sections_completed += 1
     finally:
-        write_audit_log(level, sections_completed)
+        write_audit_log(level, sections_completed, role)
 
     print()
     hr()
@@ -632,6 +757,70 @@ def cmd_check(_args: argparse.Namespace) -> int:
 # ---------------------------------------------------------------------------
 
 EXPLAINERS = {
+    "claude-cli": (
+        "Claude Code is Anthropic's coding-agent CLI. It loads `CLAUDE.md` boot files "
+        "hierarchically (current directory walking up), has a true machine-local auto-"
+        "memory at `~/.claude/projects/<encoded>/memory/MEMORY.md`, and exposes two kinds "
+        "of authored capabilities: slash commands invoked as `/name` and subagents invoked "
+        "as `@name`. Settings live at `~/.claude/settings.json` (user-global) and "
+        "`<project>/.claude/settings.json` (project-local, takes precedence). Permission "
+        "modes range from `default` (ask) to `bypassPermissions` (don't ask). "
+        "When to pick this host: when you want the deepest native primitive coverage and "
+        "the most polished memory story."
+    ),
+    "codex-cli": (
+        "OpenAI Codex is a coding-agent CLI with a strong default sandbox. On Linux it "
+        "uses bubblewrap (`bwrap`); on macOS it uses Seatbelt. There is no slash-command "
+        "convention — skills are invoked by name through delegation. The boot file is "
+        "`AGENTS.md` (walks up the directory tree like Claude's `CLAUDE.md`). Codex has "
+        "no native auto-memory, so Agent Forge bridges the canonical `MEMORY.md` to a "
+        "sidecar at `<project>/.codex/memory/AGENTS_MEMORY.md` and points Codex at it. "
+        "Settings live in `<project>/.codex/config.toml`. "
+        "When to pick this host: when you want the strongest default sandbox or when "
+        "you're on a network where Codex is the only allowed coding agent."
+    ),
+    "gemini-cli": (
+        "Gemini CLI is Google's coding-agent CLI. It loads `GEMINI.md` boot files "
+        "hierarchically and is vision-capable. Skills are delivered as TOML or Markdown "
+        "into `<project>/.gemini/commands/` and `<project>/.gemini/agents/`. Gemini "
+        "supports a subset of hook events — `permission_request` and `user_prompt_submit` "
+        "are not exposed, so the factory drops those records at render time and documents "
+        "the exclusion. Settings live in `<project>/.gemini/settings.json`. Like Codex, "
+        "Gemini has no native auto-memory; a sidecar at `<project>/.gemini/memory/"
+        "MEMORY.md` carries the bridge. "
+        "When to pick this host: when you need a vision-capable agent or want the most "
+        "cost-efficient non-trivial tier."
+    ),
+    "agent": (
+        "An agent is an autonomous something that can read, write, plan, call tools, "
+        "and remember between turns. In this factory, an agent is one of the three host "
+        "CLIs (Claude, Codex, or Gemini) running on your machine. A skill is what an "
+        "agent reads to know how to behave for a specific job. A subagent is an agent "
+        "dispatched by another agent to handle a focused task with its own fresh "
+        "context — useful when you want to keep the main agent's working memory clean "
+        "while a side task runs. The factory calls workflow-class skills 'commands' on "
+        "Claude/Gemini and 'skills' on Codex; it calls expert-class skills 'subagents' "
+        "on Claude/Gemini (Codex has no native expert-agent primitive)."
+    ),
+    "agent-team": (
+        "A team in this factory is a portable role contract. It lives at `teams/<name>."
+        "json` and says 'a research team has these roles, escalates like this, collapses "
+        "like this' — but it is a governance manifest, not a process the host runs. "
+        "Teams describe how a group of skills and agents would work together on a "
+        "complex job; the operator (you) decides whether to actually dispatch them. The "
+        "seeded teams (assessment, bootstrap, delivery, governance, improvement, "
+        "planning, research) carry `claude_mapping`, `codex_mapping`, and `gemini_mapping` "
+        "blocks that name the host-native primitives each team prefers."
+    ),
+    "host-dirs": (
+        "The factory writes to four different config directory names depending on the "
+        "host. Claude reads from `.claude/`. Codex reads from `.codex/` and also from "
+        "`.agents/` (a legacy Codex convention for skills, kept for back-compat). Gemini "
+        "reads from `.gemini/`. The factory keeps these in sync from one canonical "
+        "source, so if you ever see drift between them, that's a bug — not a feature. "
+        "The triad runtime validator (`validate-triad-runtime.py`) is the gate that "
+        "catches that drift before it ships."
+    ),
     "factory": (
         "The 'factory' is the `_agent_forge/` folder. It is a single source of truth that "
         "holds canonical definitions of skills, safety rules, shared memory sections, team "
