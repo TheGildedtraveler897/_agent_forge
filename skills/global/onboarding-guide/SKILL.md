@@ -33,26 +33,29 @@ The skill ships an executable Python helper at `onboard.py` next to this file. I
 
 ### `tour` (default)
 
-Interactive guided walkthrough. Six sections; each follows the same shape:
+**Paced, interactive walkthrough.** The tour reveals one beat at a time and asks `[Enter]` between beats. It does not dump multiple sections in one go. This is intentional — the design rule is *one screen, one beat, one question or pause.*
 
-1. **What it is** — one paragraph, plain English, jargon translated.
-2. **Why it exists** — one short paragraph naming the problem solved.
-3. **Live proof** — runs a command, shows the output, translates it.
-4. **What to do next** — explicit next command or "no action needed; this part is healthy".
-5. **Role-tuned closing paragraph** (when the operator picks a role) — one sentence per role addressing what this section means for a curious learner, a builder, an operator running a team rollout, or a decider evaluating adoption.
+Seven beats:
 
-The six sections:
-
-| # | Section | Concept introduced |
+| # | Beat | What happens |
 |---|---|---|
-| 1 | What is this folder? | The factory and its three host CLIs (Claude / Codex / Gemini). |
-| 2 | Three tools, one source of truth | The canonical-first → render-outward model, plus the four host-config directory names. |
-| 3 | Three vendors, three names | Cross-host translation table (skill → command/subagent, hook event aliases, MCP file types, memory native vs sidecar, boot files). |
-| 4 | The seatbelt | `telemetry-guardian` and the deny list. |
-| 5 | The shared brain | `MEMORY.md` cross-host state layer. |
-| 6 | What to do next | State-aware: diagnostic if broken, ready-task if green. |
+| 0 | Greet + experience prompt | One-screen intro; `prompt_choice` asks experience (yes-many / one / none / check-for-me). |
+| 1 | Role prompt | `prompt_choice` asks role (curious / builder / operator / decider). |
+| 2 | What is this folder? | One short paragraph naming the factory, plus the live skill count as proof. |
+| 3 | The translation table | First a one-screen tease ("three names for the same idea"), then on `[Enter]` the cross-host translation table renders. The table is the visual centerpiece. |
+| 4 | The seatbelt | `telemetry-guardian` and the deny list, plus the live guardian-events count. |
+| 5 | The shared brain | `MEMORY.md` cross-host state layer in three lines. |
+| 6 | Install gate | Detects which of `claude` / `codex` / `gemini` are on PATH. For any missing host CLI, offers per-vendor install hand-holding: 2-line description, docs URL, command, plus the offer to run `bootstrap-workstation.sh` for a one-shot install of all three. |
+| 7 | Role-tuned next action | One concrete next command tuned to the operator's role; goodbye. |
 
-The tour adapts to two operator signals. The first prompt asks experience level — have you used the three host CLIs before, yes / partially / no — which gates how much vocabulary translation is inserted into each section. The second prompt asks role — curious learner, builder, operator running a team rollout, or decider evaluating adoption — which appends one role-tuned paragraph at the end of each section. Both prompts have a "skip" option that returns the linear, role-blind tour.
+Each beat is small (about 10 lines of print before a pause or question). No beat dumps a wall of text; if a beat grows, split it.
+
+Flags:
+
+- `--quick` — skip the paced beats and print a 90-second non-interactive summary (bullets + probe verdicts + first red fix command). Used when an operator wants the gist.
+- `--no-pause` — run the full paced tour without waiting for `[Enter]`. Used by smoke tests and CI; not recommended for first-time operators.
+
+The audit log (`<project>/.forge_state/onboarding.log`, when a governed project is present) records the operator's chosen experience level, chosen role, and how many beats they completed.
 
 ### `check`
 
@@ -109,16 +112,27 @@ Exit codes:
 
 ## When to extend
 
-- **New section.** Each section is a function in `onboard.py` named `section_<n>_<topic>(level: str, role: str = "")`. Update the section numbering in `section_header()` calls and renumber the others (the renumbering is mechanical; keep section function names stable to avoid breaking `cmd_tour`). Add the new section's call site in `cmd_tour`. Add corresponding entries to `ROLE_TAILS` for each `(section_num, role)` pair the operator can reach. Keep it under ~80 lines including translations.
+- **New beat.** Each beat lives inline in `cmd_tour` as a clearly commented block ending in `pause(no_pause=no_pause)` or a `prompt_choice` call. Keep each beat under ~12 lines of `print()` before the pause. If a beat grows past that, split into two beats with their own pauses.
 - **New `explain` topic.** Add an entry to the `EXPLAINERS` dict in `onboard.py`. Place new entries alphabetically by key. One ~100–200 word string. Reference a specific file in the operator's repo state if possible. If the topic is a host-CLI variant, end with "When to pick this host: ..." so a new operator can choose.
 - **New diagnostic probe.** Add a function to the `PROBES` list. Each probe returns `(verdict, summary, fix_command)`. Verdicts are `"green"`, `"yellow"`, `"red"`.
-- **New host.** If a fourth host CLI is added in the future: add a row to the cross-host translation table in `section_3_translation`. Add a tier-0 explainer for it (e.g., `<host>-cli`). Add a corresponding column to the `_EVENT_ALIASES` map in `scripts/omni_factory.py`. The triad runtime validator extension is out of scope for this skill but tracked in `docs/HOST_INTEGRATIONS.md`.
+- **New host.** If a fourth host CLI is added in the future: add a row to the table inside `_print_translation_table` and a column to the `CLI_INFO` dict so the install gate covers it. Add a tier-0 explainer (`<host>-cli`). Add a corresponding column to the `_EVENT_ALIASES` map in `scripts/omni_factory.py`. The triad runtime validator extension is out of scope for this skill but tracked in `docs/HOST_INTEGRATIONS.md`.
+
+### Helpers available for new beats
+
+- `pause(prompt, no_pause)` — wait for `[Enter]`. Non-TTY safe (returns immediately when stdin is piped); `--no-pause` flag also bypasses.
+- `prompt_choice(question, options, default)` — numbered choice prompt. Options is a list of `(key, label, description)` tuples. Returns the chosen key. Invalid input returns the default.
+- `ask_yn(question, default)` — yes/no prompt. Default is bool; returns bool.
+- `_detect_cli_state()` — returns `(present, missing)` for the three host CLIs.
+- `_count_skills()` — reads `registry.json` and returns the skill count for live-proof lines.
+- `_print_translation_table()` — renders the cross-host name table with aligned columns.
+- `install_gate(no_pause)` — the per-CLI install hand-holding flow.
 
 ### Acceptance criteria for maintainers
 
-- The tour length, when read aloud at a normal pace, stays under ~10 minutes. If a contributor adds a section that pushes total length past that, split into two skills or move content into an `explain` topic.
+- The tour reads naturally aloud at a normal pace in under 10 minutes including pauses. If a contributor adds a beat that pushes total length past that, split into two skills or move content into an `explain` topic.
 - Every agentic term used in the tour appears either in `EXPLAINERS` or in the on-screen jargon-translation aside. If a new term shows up untranslated, that is a regression.
-- Cross-host names (PreToolUse / BeforeTool, MCP config file types, etc.) must match the canonical → native mapping in `scripts/omni_factory.py:_EVENT_ALIASES` and in `docs/HOST_INTEGRATIONS.md`. The translation table is documentation, not authoring surface; if it drifts from the code, the code is right and the table needs updating.
+- Cross-host names (PreToolUse / BeforeTool, MCP config file types, etc.) in `_print_translation_table` must match the canonical → native mapping in `scripts/omni_factory.py:_EVENT_ALIASES` and in `docs/HOST_INTEGRATIONS.md`. If the table drifts from the code, the code is right and the table needs updating.
+- No beat may exceed ~12 lines of `print()` output before a `pause` or `prompt_choice` call. Walls of text are the failure mode this design exists to prevent.
 
 When extending, re-read the **Tone discipline** section above first. Tone drift is the most common way this skill degrades in maintenance.
 
