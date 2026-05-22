@@ -20,10 +20,9 @@
       ],
       "transport": {
         "type": "stdio",
-        "command": "sh",
+        "command": "python3",
         "args": [
-          "-c",
-          "exec python3 \"$HOME/Projects/_agent_forge/scripts/mcp/forge_factory_server.py\""
+          "${HOME}/Projects/_agent_forge/scripts/mcp/forge_factory_server.py"
         ]
       },
       "auth": "none",
