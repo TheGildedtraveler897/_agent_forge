@@ -19,3 +19,4 @@ Each entry is a single line under `## Entries`:
 - 2026-05-22 feat-ship-prep — Plan Persistence Layer for Agent Forge (8 tasks, created 2026-05-22)
 - 2026-05-22 feat-onboarding-overhaul — Onboarding Guide Overhaul (Track H) (8 tasks, created 2026-05-22)
 - 2026-05-22 feat-windows-vm-readiness — Windows VM Deploy-Readiness Test (Track I) (6 tasks, created 2026-05-22)
+- 2026-05-22 feat-onboarding-interactive — Onboarding redesign: paced, interactive, install-aware (Track J) (5 tasks, created 2026-05-22)
