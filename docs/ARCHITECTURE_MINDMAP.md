@@ -193,7 +193,7 @@
 ### Branch: `feat/ship-prep`
 - **Target:** Clean COI-compliant production bundle to National Research Council Canada
 - **Commits Shipped (Tracks A–E):**
-  - **Track A** (`dc3f893`) — Scrub personal content (ZorroForge, jarvis, RoboNaaz, homelab, etc.)
+  - **Track A** (`dc3f893`) — Scrub personal-project content for clean production ship
   - **Track B** (`59e2953`) — Port hook helpers to Python (Windows-native execution, no bash)
   - **Track C** (`43c22be`) — `factory-export.sh --mode onboarding` for clean bundle export
   - **Track D** (`05ed429`) — Cross-platform deploy entry points + MacPorts-only macOS polish
