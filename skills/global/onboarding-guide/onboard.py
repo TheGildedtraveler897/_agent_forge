@@ -302,336 +302,167 @@ def run_probes() -> list[tuple[str, str, str, str]]:
 # Tour
 # ---------------------------------------------------------------------------
 
-def ask_experience() -> str:
-    print()
-    print(bold("Quick question before we start."))
-    print("Have you used Claude Code, OpenAI Codex, or Gemini CLI before?")
-    print("  y  yes, all three regularly")
-    print("  p  partially — one or two of them")
-    print("  n  no, this is new")
-    print("  s  skip — just run the tour without adapting")
-    print()
+def pause(prompt: str = "Press [Enter] to continue", no_pause: bool = False) -> None:
+    """Wait for the operator to press Enter. Skipped on non-TTY or when --no-pause."""
+    if no_pause or not _is_tty():
+        return
     try:
-        ans = input("Answer [y/p/n/s, default n]: ").strip().lower()
+        input(dim(f"  {prompt} ") + dim("→ "))
+    except EOFError:
+        pass
+
+
+def prompt_choice(question: str, options: list[tuple[str, str, str]], default: str) -> str:
+    """Numbered choice prompt. options is a list of (key, label, description) tuples.
+
+    Returns the chosen key. Non-TTY input returns the default; invalid input
+    returns the default. Bracket the default key with a star in the prompt.
+    """
+    print()
+    print(bold(question))
+    print()
+    for key, label, desc in options:
+        marker = "*" if key == default else " "
+        print(f"  [{key}]{marker} {label}")
+        if desc:
+            print(f"      {dim(desc)}")
+    print()
+    keys = "/".join(o[0] for o in options)
+    try:
+        ans = input(f"  Your choice [{keys}, default {default}]: ").strip().lower()
     except EOFError:
         ans = ""
-    if ans not in ("y", "p", "n", "s"):
-        ans = "n"
+    valid = {o[0] for o in options}
+    if ans not in valid:
+        ans = default
     return ans
 
 
-def adapt(level: str, full: str, brief: str) -> str:
-    """Return `brief` for experienced operators, `full` for new ones."""
-    return brief if level in ("y", "p") else full
-
-
-def ask_role() -> str:
-    print()
-    print(bold("One more quick question."))
-    print("Which best describes why you're here today?")
-    print("  c  curious — I want to understand what this is")
-    print("  b  builder — I want to extend or contribute")
-    print("  o  operator — I'm setting up the factory for a team")
-    print("  d  decider — I'm evaluating whether to adopt this")
-    print("  s  skip — just run the tour without role tuning")
-    print()
+def ask_yn(question: str, default: bool = True) -> bool:
+    label = "Y/n" if default else "y/N"
     try:
-        ans = input("Answer [c/b/o/d/s, default c]: ").strip().lower()
+        ans = input(f"  {question} [{label}]: ").strip().lower()
     except EOFError:
         ans = ""
-    if ans not in ("c", "b", "o", "d", "s"):
-        ans = "c"
-    return ans
+    if not ans:
+        return default
+    return ans.startswith("y")
 
 
-# Role-tuned closing paragraphs. One per (section_number, role) pair.
-# Role 's' (skip) returns empty; sections render no closing paragraph for skippers.
-ROLE_TAILS: dict[tuple[int, str], str] = {
-    (1, "c"): "If you remember one thing from this section: it's a factory. You feed it definitions, it spits out three different configurations from one source.",
-    (1, "b"): "If you'll extend this: every canonical file under `skills/`, `policies/`, `teams/`, or `global-mcp.json` is hand-edited; everything under `<project>/.claude/`, `.codex/`, `.gemini/` is generated. Don't hand-edit generated files — they'll be overwritten on next sync.",
-    (1, "o"): "For team rollout: deploy this factory once per workstation via `scripts/deploy-and-bootstrap.sh`. Govern your team's projects by adding entries to `projects.json` and running `scripts/bootstrap-project.sh --name <name>` for each.",
-    (1, "d"): "Adoption decision frame: the factory's value is one-author/three-deliver. Cost is one Python engine + a handful of skills/ and policies/ files. No long-running service; no per-user backend.",
-    (2, "c"): "The takeaway: you write one file, and it shows up correctly in all three AI tools without you copying anything.",
-    (2, "b"): "Authoring rhythm: edit canonical (`skills/global/<name>/SKILL.md`), run `python3 scripts/omni_factory.py sync-{claude,codex,gemini} --project <name>` for the host you want to test against, then run `validate-triad-runtime.py` to prove all three saw it.",
-    (2, "o"): "Operationally, the three syncs are independent. You can deploy a Claude-only team today and add Codex/Gemini coverage later without re-authoring anything.",
-    (2, "d"): "Architectural diligence: the canonical → renderer → host-native chain means any new host can be added by writing one renderer. The factory is not Claude-coupled.",
-    (3, "c"): "You don't have to memorize this. If a coworker says 'Claude calls it a slash command' and you've seen Codex call it a skill, you'll know they mean the same thing.",
-    (3, "b"): "When you author a new skill, you write one `SKILL.md` with `capability_class: workflow` or `expert`. The renderer decides which native primitive it lands as on each host.",
-    (3, "o"): "When debugging cross-host drift, the table is your first stop: confirm the rendered file is in the right host-native location and uses the expected event/key name.",
-    (3, "d"): "The translation table is the contract that lets the factory survive a vendor renaming a primitive — only the renderer changes, never the authoring surface.",
-    (4, "c"): "You can ignore the deny-list details. The point: there's a short list of obviously bad commands the factory refuses on your behalf, on every host, before you can shoot yourself in the foot.",
-    (4, "b"): "Extending the guardian: edit `skills/global/telemetry-guardian/guardian.py` to add a deny-list entry, then re-sync. Keep the additions narrow — the seatbelt is intentionally dumb.",
-    (4, "o"): "For team rollout, document the bypass mechanism (`AGENT_FORGE_GUARDIAN=off`) and the log location (`~/.agent-forge/guardian.log`) so on-call can audit any bypass after the fact.",
-    (4, "d"): "Procurement framing: the guardian is a deterministic policy gate, not an ML classifier. Its deny list is auditable and reversible. Bypass is logged. That posture passes most security reviews.",
-    (5, "c"): "The shared brain is just one Markdown file. You can open it in any editor and read what the AI tools have learned about your project.",
-    (5, "b"): "When you want an agent to remember something across sessions, append it to `<project>/MEMORY.md` via the `memory-archivist` skill — never edit the anchor lines by hand.",
-    (5, "o"): "Bridge lifecycle hooks (`session_start` outbound, `stop` inbound) keep canonical `MEMORY.md` in sync with each host's native or sidecar memory target. The triad validator records `memory_pass` and `bridge_pass` as separate gates.",
-    (5, "d"): "The shared brain is opt-in append-first with a secrets-deny filter at write time. That's the property that lets a procurement reviewer say 'memory across vendors, with controls.'",
-    (6, "c"): "If everything is green, you can stop here. You've seen what this thing is and why it exists. Come back when you have a project to start on.",
-    (6, "b"): "Your next step: pick a project to extend, run `bootstrap-project.sh --name <name>`, and write your first skill. The `skill-author` skill is the meta-skill that helps you author skills correctly.",
-    (6, "o"): "Bake `verify-agent-forge.py` and `validate-triad-runtime.py --project <name>` into your team's CI before letting anyone merge canonical changes.",
-    (6, "d"): "The validation pyramid (structural verifier + triad runtime + optional invocation probe) is what you'd cite in a procurement review as the cross-vendor honest-broker proof.",
-}
+def _detect_cli_state() -> tuple[list[str], list[str]]:
+    """Return (present, missing) for the three host CLIs."""
+    present, missing = [], []
+    for cli in ("claude", "codex", "gemini"):
+        (present if shutil.which(cli) else missing).append(cli)
+    return present, missing
 
 
-def role_tail(section_num: int, role: str) -> None:
-    """Print the role-tuned closing paragraph for a section, if any."""
-    if not role or role == "s":
-        return
-    text = ROLE_TAILS.get((section_num, role), "")
-    if not text:
-        return
-    print(dim(text))
-    print()
+def _count_skills() -> int:
+    if not REGISTRY_PATH.exists():
+        return 0
+    try:
+        return len(json.loads(REGISTRY_PATH.read_text()).get("skills", []))
+    except Exception:
+        return 0
 
 
-def section_1_what_is_this(level: str, role: str = "") -> None:
-    section_header(1, 6, "What is this folder?")
-    print(adapt(
-        level,
-        ("This folder is a 'governance factory.' It holds canonical definitions for skills,\n"
-         "safety rules, and shared memory, and generates the matching configuration for three\n"
-         "AI coding command-line tools (Claude Code, OpenAI Codex, and Gemini CLI). You write\n"
-         "a skill or a safety rule once, here, and the factory translates it into each tool's\n"
-         "native shape.\n"
-         "\n"
-         "If you've never used those three tools: each one is a CLI you point at a project\n"
-         "and ask in plain English to do work — write tests, fix bugs, refactor a function.\n"
-         "Three different vendors, three slightly different ways of configuring the same thing.\n"
-         "This factory is the layer that makes them consistent."),
-        ("Canonical-first factory. One source of truth (`skills/`, `policies/`, `teams/`,\n"
-         "`projects.json`, `global-mcp.json`); generates Claude / Codex / Gemini surfaces.\n"
-         "`omni_factory.py` is the engine."),
-    ))
-    print()
-    if REGISTRY_PATH.exists():
-        try:
-            r = json.loads(REGISTRY_PATH.read_text())
-            n = len(r.get("skills", []))
-            print(dim(f"Live proof: {REGISTRY_PATH.name} currently registers {n} skills."))
-        except Exception:
-            print(dim("Live proof: registry.json present but unreadable."))
-    print()
-    role_tail(1, role)
-
-
-def section_2_one_source(level: str, role: str = "") -> None:
-    section_header(2, 6, "Three tools, one source of truth")
-    print(adapt(
-        level,
-        ("The thing that makes this factory worth using is fan-out. You edit one canonical\n"
-         "file in `_agent_forge/`. The engine reads it and writes three different host-shaped\n"
-         "files — one for Claude, one for Codex, one for Gemini. No copy-paste; no drift.\n"
-         "\n"
-         "Concretely: a skill called `my-skill` lives at `skills/global/my-skill/SKILL.md`.\n"
-         "When you run `python3 scripts/omni_factory.py sync-claude --project foo`, the engine\n"
-         "writes `foo/.claude/skills/my-skill` (a symlink Claude can see). `sync-codex` writes\n"
-         "`foo/.agents/skills/my-skill`. `sync-gemini` writes `foo/.gemini/skills/my-skill`.\n"
-         "Same skill, three places, generated from one source."),
-        ("Author canonical → render outward. Generated surfaces under `<project>/.claude/`,\n"
-         "`<project>/.codex/`, `<project>/.gemini/` are never hand-edited."),
-    ))
-    print()
-    projects = [p for p in _governed_projects() if (PROJECTS_ROOT / p["root"]).exists()]
-    if projects:
-        sample = PROJECTS_ROOT / projects[0]["root"]
-        print(dim(f"Live proof: under {sample.name}, the factory has generated:"))
-        for sub in (".claude", ".codex", ".agents", ".gemini"):
-            d = sample / sub
-            if d.exists():
-                count = sum(1 for _ in d.rglob("*") if _.is_file() or _.is_symlink())
-                print(dim(f"  {sub}/  ({count} entries)"))
-    print()
-    print(adapt(
-        level,
-        ("One more thing about those four directory names. The factory writes to four "
-         "different host-config folders: `.claude/` (Claude), `.codex/` (Codex's modern "
-         "surface), `.agents/` (Codex's legacy skills convention, still in use), and "
-         "`.gemini/` (Gemini). One canonical source, four output shapes. If you ever see "
-         "drift between them, that's a bug — the triad runtime validator catches it before "
-         "it ships. Run `python3 skills/global/onboarding-guide/onboard.py explain host-dirs` "
-         "to see this written down."),
-        ("Four output dirs: `.claude/`, `.codex/`, `.agents/` (Codex legacy), `.gemini/`. "
-         "Drift between them = bug; triad validator gates it."),
-    ))
-    print()
-    role_tail(2, role)
-
-
-def section_3_translation(level: str, role: str = "") -> None:
-    section_header(3, 6, "Three vendors, three names for the same thing")
-    print(adapt(
-        level,
-        ("Each of the three host CLIs ships its own terminology for the same primitives. "
-         "A 'skill' in Codex is a 'command' or a 'subagent' in Claude depending on its "
-         "class. A 'hook' fires on `PreToolUse` on Claude and Codex but on `BeforeTool` on "
-         "Gemini. The factory keeps one canonical name and translates outward, so you "
-         "rarely need to memorize the table — but seeing it once builds the mental map."),
-        ("Canonical concept → host-native name table. The factory does the translation; "
-         "this is for orientation."),
-    ))
-    print()
+def _print_translation_table() -> None:
     rows = [
-        ("Concept",               "Claude",           "Codex",            "Gemini"),
-        ("Skill (workflow)",      "command",          "skill",            "command"),
-        ("Skill (expert)",        "subagent",         "(none native)",    "subagent"),
-        ("Slash command syntax",  "/name",            "(no slash)",       "/name"),
-        ("Hook event pre-tool",   "PreToolUse",       "PreToolUse",       "BeforeTool"),
-        ("Hook event stop",       "Stop",             "Stop",             "SessionEnd"),
-        ("MCP config file",       ".mcp.json",        ".codex/cfg.toml",  ".gemini/settings.json"),
-        ("Memory native target",  "~/.claude/.../",   "(none)",           "(none)"),
-        ("Memory sidecar",        "(n/a, native)",    ".codex/memory/",   ".gemini/memory/"),
-        ("Boot file",             "CLAUDE.md",        "AGENTS.md",        "GEMINI.md"),
+        ("Concept",         "Claude",     "Codex",          "Gemini"),
+        ("Workflow skill",  "command",    "skill",          "command"),
+        ("Expert skill",    "subagent",   "(none native)",  "subagent"),
+        ("Slash syntax",    "/name",      "(no slash)",     "/name"),
+        ("Pre-tool hook",   "PreToolUse", "PreToolUse",     "BeforeTool"),
+        ("Stop event",      "Stop",       "Stop",           "SessionEnd"),
+        ("MCP config",      ".mcp.json",  "config.toml",    "settings.json"),
+        ("Memory target",   "native",     "sidecar",        "sidecar"),
+        ("Boot file",       "CLAUDE.md",  "AGENTS.md",      "GEMINI.md"),
     ]
     widths = [max(len(row[i]) for row in rows) for i in range(4)]
     for i, row in enumerate(rows):
-        line = "  ".join(row[c].ljust(widths[c]) for c in range(4))
+        line = "  " + "  ".join(row[c].ljust(widths[c]) for c in range(4))
         if i == 0:
             print(bold(line))
-            print(dim("  ".join("-" * widths[c] for c in range(4))))
+            print("  " + "  ".join("-" * widths[c] for c in range(4)))
         else:
             print(line)
+
+
+CLI_INFO: dict[str, dict[str, str]] = {
+    "claude": {
+        "vendor": "Anthropic",
+        "tagline": "Best memory story; native slash commands and subagents.",
+        "url": "https://docs.anthropic.com/claude/docs/claude-code",
+        "command": "npm install -g @anthropic-ai/claude-cli  # or follow the docs",
+    },
+    "codex": {
+        "vendor": "OpenAI",
+        "tagline": "Strongest default sandbox (bwrap on Linux, Seatbelt on macOS).",
+        "url": "https://platform.openai.com/docs/codex",
+        "command": "Follow the docs link — install method varies by platform.",
+    },
+    "gemini": {
+        "vendor": "Google",
+        "tagline": "Vision-capable; cheapest non-trivial tier.",
+        "url": "https://ai.google.dev/gemini-api/docs/cli",
+        "command": "npm install -g @google/gemini-cli  # or follow the docs",
+    },
+}
+
+
+def install_gate(no_pause: bool = False) -> None:
+    """Detect missing host CLIs and offer per-CLI install hand-holding."""
+    present, missing = _detect_cli_state()
     print()
-    print(dim(
-        "Three vendors shipped similar primitives with their own names. The factory keeps\n"
-        "one source of truth, then renders out to each host's idiom. The table is for\n"
-        "orientation, not memorization — the factory does the translation."
-    ))
+    print(bold("◆ Install check"))
     print()
-    role_tail(3, role)
-
-
-def section_4_seatbelt(level: str, role: str = "") -> None:
-    section_header(4, 6, "The seatbelt")
-    print(adapt(
-        level,
-        ("Coding agents will run shell commands for you. That power is the point. It is also\n"
-         "the risk: an over-eager agent can run `git push --force origin main` or `rm -rf $HOME`\n"
-         "if you don't have a check in place.\n"
-         "\n"
-         "The factory ships one such check: `telemetry-guardian`. It is a script that runs\n"
-         "before every shell command on all three host CLIs (this is what 'a hook' means —\n"
-         "a script that runs before or after a tool call). The guardian reads the command,\n"
-         "matches it against a short list of known-dangerous patterns, and either lets it\n"
-         "through or refuses.\n"
-         "\n"
-         "Currently blocked: `--no-verify`, `--no-gpg-sign`, force-push to protected branches,\n"
-         "`git reset --hard <ref>`, wildcard home/root deletion, unscoped `terraform destroy`,\n"
-         "whole-disk `dd`, recursive 777. The seatbelt is intentionally dumb — predictability\n"
-         "beats sophistication for safety gates."),
-        ("Pre-tool deny list shared across all three hosts via `policies/hooks.json`. Bypass\n"
-         "with `AGENT_FORGE_GUARDIAN=off`; every bypass is logged to `~/.agent-forge/guardian.log`."),
-    ))
-    print()
-    log = Path.home() / ".agent-forge" / "guardian.log"
-    if log.exists():
-        try:
-            count = sum(1 for _ in log.open())
-            print(dim(f"Live proof: ~/.agent-forge/guardian.log has {count} recorded events."))
-        except Exception:
-            pass
-    print()
-    role_tail(4, role)
-
-
-def section_5_shared_brain(level: str, role: str = "") -> None:
-    section_header(5, 6, "The shared brain")
-    print(adapt(
-        level,
-        ("Each AI tool has its own way to remember things across sessions. Without coordination,\n"
-         "what Claude figures out today is invisible to Codex tomorrow.\n"
-         "\n"
-         "The factory adds one cross-host file per project: `MEMORY.md` at the project root.\n"
-         "All three host CLIs read it. Five sections: build commands, project quirks, active\n"
-         "tasks, recent decisions, known failures. Entries are timestamped and tagged with\n"
-         "which host wrote them.\n"
-         "\n"
-         "Append-first: new entries go at the end; nothing silently overwrites prior entries.\n"
-         "Secrets are denied at write time (the writer rejects API keys, private-key blocks,\n"
-         "and credential-shaped strings)."),
-        ("Per-project canonical state at `<project>/MEMORY.md`. Sections defined in\n"
-         "`policies/memory.json`. Writer is `skills/global/memory-archivist/archivist.py`\n"
-         "with append/validate/summary subcommands."),
-    ))
-    print()
-    projects = [p for p in _governed_projects() if (PROJECTS_ROOT / p["root"]).exists()]
-    if projects:
-        mem = PROJECTS_ROOT / projects[0]["root"] / "MEMORY.md"
-        if mem.exists():
-            try:
-                size = mem.stat().st_size
-                lines = sum(1 for _ in mem.open())
-                print(dim(f"Live proof: {projects[0]['name']}/MEMORY.md exists ({size} bytes, {lines} lines)."))
-            except Exception:
-                pass
-    print()
-    role_tail(5, role)
-
-
-def section_6_what_now(level: str, probes: list[tuple[str, str, str, str]], role: str = "") -> None:
-    section_header(6, 6, "What to do next")
-    reds = [(name, fix) for name, v, _, fix in probes if v == "red" and fix]
-    yellows = [(name, fix) for name, v, _, fix in probes if v == "yellow" and fix]
-
-    if reds:
-        print("Some checks are RED. Fix the first red item before proceeding:")
-        print()
-        for name, fix in reds:
-            print(f"  - {bold(name)}")
-            print(f"    {fix}")
-        print()
-        print("Run this skill in `check` mode after each fix to re-verify:")
-        print(dim(f"  python3 {Path(__file__).resolve()} check"))
-    elif yellows:
-        print("Everything critical is GREEN. Some checks are yellow — usually optional.")
-        print()
-        for name, fix in yellows:
-            print(f"  - {bold(name)}")
-            print(f"    {fix}")
-        print()
-        print("If you want to clear the yellows, run those commands. Otherwise, you're ready.")
-    else:
-        print(green("Everything is GREEN. You're ready to use the factory."))
-        print()
-        print("Pick a governed project to start in:")
-        print()
-        projects = [p for p in _governed_projects() if (PROJECTS_ROOT / p["root"]).exists()]
-        if projects:
-            sample = projects[0]["name"]
-            sample_root = PROJECTS_ROOT / projects[0]["root"]
-            print(dim(f"  cd {sample_root}"))
+    for cli in ("claude", "codex", "gemini"):
+        if cli in present:
+            print(f"  {green('✓')} {cli} is on PATH")
         else:
-            sample = "<your-project>"
-            print(dim(f"  cd ~/Projects/<your-project>"))
-        print()
-        print("Then run one of these in a real terminal — pick the host you have authed.")
-        print("These are low-risk reads; none of them modify your repo:")
-        print()
-        # Per-host "Try this" — only show hosts on PATH.
-        if shutil.which("claude") is not None:
-            print(bold("  Claude Code"))
-            print(dim("    claude --version"))
-            print(dim('    claude -p "List the skills this project has loaded." --output-format text'))
-            print()
-        if shutil.which("codex") is not None:
-            print(bold("  OpenAI Codex"))
-            print(dim("    codex --version"))
-            print(dim("    codex /mcp verbose"))
-            print()
-        if shutil.which("gemini") is not None:
-            print(bold("  Gemini CLI"))
-            print(dim("    gemini --version"))
-            print(dim("    gemini /memory show"))
-            print()
-        if not any(shutil.which(c) for c in ("claude", "codex", "gemini")):
-            print(dim("  (No host CLIs are on PATH. Run scripts/bootstrap-workstation.sh to install them.)"))
-            print()
-        print("To go deeper:")
-        print(dim(f"  cat {FACTORY_ROOT}/README.md"))
-        print(dim(f"  cat {FACTORY_ROOT}/docs/HANDOFF.md  # what just shipped"))
-        print(dim(f"  cat {FACTORY_ROOT}/docs/SPRINT_BACKLOG.md  # what's coming next"))
+            print(f"  {red('✗')} {cli} is not installed yet")
     print()
-    role_tail(6, role)
+    if not missing:
+        print("  All three host CLIs are installed. Nothing to do here.")
+        print()
+        pause(no_pause=no_pause)
+        return
+
+    print(f"  You're missing: {bold(', '.join(missing))}")
+    print()
+    choice = prompt_choice(
+        "Want help installing them?",
+        [
+            ("w", "Walk me through it",       "Per-CLI: what it is, why you'd pick it, install command."),
+            ("c", "Just show me the commands", "Brief and direct, no description."),
+            ("s", "Skip for now",              "Come back later when you're ready."),
+        ],
+        default="w",
+    )
+    if choice == "s":
+        print()
+        print("  Fine. When you're ready:")
+        print(dim("    python3 ~/Projects/_agent_forge/skills/global/onboarding-guide/onboard.py tour"))
+        print()
+        pause(no_pause=no_pause)
+        return
+
+    print()
+    print(dim("  The factory ships scripts/bootstrap-workstation.sh which can install"))
+    print(dim("  all three in one shot. Or install each one individually below."))
+    print()
+    for cli in missing:
+        info = CLI_INFO[cli]
+        print(bold(f"  {cli}  ({info['vendor']})"))
+        if choice == "w":
+            print(f"    {info['tagline']}")
+        print(f"    Docs: {info['url']}")
+        print(f"    {dim(info['command'])}")
+        print()
+    print(bold("  Or install everything at once:"))
+    print(dim("    bash ~/Projects/_agent_forge/scripts/bootstrap-workstation.sh"))
+    print()
+    pause(no_pause=no_pause)
 
 
 def write_audit_log(level: str, sections_completed: int, role: str = "") -> None:
@@ -659,30 +490,26 @@ def write_audit_log(level: str, sections_completed: int, role: str = "") -> None
 def cmd_quick_summary(probes: list[tuple[str, str, str, str]]) -> None:
     """Non-interactive 90-second summary. Used by `tour --quick`.
 
-    Skips the experience prompt and the five expanded sections. Prints a
-    five-bullet pitch + the probe verdicts + the "what to do next" branch.
-    Intended for operators who want the gist without being marched through
-    the full guided flow.
+    Five bullets + probe verdicts + the first red fix command if any.
+    No paced beats; no questions. For operators who want the gist.
     """
     print(bold("Agent Forge — quick summary"))
     print(dim("Read-only; nothing here modifies your repo."))
     print()
     bullets = [
         ("What this folder is",
-         "A single source of truth that generates the same skills, safety rules, and shared "
-         "memory for three AI coding CLIs (Claude / Codex / Gemini)."),
+         "A single source of truth that generates the same skills, safety rules, and "
+         "shared memory for three AI coding CLIs (Claude / Codex / Gemini)."),
         ("Why",
          "Author one canonical file; the engine renders it into each host's native shape. "
          "No drift, no triple maintenance."),
         ("The seatbelt",
          "telemetry-guardian runs before every shell command on every host and refuses "
-         "obviously dangerous patterns (--no-verify, force-push to main, rm -rf $HOME, etc.)."),
+         "obviously dangerous patterns."),
         ("The shared brain",
-         "<project>/MEMORY.md is one file all three hosts read and write. Build commands, "
-         "project quirks, recent decisions, known failures."),
+         "<project>/MEMORY.md — one file all three hosts read and write."),
         ("The gate",
-         "validate-triad-runtime.py asks each host's CLI 'can you see what we shipped?' — "
-         "files on disk are necessary; CLI reachability is the sufficient proof."),
+         "validate-triad-runtime.py asks each host's CLI 'can you see what we shipped?'"),
     ]
     for title, body in bullets:
         print(f"  - {bold(title)}: {body}")
@@ -691,37 +518,193 @@ def cmd_quick_summary(probes: list[tuple[str, str, str, str]]) -> None:
     for name, verdict, summary, _fix in probes:
         print(f"  {verdict_glyph(verdict)} {name}: {summary}")
     print()
-    section_6_what_now("s", probes, role="s")
-    print()
+    reds = [(n, fix) for n, v, _, fix in probes if v == "red" and fix]
+    if reds:
+        print(bold("Next action:"))
+        for name, fix in reds:
+            print(f"  {name} → {fix}")
+        print()
     print(dim(f"For the full guided tour: python3 {Path(__file__).resolve()} tour"))
 
 
 def cmd_tour(args: argparse.Namespace) -> int:
+    """Paced, interactive tour. One beat at a time; questions drive the flow."""
     probes = run_probes()
     if getattr(args, "quick", False):
         cmd_quick_summary(probes)
         return 0
-    print(bold("Agent Forge Onboarding Guide"))
-    print(dim("Six short sections. Plain English. Read-only — nothing you do here will modify your repo."))
-    print()
-    print(dim(f"Factory root: {FACTORY_ROOT}"))
-    level = ask_experience()
-    role = ask_role()
+    no_pause = getattr(args, "no_pause", False)
 
-    sections_completed = 0
-    try:
-        section_1_what_is_this(level, role);   sections_completed += 1
-        section_2_one_source(level, role);     sections_completed += 1
-        section_3_translation(level, role);    sections_completed += 1
-        section_4_seatbelt(level, role);       sections_completed += 1
-        section_5_shared_brain(level, role);   sections_completed += 1
-        section_6_what_now(level, probes, role); sections_completed += 1
-    finally:
-        write_audit_log(level, sections_completed, role)
-
+    # Greeting ---------------------------------------------------------------
     print()
-    hr()
-    print(dim("End of tour. Run with `check` to re-verify state at any time."))
+    print(bold("=" * 60))
+    print(bold("  Agent Forge — quick tour"))
+    print(bold("=" * 60))
+    print()
+    print("  You just unzipped a factory that makes three AI coding tools")
+    print(f"  ({bold('Claude')}, {bold('Codex')}, {bold('Gemini')}) speak the same language.")
+    print()
+    print("  Same skill, same safety rule, same shared brain — rendered")
+    print("  into each tool's native format from one source.")
+    print()
+    print(dim("  I'll keep this short. Press [Enter] each time you're ready to"))
+    print(dim("  move on. Ctrl+C if you want to bail."))
+    print()
+    pause("Press [Enter] to start", no_pause=no_pause)
+
+    # Q1 — Experience --------------------------------------------------------
+    level = prompt_choice(
+        "First — have you used any of the three AI coding CLIs before?",
+        [
+            ("a", "Yes, two or three of them", "I'll keep things terse."),
+            ("o", "One of them",                "I'll translate jargon the first time."),
+            ("n", "None yet — starting fresh",  "I'll translate every term."),
+            ("u", "Not sure — check for me",    "I'll inspect your PATH."),
+        ],
+        default="n",
+    )
+    if level == "u":
+        present, missing = _detect_cli_state()
+        print()
+        if present:
+            print(f"  On your PATH: {green(', '.join(present))}")
+        if missing:
+            print(f"  Missing: {yellow(', '.join(missing))}")
+        if not present:
+            print(dim("  None of the three installed yet. That's fine — keep going."))
+            level = "n"
+        elif len(present) >= 2:
+            level = "a"
+        else:
+            level = "o"
+        print()
+        pause(no_pause=no_pause)
+
+    # Q2 — Role --------------------------------------------------------------
+    role = prompt_choice(
+        "Quick one — what brings you here today?",
+        [
+            ("c", "Curious — what is this?",          ""),
+            ("b", "Builder — extend or contribute",   ""),
+            ("o", "Operator — set this up for a team", ""),
+            ("d", "Decider — should we adopt this?",  ""),
+        ],
+        default="c",
+    )
+
+    # Beat 1 — What is this? -------------------------------------------------
+    print()
+    print(bold("◆ This folder is a factory."))
+    print()
+    print("  You write a skill once — a short markdown file describing what")
+    print("  an AI tool should do. The factory turns that one file into three")
+    print("  different configurations, one for each AI tool.")
+    print()
+    print("  You don't copy-paste. You don't maintain three versions.")
+    print("  The factory does the translation.")
+    print()
+    n = _count_skills()
+    if n:
+        print(f"  {green('✓')} Right now this factory holds {bold(str(n))} skills.")
+        print()
+    pause(no_pause=no_pause)
+
+    # Beat 2 — The tease -----------------------------------------------------
+    print()
+    print(bold("◆ Here's the trick."))
+    print()
+    print("  Each AI tool calls things by different names.")
+    print()
+    print(f"    {bold('Claude')} calls it a 'slash command' or a 'subagent.'")
+    print(f"    {bold('Codex')}  calls it a 'skill.'")
+    print(f"    {bold('Gemini')} calls it a 'command' or a 'subagent.'")
+    print()
+    print("  Same idea. Three names.")
+    print()
+    pause("Press [Enter] to see all the names side-by-side", no_pause=no_pause)
+
+    # Beat 3 — The translation table (payoff) --------------------------------
+    print()
+    print(bold("◆ The translation table"))
+    print()
+    _print_translation_table()
+    print()
+    print(dim("  Three vendors, similar primitives, different names."))
+    print(dim("  You don't have to memorize this — the factory translates."))
+    print()
+    pause(no_pause=no_pause)
+
+    # Beat 4 — The seatbelt --------------------------------------------------
+    print()
+    print(bold("◆ The seatbelt"))
+    print()
+    print("  Agents will run shell commands for you. That's the point.")
+    print("  It's also the risk.")
+    print()
+    print("  The factory runs one check before every shell command on every")
+    print("  AI tool. It refuses obviously destructive patterns:")
+    print()
+    print(f"    {dim('- force-push to main')}")
+    print(f"    {dim('- rm -rf $HOME')}")
+    print(f"    {dim('- git reset --hard <ref>')}")
+    print(f"    {dim('- --no-verify, --no-gpg-sign')}")
+    print()
+    print("  Intentionally dumb. Predictability beats sophistication.")
+    print()
+    log = Path.home() / ".agent-forge" / "guardian.log"
+    if log.exists():
+        try:
+            n_events = sum(1 for _ in log.open())
+            print(f"  {green('✓')} It's logged {bold(str(n_events))} events on this machine.")
+            print()
+        except Exception:
+            pass
+    pause(no_pause=no_pause)
+
+    # Beat 5 — The shared brain ----------------------------------------------
+    print()
+    print(bold("◆ The shared brain"))
+    print()
+    print("  All three AI tools read one file per project: MEMORY.md.")
+    print()
+    print("  Build commands. Project quirks. Recent decisions. Known failures.")
+    print("  What Claude learns today, Codex sees tomorrow.")
+    print()
+    print("  Append-first. Secrets blocked at write time.")
+    print()
+    pause(no_pause=no_pause)
+
+    # Beat 6 — Install gate --------------------------------------------------
+    install_gate(no_pause=no_pause)
+
+    # Beat 7 — Wrap with role-tuned next action ------------------------------
+    print()
+    print(bold("◆ That's the tour."))
+    print()
+    print("  Working mental model now in place:")
+    print("    - The factory (one source, three deliveries)")
+    print("    - The cross-host translation table")
+    print("    - The safety gate")
+    print("    - The shared brain")
+    print()
+    print(bold("  What's next, for someone like you:"))
+    print()
+    role_next = {
+        "c": ("Try `explain <topic>` on anything that piqued your curiosity.\n"
+              "    Topics: claude-cli, codex-cli, gemini-cli, agent, skill, hook, mcp, memory."),
+        "b": ("Read `docs/CONOPS.md` for the architecture and use\n"
+              "    `skills/global/skill-author/SKILL.md` to author new skills correctly."),
+        "o": ("Bake `scripts/verify-agent-forge.py` and `scripts/validate-triad-runtime.py`\n"
+              "    into your team's CI before letting anyone merge canonical changes."),
+        "d": ("Read `docs/CONOPS.md` for the durable architecture. `policies/hooks.json`\n"
+              "    is the auditable deny list — those are your procurement talking points."),
+    }
+    print(f"    {role_next.get(role, role_next['c'])}")
+    print()
+    print(green("  Welcome to Agent Forge."))
+    print()
+
+    write_audit_log(level, sections_completed=7, role=role)
     return 0
 
 
@@ -965,9 +948,14 @@ def main() -> int:
     p_tour.add_argument(
         "--quick",
         action="store_true",
-        help="Skip the experience prompt and the five guided sections; print a "
-             "non-interactive 90-second summary instead. Useful for operators "
-             "who want the gist without being marched through the full tour.",
+        help="Skip the prompts and the paced beats; print a non-interactive "
+             "90-second summary instead. Useful for operators who want the gist.",
+    )
+    p_tour.add_argument(
+        "--no-pause",
+        action="store_true",
+        help="Run the full tour without pausing for [Enter] between beats. "
+             "Used by smoke tests; not recommended for first-time operators.",
     )
     p_tour.set_defaults(func=cmd_tour)
 
