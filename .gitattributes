@@ -1,0 +1,26 @@
+# Enforce platform-specific line endings so Windows operators can clone or
+# unzip the repo without breaking interpreter shebangs or PowerShell parsing.
+
+# Always LF — POSIX shell scripts, Python source, JSON, YAML, Markdown.
+# These run identically on Linux/macOS and are read by tools that handle LF
+# correctly on Windows (Python, Claude Code, etc.).
+*.sh        text eol=lf
+*.py        text eol=lf
+*.json      text eol=lf
+*.toml      text eol=lf
+*.yml       text eol=lf
+*.yaml      text eol=lf
+*.md        text eol=lf
+
+# Always CRLF — PowerShell. PowerShell parsers tolerate LF, but CRLF is the
+# native Windows convention and avoids any "no newline at end of file" warnings
+# from Windows-side tooling.
+*.ps1       text eol=crlf
+*.psm1      text eol=crlf
+*.cmd       text eol=crlf
+*.bat       text eol=crlf
+
+# Binary archives — git should not try to normalize these.
+*.tar.gz    binary
+*.zip       binary
+*.tgz       binary

@@ -627,6 +627,32 @@ def mcp_server_alias(prefix: str) -> str:
     return prefix.replace(".", "-")
 
 
+def _expand_transport_paths(transport: dict[str, Any]) -> dict[str, Any]:
+    """Expand ${HOME}, $HOME, and ~ in transport command/args at render time.
+
+    The canonical global-mcp.json uses ${HOME}-style placeholders so the file
+    is portable across operator workstations. Expansion happens here, against
+    the renderer's environment, so the rendered host configs (Claude .mcp.json,
+    Codex .codex/config.toml, Gemini .gemini/settings.json) contain absolute
+    paths that work on the operator's machine without needing a shell wrapper.
+
+    This is what removes the Windows blocker: prior canonical args invoked
+    `sh -c "exec python3 ..."` to get $HOME expansion at runtime; native
+    Windows has no `sh`, so we pre-expand at render and invoke python3 directly.
+    """
+    result = dict(transport)
+    if "command" in result and isinstance(result["command"], str):
+        result["command"] = os.path.expanduser(os.path.expandvars(result["command"]))
+    if "args" in result and isinstance(result["args"], list):
+        result["args"] = [
+            os.path.expanduser(os.path.expandvars(arg)) if isinstance(arg, str) else arg
+            for arg in result["args"]
+        ]
+    if "cwd" in result and isinstance(result["cwd"], str):
+        result["cwd"] = os.path.expanduser(os.path.expandvars(result["cwd"]))
+    return result
+
+
 def normalize_mcp_server(server_id: str, server: dict[str, Any], defaults: dict[str, Any]) -> dict[str, Any]:
     prefix = str(server.get("prefix") or server_id)
     tool_filter = list(server.get("tool_filter") or server.get("tool_allow") or [])
@@ -644,7 +670,7 @@ def normalize_mcp_server(server_id: str, server: dict[str, Any], defaults: dict[
         "scope": server.get("scope", "project"),
         "projects": _as_list(server.get("projects")),
         "targets": list(server.get("targets") or MCP_TARGETS),
-        "transport": dict(server.get("transport") or {}),
+        "transport": _expand_transport_paths(dict(server.get("transport") or {})),
         "auth": server.get("auth", "none"),
         "trust": trust,
         "env_passthrough": list(server.get("env_passthrough") or []),
