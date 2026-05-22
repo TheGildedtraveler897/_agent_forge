@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "description": "Canonical bounded-decay policy. Append-first ledgers are necessary but not sufficient; over time their auto-loaded session footprint grows unbounded. This policy authorizes per-target distillation rules. Renderers and skills (lesson-distiller, handoff-archiver) translate it into compaction passes that move historical content to docs/archive/ while preserving wisdom verbatim. Distillation is reversible by design.",
+  "targets": [
+    {
+      "id": "lessons_ledger",
+      "path": "docs/LESSONS_LEARNED.md",
+      "rule": "archive_promoted_entries",
+      "archive_path": "docs/archive/LESSONS_PROMOTED.md",
+      "verify_promotion_claim": true,
+      "retain_one_line_index": true,
+      "owner_skill": "lesson-distiller",
+      "description": "Move entries with Status: promoted to the archive. Replace each in the main file with a one-line index pointer. Active and superseded entries stay."
+    },
+    {
+      "id": "handoff_log",
+      "path": "docs/HANDOFF.md",
+      "rule": "keep_recent_sprints",
+      "keep": 1,
+      "archive_path": "docs/archive/SPRINTS.md",
+      "retain_summary_table": true,
+      "section_marker": "### Sprint",
+      "header_sections_to_preserve": [
+        "## Current State",
+        "## Remaining Weaknesses",
+        "## Resolved Backlog Items",
+        "## Manual Follow-Up Items",
+        "## Next Evolution",
+        "## Final Verdict"
+      ],
+      "owner_skill": "handoff-archiver",
+      "description": "Move all but the most recent N sprint sections to the archive. Replace them with a compact summary table in HANDOFF.md."
+    },
+    {
+      "id": "triad_runs",
+      "path": "runtime/validation/triad",
+      "rule": "keep_recent_runs",
+      "keep": 5,
+      "archive_path": null,
+      "owner_skill": "lesson-distiller",
+      "description": "Delete (do not archive) timestamped triad validation run directories beyond the most recent N. These are evidence artifacts; the latest few suffice for audit."
+    }
+  ],
+  "audit": {
+    "log_path_relative_to_project": ".forge_state/distiller.log",
+    "include_dry_run": true
+  },
+  "session_load_thresholds": {
+    "warn_at_bytes": 20000,
+    "fail_at_bytes": 35000,
+    "applies_to": [
+      "docs/LESSONS_LEARNED.md",
+      "docs/HANDOFF.md"
+    ]
+  }
+}

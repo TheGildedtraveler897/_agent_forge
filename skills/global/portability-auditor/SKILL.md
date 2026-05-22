@@ -5,7 +5,7 @@ context_cost: light
 model_tier: any
 capability_class: workflow
 targets: ["claude", "codex", "gemini"]
-delivery_projects: ["jarvis"]
+delivery_projects: ["*"]
 claude_command_name: portability-audit
 gemini_command_name: portability-audit
 ---

@@ -41,7 +41,7 @@ Read-only and observational. Five guided sections (what the folder is, three too
 ### Example
 
 ```md
-# Task Brief: YouTube download script for playlist-archive
+# Task Brief: YouTube download script for example-app
 
 ## Goal
 Create an idempotent yt-dlp wrapper script that downloads a YouTube playlist to the local archive.
@@ -58,12 +58,12 @@ Create an idempotent yt-dlp wrapper script that downloads a YouTube playlist to 
 - Use .venv Python if any Python is needed; bash preferred
 
 ## Current Repo State
-- playlist-archive/ exists with AGENTS.md, CONOPS.md, HANDOFF.md
+- example-app/ exists with AGENTS.md, CONOPS.md, HANDOFF.md
 - No scripts/ directory yet
 
 ## Relevant Docs To Read First
-- playlist-archive/docs/CONOPS.md
-- playlist-archive/docs/HANDOFF.md
+- example-app/docs/CONOPS.md
+- example-app/docs/HANDOFF.md
 
 ## Out Of Scope
 - Spotify downloads (separate task)
@@ -196,7 +196,7 @@ cat playlists/youtube/*/archive.txt | wc -l
 ### Example
 
 ```md
-# Handoff: playlist-archive YouTube download script
+# Handoff: example-app YouTube download script
 
 ## Current State
 YouTube download script is complete and tested. Spotify download is not started.

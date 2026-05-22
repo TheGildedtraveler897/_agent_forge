@@ -39,6 +39,7 @@ Turn the end of a sprint into a reusable knowledge-anchor update so the next ope
 5. If a lesson deserves promotion, name the exact target doc and the reason, but keep promotion as a separate follow-up action.
 6. Exclude secrets, auth state, machine-local residue, and transient debugging noise.
 7. Mark the lesson status as `active`, `promoted`, or `superseded`.
+8. Compaction is downstream and out of scope. Once an entry's `Status:` becomes `promoted` and the named doctrine reference resolves, `lesson-distiller` is the bounded-decay counterpart that archives it. The harvester only appends; it never deletes or rewrites prior entries.
 
 ## Workflow
 

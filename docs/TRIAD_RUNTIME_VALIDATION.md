@@ -32,9 +32,9 @@ Run from `~/Projects/_agent_forge`:
 
 ```bash
 python3 scripts/omni_factory.py render-registry > registry.json
-python3 scripts/omni_factory.py sync-claude --project jarvis
-python3 scripts/omni_factory.py sync-codex --project jarvis
-python3 scripts/omni_factory.py sync-gemini --project jarvis
+python3 scripts/omni_factory.py sync-claude --project <name>
+python3 scripts/omni_factory.py sync-codex --project <name>
+python3 scripts/omni_factory.py sync-gemini --project <name>
 python3 scripts/verify-agent-forge.py
 ```
 
@@ -108,9 +108,9 @@ After the universal memory surface check, the validator runs `memory_bridge_for(
 For the normal gate, run outbound proof before triad:
 
 ```bash
-python3 skills/global/memory-bridge/bridge.py outbound --project ~/Projects/jarvis --host claude
-python3 skills/global/memory-bridge/bridge.py outbound --project ~/Projects/jarvis --host codex
-python3 skills/global/memory-bridge/bridge.py outbound --project ~/Projects/jarvis --host gemini
+python3 skills/global/memory-bridge/bridge.py outbound --project ~/Projects/<name> --host claude
+python3 skills/global/memory-bridge/bridge.py outbound --project ~/Projects/<name> --host codex
+python3 skills/global/memory-bridge/bridge.py outbound --project ~/Projects/<name> --host gemini
 ```
 
 Per-host matrix entries include `bridge_pass` alongside `hook_pass` and `memory_pass`.
@@ -193,7 +193,7 @@ If the scripted path is unavailable (CLI binaries missing, or you need a human-j
 ### Live Codex Proof (manual)
 
 ```bash
-python3 scripts/validate-codex-runtime.py --project jarvis
+python3 scripts/validate-codex-runtime.py --project <name>
 ```
 
 Success criteria mirror `codex/result.json` above: a structured JSON artifact with `pass: true` or a `sandbox_blocked: true` pair proven by filesystem evidence.
@@ -205,7 +205,7 @@ In a Claude session started from the project root, ask:
 - "List the instruction sources you loaded for this repo in order."
 - "Name the durable lesson ledger that governs shared Agent Forge work, if it is in scope."
 
-Then invoke one generated project surface (for example `/jarvis-reviewer`).
+Then invoke one generated project surface (for example a project-local `/code-reviewer`).
 
 Claude success means:
 

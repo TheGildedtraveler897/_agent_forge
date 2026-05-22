@@ -6,76 +6,7 @@
     "teams": "teams/*.json",
     "mcp": "global-mcp.json"
   },
-  "governed_projects": [
-    {
-      "name": "jarvis",
-      "root": "jarvis",
-      "required_files": [
-        "AGENTS.md",
-        "CLAUDE.md",
-        "docs/CONOPS.md",
-        "docs/HANDOFF.md",
-        ".claude/CLAUDE.md",
-        ".claude/agents/jarvis-system.md",
-        ".claude/agents/jarvis-coder.md",
-        ".claude/commands/jarvis-healthcheck.md",
-        ".claude/commands/jarvis-reviewer.md",
-        ".claude/commands/jarvis-audit.md"
-      ]
-    },
-    {
-      "name": "RoboNaaz",
-      "root": "RoboNaaz",
-      "required_files": [
-        "AGENTS.md",
-        "CLAUDE.md",
-        "docs/CONOPS.md",
-        "docs/HANDOFF.md",
-        ".claude/CLAUDE.md"
-      ]
-    },
-    {
-      "name": "ZorroClaw",
-      "root": "ZorroClaw",
-      "required_files": [
-        "AGENTS.md",
-        "docs/CONOPS.md",
-        "docs/HANDOFF.md",
-        ".claude/CLAUDE.md"
-      ]
-    },
-    {
-      "name": "homelab",
-      "root": "homelab",
-      "required_files": [
-        "AGENTS.md",
-        "AI_GUIDE.md",
-        "docs/HANDOFF.md",
-        ".claude/CLAUDE.md"
-      ]
-    },
-    {
-      "name": "factory",
-      "root": "ZorroForge/factory",
-      "required_files": [
-        "AGENTS.md",
-        "README.md",
-        "docs/HANDOFF.md",
-        ".claude/CLAUDE.md"
-      ]
-    },
-    {
-      "name": "playlist-archive",
-      "root": "playlist-archive",
-      "required_files": [
-        "AGENTS.md",
-        "CLAUDE.md",
-        "docs/CONOPS.md",
-        "docs/HANDOFF.md",
-        ".claude/CLAUDE.md"
-      ]
-    }
-  ],
+  "governed_projects": [],
   "skills": [
     {
       "name": "branch-finisher",
@@ -89,14 +20,7 @@
         "codex",
         "gemini"
       ],
-      "delivery_projects": [
-        "jarvis",
-        "RoboNaaz",
-        "ZorroClaw",
-        "homelab",
-        "factory",
-        "playlist-archive"
-      ],
+      "delivery_projects": [],
       "claude": {
         "mode": "command",
         "generated": true,
@@ -112,7 +36,7 @@
       "codex": {
         "generated": true,
         "global_skill": true,
-        "project_skill": true,
+        "project_skill": false,
         "custom_agent": false
       }
     },
@@ -128,14 +52,7 @@
         "codex",
         "gemini"
       ],
-      "delivery_projects": [
-        "jarvis",
-        "RoboNaaz",
-        "ZorroClaw",
-        "homelab",
-        "factory",
-        "playlist-archive"
-      ],
+      "delivery_projects": [],
       "claude": {
         "mode": "subagent",
         "generated": true,
@@ -151,7 +68,7 @@
       "codex": {
         "generated": true,
         "global_skill": true,
-        "project_skill": true,
+        "project_skill": false,
         "custom_agent": true
       }
     },
@@ -167,9 +84,7 @@
         "codex",
         "gemini"
       ],
-      "delivery_projects": [
-        "jarvis"
-      ],
+      "delivery_projects": [],
       "claude": {
         "mode": "command",
         "generated": true,
@@ -185,7 +100,7 @@
       "codex": {
         "generated": true,
         "global_skill": true,
-        "project_skill": true,
+        "project_skill": false,
         "custom_agent": false
       }
     },
@@ -201,14 +116,7 @@
         "codex",
         "gemini"
       ],
-      "delivery_projects": [
-        "jarvis",
-        "RoboNaaz",
-        "ZorroClaw",
-        "homelab",
-        "factory",
-        "playlist-archive"
-      ],
+      "delivery_projects": [],
       "claude": {
         "mode": "command",
         "generated": true,
@@ -224,7 +132,7 @@
       "codex": {
         "generated": true,
         "global_skill": true,
-        "project_skill": true,
+        "project_skill": false,
         "custom_agent": false
       }
     },
@@ -240,14 +148,7 @@
         "codex",
         "gemini"
       ],
-      "delivery_projects": [
-        "jarvis",
-        "RoboNaaz",
-        "ZorroClaw",
-        "homelab",
-        "factory",
-        "playlist-archive"
-      ],
+      "delivery_projects": [],
       "claude": {
         "mode": "command",
         "generated": true,
@@ -263,7 +164,7 @@
       "codex": {
         "generated": true,
         "global_skill": true,
-        "project_skill": true,
+        "project_skill": false,
         "custom_agent": false
       }
     },
@@ -279,14 +180,7 @@
         "codex",
         "gemini"
       ],
-      "delivery_projects": [
-        "jarvis",
-        "RoboNaaz",
-        "ZorroClaw",
-        "homelab",
-        "factory",
-        "playlist-archive"
-      ],
+      "delivery_projects": [],
       "claude": {
         "mode": "subagent",
         "generated": true,
@@ -302,7 +196,7 @@
       "codex": {
         "generated": true,
         "global_skill": true,
-        "project_skill": true,
+        "project_skill": false,
         "custom_agent": true
       }
     },
@@ -318,14 +212,7 @@
         "codex",
         "gemini"
       ],
-      "delivery_projects": [
-        "jarvis",
-        "RoboNaaz",
-        "ZorroClaw",
-        "homelab",
-        "factory",
-        "playlist-archive"
-      ],
+      "delivery_projects": [],
       "claude": {
         "mode": "command",
         "generated": true,
@@ -341,7 +228,7 @@
       "codex": {
         "generated": true,
         "global_skill": true,
-        "project_skill": true,
+        "project_skill": false,
         "custom_agent": false
       }
     },
@@ -357,14 +244,7 @@
         "codex",
         "gemini"
       ],
-      "delivery_projects": [
-        "jarvis",
-        "RoboNaaz",
-        "ZorroClaw",
-        "homelab",
-        "factory",
-        "playlist-archive"
-      ],
+      "delivery_projects": [],
       "claude": {
         "mode": "command",
         "generated": true,
@@ -380,7 +260,39 @@
       "codex": {
         "generated": true,
         "global_skill": true,
-        "project_skill": true,
+        "project_skill": false,
+        "custom_agent": false
+      }
+    },
+    {
+      "name": "handoff-archiver",
+      "display_name": "handoff-archiver",
+      "scope": "global",
+      "project": null,
+      "capability_class": "workflow",
+      "canonical_skill": "skills/global/handoff-archiver/SKILL.md",
+      "targets": [
+        "claude",
+        "codex",
+        "gemini"
+      ],
+      "delivery_projects": [],
+      "claude": {
+        "mode": "command",
+        "generated": true,
+        "command_name": "handoff-archiver",
+        "agent_name": null
+      },
+      "gemini": {
+        "mode": "command",
+        "generated": true,
+        "command_name": "handoff-archiver",
+        "agent_name": null
+      },
+      "codex": {
+        "generated": true,
+        "global_skill": true,
+        "project_skill": false,
         "custom_agent": false
       }
     },
@@ -396,14 +308,7 @@
         "codex",
         "gemini"
       ],
-      "delivery_projects": [
-        "jarvis",
-        "RoboNaaz",
-        "ZorroClaw",
-        "homelab",
-        "factory",
-        "playlist-archive"
-      ],
+      "delivery_projects": [],
       "claude": {
         "mode": "subagent",
         "generated": true,
@@ -419,7 +324,7 @@
       "codex": {
         "generated": true,
         "global_skill": true,
-        "project_skill": true,
+        "project_skill": false,
         "custom_agent": true
       }
     },
@@ -435,14 +340,7 @@
         "codex",
         "gemini"
       ],
-      "delivery_projects": [
-        "jarvis",
-        "RoboNaaz",
-        "ZorroClaw",
-        "homelab",
-        "factory",
-        "playlist-archive"
-      ],
+      "delivery_projects": [],
       "claude": {
         "mode": "subagent",
         "generated": true,
@@ -458,8 +356,40 @@
       "codex": {
         "generated": true,
         "global_skill": true,
-        "project_skill": true,
+        "project_skill": false,
         "custom_agent": true
+      }
+    },
+    {
+      "name": "lesson-distiller",
+      "display_name": "lesson-distiller",
+      "scope": "global",
+      "project": null,
+      "capability_class": "workflow",
+      "canonical_skill": "skills/global/lesson-distiller/SKILL.md",
+      "targets": [
+        "claude",
+        "codex",
+        "gemini"
+      ],
+      "delivery_projects": [],
+      "claude": {
+        "mode": "command",
+        "generated": true,
+        "command_name": "lesson-distiller",
+        "agent_name": null
+      },
+      "gemini": {
+        "mode": "command",
+        "generated": true,
+        "command_name": "lesson-distiller",
+        "agent_name": null
+      },
+      "codex": {
+        "generated": true,
+        "global_skill": true,
+        "project_skill": false,
+        "custom_agent": false
       }
     },
     {
@@ -474,14 +404,7 @@
         "codex",
         "gemini"
       ],
-      "delivery_projects": [
-        "jarvis",
-        "RoboNaaz",
-        "ZorroClaw",
-        "homelab",
-        "factory",
-        "playlist-archive"
-      ],
+      "delivery_projects": [],
       "claude": {
         "mode": "command",
         "generated": true,
@@ -497,7 +420,7 @@
       "codex": {
         "generated": true,
         "global_skill": true,
-        "project_skill": true,
+        "project_skill": false,
         "custom_agent": false
       }
     },
@@ -513,14 +436,7 @@
         "codex",
         "gemini"
       ],
-      "delivery_projects": [
-        "jarvis",
-        "RoboNaaz",
-        "ZorroClaw",
-        "homelab",
-        "factory",
-        "playlist-archive"
-      ],
+      "delivery_projects": [],
       "claude": {
         "mode": "command",
         "generated": true,
@@ -536,7 +452,7 @@
       "codex": {
         "generated": true,
         "global_skill": true,
-        "project_skill": true,
+        "project_skill": false,
         "custom_agent": false
       }
     },
@@ -552,14 +468,7 @@
         "codex",
         "gemini"
       ],
-      "delivery_projects": [
-        "jarvis",
-        "RoboNaaz",
-        "ZorroClaw",
-        "homelab",
-        "factory",
-        "playlist-archive"
-      ],
+      "delivery_projects": [],
       "claude": {
         "mode": "command",
         "generated": true,
@@ -575,7 +484,7 @@
       "codex": {
         "generated": true,
         "global_skill": true,
-        "project_skill": true,
+        "project_skill": false,
         "custom_agent": false
       }
     },
@@ -591,9 +500,7 @@
         "codex",
         "gemini"
       ],
-      "delivery_projects": [
-        "jarvis"
-      ],
+      "delivery_projects": [],
       "claude": {
         "mode": "command",
         "generated": true,
@@ -609,7 +516,7 @@
       "codex": {
         "generated": true,
         "global_skill": true,
-        "project_skill": true,
+        "project_skill": false,
         "custom_agent": false
       }
     },
@@ -625,14 +532,7 @@
         "codex",
         "gemini"
       ],
-      "delivery_projects": [
-        "jarvis",
-        "RoboNaaz",
-        "ZorroClaw",
-        "homelab",
-        "factory",
-        "playlist-archive"
-      ],
+      "delivery_projects": [],
       "claude": {
         "mode": "command",
         "generated": true,
@@ -648,7 +548,7 @@
       "codex": {
         "generated": true,
         "global_skill": true,
-        "project_skill": true,
+        "project_skill": false,
         "custom_agent": false
       }
     },
@@ -664,9 +564,7 @@
         "codex",
         "gemini"
       ],
-      "delivery_projects": [
-        "jarvis"
-      ],
+      "delivery_projects": [],
       "claude": {
         "mode": "command",
         "generated": true,
@@ -682,7 +580,7 @@
       "codex": {
         "generated": true,
         "global_skill": true,
-        "project_skill": true,
+        "project_skill": false,
         "custom_agent": false
       }
     },
@@ -698,9 +596,7 @@
         "codex",
         "gemini"
       ],
-      "delivery_projects": [
-        "jarvis"
-      ],
+      "delivery_projects": [],
       "claude": {
         "mode": "command",
         "generated": true,
@@ -716,7 +612,7 @@
       "codex": {
         "generated": true,
         "global_skill": true,
-        "project_skill": true,
+        "project_skill": false,
         "custom_agent": false
       }
     },
@@ -731,14 +627,7 @@
         "claude",
         "codex"
       ],
-      "delivery_projects": [
-        "jarvis",
-        "RoboNaaz",
-        "ZorroClaw",
-        "homelab",
-        "factory",
-        "playlist-archive"
-      ],
+      "delivery_projects": [],
       "claude": {
         "mode": "command",
         "generated": true,
@@ -748,7 +637,7 @@
       "codex": {
         "generated": true,
         "global_skill": true,
-        "project_skill": true,
+        "project_skill": false,
         "custom_agent": false
       }
     },
@@ -764,14 +653,7 @@
         "codex",
         "gemini"
       ],
-      "delivery_projects": [
-        "jarvis",
-        "RoboNaaz",
-        "ZorroClaw",
-        "homelab",
-        "factory",
-        "playlist-archive"
-      ],
+      "delivery_projects": [],
       "claude": {
         "mode": "command",
         "generated": true,
@@ -787,7 +669,7 @@
       "codex": {
         "generated": true,
         "global_skill": true,
-        "project_skill": true,
+        "project_skill": false,
         "custom_agent": false
       }
     },
@@ -803,14 +685,7 @@
         "codex",
         "gemini"
       ],
-      "delivery_projects": [
-        "jarvis",
-        "RoboNaaz",
-        "ZorroClaw",
-        "homelab",
-        "factory",
-        "playlist-archive"
-      ],
+      "delivery_projects": [],
       "claude": {
         "mode": "command",
         "generated": true,
@@ -826,7 +701,7 @@
       "codex": {
         "generated": true,
         "global_skill": true,
-        "project_skill": true,
+        "project_skill": false,
         "custom_agent": false
       }
     },
@@ -842,14 +717,7 @@
         "codex",
         "gemini"
       ],
-      "delivery_projects": [
-        "jarvis",
-        "RoboNaaz",
-        "ZorroClaw",
-        "homelab",
-        "factory",
-        "playlist-archive"
-      ],
+      "delivery_projects": [],
       "claude": {
         "mode": "command",
         "generated": true,
@@ -865,7 +733,7 @@
       "codex": {
         "generated": true,
         "global_skill": true,
-        "project_skill": true,
+        "project_skill": false,
         "custom_agent": false
       }
     },
@@ -881,14 +749,7 @@
         "codex",
         "gemini"
       ],
-      "delivery_projects": [
-        "jarvis",
-        "RoboNaaz",
-        "ZorroClaw",
-        "homelab",
-        "factory",
-        "playlist-archive"
-      ],
+      "delivery_projects": [],
       "claude": {
         "mode": "command",
         "generated": true,
@@ -904,7 +765,7 @@
       "codex": {
         "generated": true,
         "global_skill": true,
-        "project_skill": true,
+        "project_skill": false,
         "custom_agent": false
       }
     },
@@ -920,14 +781,7 @@
         "codex",
         "gemini"
       ],
-      "delivery_projects": [
-        "jarvis",
-        "RoboNaaz",
-        "ZorroClaw",
-        "homelab",
-        "factory",
-        "playlist-archive"
-      ],
+      "delivery_projects": [],
       "claude": {
         "mode": "command",
         "generated": true,
@@ -943,7 +797,7 @@
       "codex": {
         "generated": true,
         "global_skill": true,
-        "project_skill": true,
+        "project_skill": false,
         "custom_agent": false
       }
     },
@@ -959,14 +813,7 @@
         "codex",
         "gemini"
       ],
-      "delivery_projects": [
-        "jarvis",
-        "RoboNaaz",
-        "ZorroClaw",
-        "homelab",
-        "factory",
-        "playlist-archive"
-      ],
+      "delivery_projects": [],
       "claude": {
         "mode": "command",
         "generated": true,
@@ -982,7 +829,7 @@
       "codex": {
         "generated": true,
         "global_skill": true,
-        "project_skill": true,
+        "project_skill": false,
         "custom_agent": false
       }
     },
@@ -998,14 +845,7 @@
         "codex",
         "gemini"
       ],
-      "delivery_projects": [
-        "jarvis",
-        "RoboNaaz",
-        "ZorroClaw",
-        "homelab",
-        "factory",
-        "playlist-archive"
-      ],
+      "delivery_projects": [],
       "claude": {
         "mode": "command",
         "generated": true,
@@ -1021,7 +861,7 @@
       "codex": {
         "generated": true,
         "global_skill": true,
-        "project_skill": true,
+        "project_skill": false,
         "custom_agent": false
       }
     },
@@ -1037,14 +877,7 @@
         "codex",
         "gemini"
       ],
-      "delivery_projects": [
-        "jarvis",
-        "RoboNaaz",
-        "ZorroClaw",
-        "homelab",
-        "factory",
-        "playlist-archive"
-      ],
+      "delivery_projects": [],
       "claude": {
         "mode": "subagent",
         "generated": true,
@@ -1060,7 +893,7 @@
       "codex": {
         "generated": true,
         "global_skill": true,
-        "project_skill": true,
+        "project_skill": false,
         "custom_agent": true
       }
     },
@@ -1076,14 +909,7 @@
         "codex",
         "gemini"
       ],
-      "delivery_projects": [
-        "jarvis",
-        "RoboNaaz",
-        "ZorroClaw",
-        "homelab",
-        "factory",
-        "playlist-archive"
-      ],
+      "delivery_projects": [],
       "claude": {
         "mode": "command",
         "generated": true,
@@ -1099,7 +925,7 @@
       "codex": {
         "generated": true,
         "global_skill": true,
-        "project_skill": true,
+        "project_skill": false,
         "custom_agent": false
       }
     },
@@ -1115,14 +941,7 @@
         "codex",
         "gemini"
       ],
-      "delivery_projects": [
-        "jarvis",
-        "RoboNaaz",
-        "ZorroClaw",
-        "homelab",
-        "factory",
-        "playlist-archive"
-      ],
+      "delivery_projects": [],
       "claude": {
         "mode": "command",
         "generated": true,
@@ -1138,178 +957,8 @@
       "codex": {
         "generated": true,
         "global_skill": true,
-        "project_skill": true,
+        "project_skill": false,
         "custom_agent": false
-      }
-    },
-    {
-      "name": "jarvis-audit",
-      "display_name": "jarvis-audit",
-      "scope": "project-local",
-      "project": "jarvis",
-      "capability_class": "workflow",
-      "canonical_skill": "skills/projects/jarvis/jarvis-audit/SKILL.md",
-      "targets": [
-        "claude",
-        "codex",
-        "gemini"
-      ],
-      "delivery_projects": [
-        "jarvis"
-      ],
-      "claude": {
-        "mode": "command",
-        "generated": true,
-        "command_name": "jarvis-audit",
-        "agent_name": null
-      },
-      "gemini": {
-        "mode": "command",
-        "generated": true,
-        "command_name": "jarvis-audit",
-        "agent_name": null
-      },
-      "codex": {
-        "generated": true,
-        "global_skill": false,
-        "project_skill": true,
-        "custom_agent": false
-      }
-    },
-    {
-      "name": "jarvis-coder",
-      "display_name": "jarvis-coder",
-      "scope": "project-local",
-      "project": "jarvis",
-      "capability_class": "expert",
-      "canonical_skill": "skills/projects/jarvis/jarvis-coder/SKILL.md",
-      "targets": [
-        "claude",
-        "codex",
-        "gemini"
-      ],
-      "delivery_projects": [
-        "jarvis"
-      ],
-      "claude": {
-        "mode": "subagent",
-        "generated": true,
-        "command_name": null,
-        "agent_name": "jarvis-coder"
-      },
-      "gemini": {
-        "mode": "subagent",
-        "generated": true,
-        "command_name": null,
-        "agent_name": "jarvis-coder"
-      },
-      "codex": {
-        "generated": true,
-        "global_skill": false,
-        "project_skill": true,
-        "custom_agent": true
-      }
-    },
-    {
-      "name": "jarvis-healthcheck",
-      "display_name": "jarvis-healthcheck",
-      "scope": "project-local",
-      "project": "jarvis",
-      "capability_class": "workflow",
-      "canonical_skill": "skills/projects/jarvis/jarvis-healthcheck/SKILL.md",
-      "targets": [
-        "claude",
-        "codex",
-        "gemini"
-      ],
-      "delivery_projects": [
-        "jarvis"
-      ],
-      "claude": {
-        "mode": "command",
-        "generated": true,
-        "command_name": "jarvis-healthcheck",
-        "agent_name": null
-      },
-      "gemini": {
-        "mode": "command",
-        "generated": true,
-        "command_name": "jarvis-healthcheck",
-        "agent_name": null
-      },
-      "codex": {
-        "generated": true,
-        "global_skill": false,
-        "project_skill": true,
-        "custom_agent": false
-      }
-    },
-    {
-      "name": "jarvis-reviewer",
-      "display_name": "jarvis-reviewer",
-      "scope": "project-local",
-      "project": "jarvis",
-      "capability_class": "workflow",
-      "canonical_skill": "skills/projects/jarvis/jarvis-reviewer/SKILL.md",
-      "targets": [
-        "claude",
-        "codex",
-        "gemini"
-      ],
-      "delivery_projects": [
-        "jarvis"
-      ],
-      "claude": {
-        "mode": "command",
-        "generated": true,
-        "command_name": "jarvis-reviewer",
-        "agent_name": null
-      },
-      "gemini": {
-        "mode": "command",
-        "generated": true,
-        "command_name": "jarvis-reviewer",
-        "agent_name": null
-      },
-      "codex": {
-        "generated": true,
-        "global_skill": false,
-        "project_skill": true,
-        "custom_agent": false
-      }
-    },
-    {
-      "name": "jarvis-system",
-      "display_name": "jarvis-system",
-      "scope": "project-local",
-      "project": "jarvis",
-      "capability_class": "expert",
-      "canonical_skill": "skills/projects/jarvis/jarvis-system/SKILL.md",
-      "targets": [
-        "claude",
-        "codex",
-        "gemini"
-      ],
-      "delivery_projects": [
-        "jarvis"
-      ],
-      "claude": {
-        "mode": "subagent",
-        "generated": true,
-        "command_name": null,
-        "agent_name": "jarvis-system"
-      },
-      "gemini": {
-        "mode": "subagent",
-        "generated": true,
-        "command_name": null,
-        "agent_name": "jarvis-system"
-      },
-      "codex": {
-        "generated": true,
-        "global_skill": false,
-        "project_skill": true,
-        "custom_agent": true
       }
     }
   ],

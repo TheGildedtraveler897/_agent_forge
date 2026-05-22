@@ -37,7 +37,7 @@ A single blocker means the artifact is not ready. Warnings accumulate — 3+ war
 ## Example Scorecard
 
 ```
-# Quality Gate: playlist-archive implementation brief
+# Quality Gate: example-app implementation brief
 
 - Goal clarity: PASS
 - Acceptance clarity: WARNING — "downloads work" is vague; specify: yt-dlp exits 0, file exists, metadata preserved

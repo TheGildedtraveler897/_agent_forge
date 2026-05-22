@@ -5,7 +5,7 @@ context_cost: light
 model_tier: any
 capability_class: workflow
 targets: ["claude", "codex", "gemini"]
-delivery_projects: ["jarvis"]
+delivery_projects: ["*"]
 ---
 
 # Multi Agent Governor

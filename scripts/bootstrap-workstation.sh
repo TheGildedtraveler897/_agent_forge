@@ -195,8 +195,12 @@ EOF
 ensure_base_dependencies_macports() {
   if ! command -v port >/dev/null 2>&1; then
     cat <<'EOF' >&2
-MacPorts is required for the macOS bootstrap path.
-Install MacPorts first, then rerun this script.
+MacPorts is required (the supported macOS package manager for this workstation
+bootstrap path). Homebrew is intentionally not supported.
+
+Install MacPorts:  https://www.macports.org/install.php
+
+After MacPorts is installed and `port` is on PATH, rerun this script.
 EOF
     exit 1
   fi

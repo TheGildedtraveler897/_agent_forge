@@ -19,6 +19,7 @@ Purpose: close out a development branch safely. Merge, open a PR, keep as-is, or
 4. **Post-merge re-verification.** After a local merge, re-run the proof command on the base branch before cleaning up the feature branch or worktree. Do not delete anything until the merged state is clean.
 5. **No hook or signature bypass.** Never use `--no-verify`, `--no-gpg-sign`, `-c commit.gpgsign=false`, or equivalent flags unless the user has explicitly asked for a specific bypass and explained why.
 6. **No force push to the primary branch.** Refuse `--force` or `--force-with-lease` against the base branch. If asked, escalate for explicit human confirmation.
+7. **Feature branch required.** Implementation work must finish from a named task branch, not directly from `main` or `master`. Use `scripts/enforce-branch-discipline.sh` unless the action is an explicit integration or release step.
 
 ## Workflow
 
@@ -26,6 +27,7 @@ Purpose: close out a development branch safely. Merge, open a PR, keep as-is, or
 1. Inspect working-tree status. Uncommitted changes must be either committed or explicitly acknowledged.
 2. Confirm the branch name and the remote it tracks.
 3. Identify and confirm the base branch.
+4. Confirm the current branch is not the base branch unless the requested action is integration-only.
 
 ### Step 2 — Run the full test suite
 Execute the project's full verification command. Read the output and the exit code. A non-zero exit code halts the skill and returns the user to `tdd-engineer` or `root-cause-analyst` depending on the failure mode.
@@ -40,20 +42,49 @@ Only after Step 2 passes, present four options:
 ### Step 4 — Execute the chosen option
 - **Merge:** fast-forward if possible, otherwise a merge commit with a descriptive message. After merging, re-run the full test suite on the merged state. Only then offer branch or worktree cleanup.
 - **PR:** build the PR with a clear title (under ~70 characters) and a body containing summary and test plan. Do not auto-approve or auto-merge the PR.
-- **Keep as-is:** record the current state and exit the skill.
+- **Keep as-is:** record the current branch, latest commit, upstream, next task, and any intentional dirty state; push the branch if it has no upstream.
 - **Discard:** require typed confirmation of the branch name. Prefer recoverable actions (local branch delete) before unrecoverable ones (remote branch delete, reflog expiry).
 
 ### Step 5 — Cleanup
 Only after Step 4's verification passes:
 - Remove worktrees associated with the merged branch if present.
 - Remove local branches safely.
-- If a transient `dev/active/<slug>/` working tree exists for this task, delete it. This is the cleanup half of the lifecycle documented in `execution-planner` § Checkpoint Discipline. The directory is `.gitignore`d and holds `cursor.json` plus optional handoff scratch state; the durable plan at `docs/plans/<slug>.md` and the cross-host pointer in `MEMORY.md active_tasks` survive untouched.
+- If a transient `dev/active/<slug>/` working tree exists for this task, delete it. This is the cleanup half of the lifecycle documented in `execution-planner` § Checkpoint Discipline. The directory is `.gitignore`d and holds `cursor.json` plus optional handoff scratch state.
 - Do not touch unrelated branches or worktrees.
+
+### Step 5b — Plan archival (merge only)
+This step runs only when Step 4's action was a successful local merge. On PR-only paths, archival happens after the PR is merged upstream — invoke this skill again post-merge if needed.
+
+For each `docs/plans/<branch-slug>.md` whose `branch` frontmatter field matches the merged branch:
+
+1. Read the plan file's frontmatter (`plan_id`, `title`, `task_count`, `created`).
+2. Update frontmatter in-place:
+   - `status: completed`
+   - `last_updated: <now>`
+3. Append a one-line summary to `docs/archive/PLANS_COMPLETED.md` under `## Entries`:
+   ```
+   - <YYYY-MM-DD> <plan_id> — <title> (<task_count> tasks, created <created-date>)
+   ```
+   If the archive file or its `## Entries` section does not exist, create it from the seed template before appending.
+4. Delete `docs/plans/<branch-slug>.md`.
+5. Remove the corresponding pointer line from `MEMORY.md active_tasks` via `memory-archivist`.
+6. Commit: `Plan archived: <branch-slug> (completed)`.
+
+The archive at `docs/archive/PLANS_COMPLETED.md` is the durable wisdom anchor for completed plans, analogous to `docs/archive/LESSONS_PROMOTED.md` and `docs/archive/SPRINTS.md`. Do not auto-archive plans whose status is `awaiting-approval`, `superseded`, or `in-progress`; those represent abandoned or in-flight work and should be addressed explicitly (re-plan, mark superseded, or finish).
+
+### Step 6 — Milestone distillation hook
+Only when finishing a sprint or RC milestone branch (e.g., a `Sprint N` or `RC ...` integration), and only after Step 4 verification has passed:
+- Run `python3 ~/Projects/_agent_forge/skills/global/lesson-distiller/distiller.py dry-run --target lessons` and present the projected archival list and byte delta.
+- Run `python3 ~/Projects/_agent_forge/skills/global/handoff-archiver/archiver.py dry-run` and present the projected sprint-section archival list and byte delta.
+- Do **not** apply either pass without typed operator confirmation. Both skills require `--yes` to write; without it, they exit non-zero and print the dry-run preview.
+- Only re-run `validate-triad-runtime.py` after the operator has either applied or skipped the distillation pass. The validator's `distillation_pass` gate will warn (or fail) if the auto-loaded ledgers exceed the byte threshold defined in `policies/distillation.json`.
+- Do not attempt distillation outside a milestone integration. Distillation is the bounded-decay counterpart to append-first, not a routine cleanup step.
 
 ## Red-flag patterns to refuse
 
 - Offering merge when tests have not been re-run on the current state.
 - Assuming `main` or `master` is the base branch without checking.
+- Doing implementation work directly on `main` or `master`.
 - Accepting "yes" as a destructive confirmation.
 - Skipping post-merge re-verification because "the merge was clean".
 - Using a hook bypass flag because a hook is inconveniently slow.
@@ -63,6 +94,7 @@ Only after Step 4's verification passes:
 
 - A summary line of the action taken.
 - The fresh proof-command output for both pre-action and post-action verification.
+- The branch name, latest commit hash, and upstream branch used for handoff or integration.
 - Any cleanup that was performed, listed explicitly.
 
 ## Non-goals

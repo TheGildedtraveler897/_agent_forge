@@ -9,7 +9,7 @@
       "matcher": "Bash",
       "handler": {
         "type": "command",
-        "command": "bash ~/Projects/_agent_forge/skills/global/telemetry-guardian/guardian.sh"
+        "command": "python3 ~/Projects/_agent_forge/skills/global/telemetry-guardian/guardian.py"
       },
       "targets": [
         "claude",
@@ -26,7 +26,7 @@
       "matcher": "",
       "handler": {
         "type": "command",
-        "command": "bash ~/Projects/_agent_forge/skills/global/prompt-auto-activator/auto-activator.sh"
+        "command": "python3 ~/Projects/_agent_forge/skills/global/prompt-auto-activator/auto-activator.py"
       },
       "targets": [
         "claude",

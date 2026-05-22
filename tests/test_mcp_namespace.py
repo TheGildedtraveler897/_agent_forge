@@ -47,7 +47,7 @@ class MCPNamespaceTests(unittest.TestCase):
         return {
             "version": 1,
             "governed_projects": [
-                {"name": "jarvis", "root": "jarvis", "trusted_workspace": True, "required_files": []},
+                {"name": "trusted-app", "root": "trusted-app", "trusted_workspace": True, "required_files": []},
                 {"name": "unsafe", "root": "unsafe", "trusted_workspace": False, "required_files": []},
             ],
         }
@@ -100,9 +100,9 @@ class MCPNamespaceTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             self.with_catalog(tmp, self.forge_factory_payload(), self.base_projects())
             try:
-                claude = json.loads(omni_factory.render_claude_project_mcp("jarvis"))
-                gemini = json.loads(omni_factory.render_gemini_settings("jarvis"))
-                codex = omni_factory.render_codex_config("jarvis", Path(tmp) / "jarvis", [])
+                claude = json.loads(omni_factory.render_claude_project_mcp("trusted-app"))
+                gemini = json.loads(omni_factory.render_gemini_settings("trusted-app"))
+                codex = omni_factory.render_codex_config("trusted-app", Path(tmp) / "trusted-app", [])
             finally:
                 self.restore_catalog()
 
@@ -118,7 +118,7 @@ class MCPNamespaceTests(unittest.TestCase):
             "remote-audit": {
                 "prefix": "forge.audit",
                 "scope": "project",
-                "projects": ["unsafe", "jarvis"],
+                "projects": ["unsafe", "trusted-app"],
                 "targets": ["claude", "codex", "gemini"],
                 "transport": {"type": "streamable_http", "url": "https://example.invalid/mcp"},
                 "auth": "bearer",
@@ -132,7 +132,7 @@ class MCPNamespaceTests(unittest.TestCase):
             self.with_catalog(tmp, payload, self.base_projects())
             try:
                 unsafe = omni_factory.project_mcp_servers("unsafe")
-                trusted = omni_factory.project_mcp_servers("jarvis")
+                trusted = omni_factory.project_mcp_servers("trusted-app")
             finally:
                 self.restore_catalog()
 
@@ -188,9 +188,9 @@ class MCPNamespaceTests(unittest.TestCase):
                 validator.omni_factory.GLOBAL_MCP_PATH = self.mcp_path
                 validator.omni_factory.PROJECTS_CATALOG_PATH = self.projects_path
                 validator.omni_factory.PROJECTS_ROOT = self.tmp_root
-                project = Path(tmp) / "jarvis"
+                project = Path(tmp) / "trusted-app"
                 (project / ".claude").mkdir(parents=True)
-                payload = omni_factory.render_claude_project_mcp("jarvis")
+                payload = omni_factory.render_claude_project_mcp("trusted-app")
                 assert payload is not None
                 (project / ".mcp.json").write_text(payload)
                 result = validator.mcp_surface_for("claude", project)

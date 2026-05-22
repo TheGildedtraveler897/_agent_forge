@@ -24,7 +24,7 @@ Prove, by live execution, that the configured hooks fire on each host. Distingui
 
 ## Subcommand contract
 
-`bash prober.sh --host <claude|codex|gemini> --project <root> --command <one-of-known-test-commands> --expect <block|allow|available> [--handler-type <command|http|mcp_tool|prompt|agent>]`
+`python3 prober.py --host <claude|codex|gemini> --project <root> --command <one-of-known-test-commands> --expect <block|allow|available> [--handler-type <command|http|mcp_tool|prompt|agent>]` (a thin `prober.sh` POSIX forwarder is also available for legacy callers)
 
 Output: one line of JSON to stdout with `host`, `handler_type`, `command`, `expected`, `observed`, `verdict` (`pass|fail|escalated`), `evidence_path`, optional `reason`.
 
@@ -57,7 +57,7 @@ The probe never executes destructive commands directly; it asks the host CLI to 
 
 ## Integration
 
-The triad validator (`scripts/validate-triad-runtime.py`) gains a `--probe-invocations` flag (default OFF). When set, after `hook_surface_for(host, project_root)` and `memory_surface_for(host, project_root)` both pass, the validator runs `live_hook_invocation_for(host, project_root)` which shells out to this skill's `prober.sh`. The result is attached to each per-host result as `live_hook` and the matrix entry gains `live_hook_pass`.
+The triad validator (`scripts/validate-triad-runtime.py`) gains a `--probe-invocations` flag (default OFF). When set, after `hook_surface_for(host, project_root)` and `memory_surface_for(host, project_root)` both pass, the validator runs `live_hook_invocation_for(host, project_root)` which shells out to this skill's `prober.py`. The result is attached to each per-host result as `live_hook` and the matrix entry gains `live_hook_pass`.
 
 The probe is opt-in because it makes real CLI calls (token cost) and takes longer than the surface check. Default sync runs stay fast; the deeper gate runs on demand or on schedule.
 

@@ -28,3 +28,6 @@ runtime/*
 
 # Transient per-task working trees (execution-planner Checkpoint Discipline)
 dev/
+
+# Distiller/archivist file lock guards (POSIX flock files; ephemeral)
+.forge_state/*.lock

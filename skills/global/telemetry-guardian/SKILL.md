@@ -9,7 +9,7 @@ model_tier: any
 
 # Telemetry Guardian
 
-Purpose: sit in front of every shell/tool invocation across all three hosts and refuse destructive patterns before they run. The factory compiles `policies/hooks.json` into each host's native pre-tool-use format and points the hook at `guardian.sh` in this skill directory.
+Purpose: sit in front of every shell/tool invocation across all three hosts and refuse destructive patterns before they run. The factory compiles `policies/hooks.json` into each host's native pre-tool-use format and points the hook at `guardian.py` in this skill directory. A thin `guardian.sh` POSIX forwarder is also present for legacy hook records that still reference the bash entry point.
 
 ## Hard Gates
 
@@ -17,7 +17,7 @@ Purpose: sit in front of every shell/tool invocation across all three hosts and 
 2. **Deny list is explicit.** The script only blocks patterns that appear in its matcher list. Novel destructive invocations will pass through until the deny list is updated. Err toward blocking; allow explicit human override via `AGENT_FORGE_GUARDIAN=off`.
 3. **Opt-out must be explicit and logged.** When `AGENT_FORGE_GUARDIAN=off` is set, the guardian allows and writes one line to `~/.agent-forge/guardian.log` so the bypass is auditable.
 4. **No network calls.** Guardian evaluates locally. It never phones home, never writes to external endpoints, and never caches invocations.
-5. **Fast.** Guardian must complete in well under its 5-second timeout. Complex regexes should be avoided; the deny list is fixed-string or simple `grep -E`.
+5. **Fast.** Guardian must complete in well under its 5-second timeout. Complex regexes should be avoided; the deny list is fixed-string or simple Python `re` patterns.
 
 ## Current deny list
 
@@ -32,7 +32,7 @@ Block the invocation if the command string matches any of:
 - `dd of=/dev/sda` or similar whole-disk writes
 - `chmod -R 777 ~` — permissions nuke
 
-Matchers are simple fixed strings or short `grep -E` patterns. Adjust the list inside `guardian.sh`.
+Matchers are simple fixed strings or short Python regex patterns. Adjust the `DENY_LIST` constant inside `guardian.py`.
 
 ## Output contract
 
@@ -49,10 +49,10 @@ Exit 0 → allow. Exit 1 → block. Exit 2 → guardian error (caller should tre
 ## Testing the guardian
 
 ```sh
-echo '{"tool":"Bash","command":"git commit --no-verify"}' | bash skills/global/telemetry-guardian/guardian.sh
+echo '{"tool":"Bash","command":"git commit --no-verify"}' | python3 skills/global/telemetry-guardian/guardian.py
 # expected: stdout JSON with verdict=block, matched=--no-verify; exit 1
 
-echo '{"tool":"Bash","command":"ls -la"}' | bash skills/global/telemetry-guardian/guardian.sh
+echo '{"tool":"Bash","command":"ls -la"}' | python3 skills/global/telemetry-guardian/guardian.py
 # expected: verdict=allow; exit 0
 ```
 

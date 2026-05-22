@@ -13,7 +13,7 @@ Owns the `user_prompt_submit` advisory hook. Reads the user prompt, regex-matche
 
 ## Hook-driven, advisory-only
 
-- Ships `auto-activator.sh`, registered as a `user_prompt_submit` hook for Claude and Codex via `policies/hooks.json`.
+- Ships `auto-activator.py` (with a thin `auto-activator.sh` POSIX forwarder), registered as a `user_prompt_submit` hook for Claude and Codex via `policies/hooks.json`. The Python implementation runs natively on Windows Claude Code without bash.
 - Gemini has no equivalent event. The canonical alias `_EVENT_ALIASES["gemini"]["user_prompt_submit"]` resolves to `None`, so the renderer drops Gemini automatically. The skill's `targets` list reflects this.
 - The script reads stdin, regex-matches a keyword set, and prints one advisory line per match.
 - The agent decides whether to load the recommended skill. The hook never blocks, never modifies the prompt, and never invokes a tool.
@@ -25,7 +25,7 @@ Owns the `user_prompt_submit` advisory hook. Reads the user prompt, regex-matche
 | `/caveman`, `caveman mode`, `/terse`, `terse mode` | `token-optimizer` |
 | `/checkpoint`, `/handoff` | `context-engineer` |
 
-New rows are added by editing the bash `case` table in `auto-activator.sh`. No schema change is required to add a new trigger.
+New rows are added by editing the `ADVISORIES` list in `auto-activator.py`. No schema change is required to add a new trigger.
 
 ## Non-goals
 
