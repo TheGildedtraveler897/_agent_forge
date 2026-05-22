@@ -2018,6 +2018,42 @@ def verify() -> int:
                     if p.exists() and p.stat().st_size >= fail_at:
                         warn(f"distillation: {rel} is {p.stat().st_size} bytes (fail_at={fail_at}); consider running lesson-distiller / handoff-archiver")
 
+    plans_dir = ROOT / "docs" / "plans"
+    if plans_dir.is_dir():
+        try:
+            local_branches = subprocess.run(
+                ["git", "-C", str(ROOT), "branch", "--format=%(refname:short)"],
+                capture_output=True, text=True, check=False,
+            ).stdout.splitlines()
+            remote_branches = subprocess.run(
+                ["git", "-C", str(ROOT), "branch", "-r", "--format=%(refname:short)"],
+                capture_output=True, text=True, check=False,
+            ).stdout.splitlines()
+        except Exception as exc:
+            warn(f"stale-plan check skipped (git unavailable): {exc}")
+        else:
+            known_branches = set(b.strip() for b in local_branches)
+            known_branches.update(b.strip().removeprefix("origin/") for b in remote_branches)
+            for plan_path in sorted(plans_dir.glob("*.md")):
+                try:
+                    body = plan_path.read_text()
+                except Exception as exc:
+                    warn(f"plan {plan_path.relative_to(ROOT)} unreadable: {exc}")
+                    continue
+                fm = parse_frontmatter(body)
+                branch = fm.get("branch")
+                plan_status = fm.get("status")
+                if not branch:
+                    warn(f"plan {plan_path.relative_to(ROOT)} missing 'branch' frontmatter field")
+                    continue
+                if plan_status in ("completed", "superseded"):
+                    continue
+                if branch not in known_branches:
+                    warn(
+                        f"plan {plan_path.relative_to(ROOT)} references branch '{branch}' "
+                        f"which does not exist locally or on origin; consider archiving or marking superseded"
+                    )
+
     return status
 
 

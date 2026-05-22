@@ -49,8 +49,28 @@ Only after Step 2 passes, present four options:
 Only after Step 4's verification passes:
 - Remove worktrees associated with the merged branch if present.
 - Remove local branches safely.
-- If a transient `dev/active/<slug>/` working tree exists for this task, delete it. This is the cleanup half of the lifecycle documented in `execution-planner` § Checkpoint Discipline. The directory is `.gitignore`d and holds `cursor.json` plus optional handoff scratch state; the durable plan at `docs/plans/<slug>.md` and the cross-host pointer in `MEMORY.md active_tasks` survive untouched.
+- If a transient `dev/active/<slug>/` working tree exists for this task, delete it. This is the cleanup half of the lifecycle documented in `execution-planner` § Checkpoint Discipline. The directory is `.gitignore`d and holds `cursor.json` plus optional handoff scratch state.
 - Do not touch unrelated branches or worktrees.
+
+### Step 5b — Plan archival (merge only)
+This step runs only when Step 4's action was a successful local merge. On PR-only paths, archival happens after the PR is merged upstream — invoke this skill again post-merge if needed.
+
+For each `docs/plans/<branch-slug>.md` whose `branch` frontmatter field matches the merged branch:
+
+1. Read the plan file's frontmatter (`plan_id`, `title`, `task_count`, `created`).
+2. Update frontmatter in-place:
+   - `status: completed`
+   - `last_updated: <now>`
+3. Append a one-line summary to `docs/archive/PLANS_COMPLETED.md` under `## Entries`:
+   ```
+   - <YYYY-MM-DD> <plan_id> — <title> (<task_count> tasks, created <created-date>)
+   ```
+   If the archive file or its `## Entries` section does not exist, create it from the seed template before appending.
+4. Delete `docs/plans/<branch-slug>.md`.
+5. Remove the corresponding pointer line from `MEMORY.md active_tasks` via `memory-archivist`.
+6. Commit: `Plan archived: <branch-slug> (completed)`.
+
+The archive at `docs/archive/PLANS_COMPLETED.md` is the durable wisdom anchor for completed plans, analogous to `docs/archive/LESSONS_PROMOTED.md` and `docs/archive/SPRINTS.md`. Do not auto-archive plans whose status is `awaiting-approval`, `superseded`, or `in-progress`; those represent abandoned or in-flight work and should be addressed explicitly (re-plan, mark superseded, or finish).
 
 ### Step 6 — Milestone distillation hook
 Only when finishing a sprint or RC milestone branch (e.g., a `Sprint N` or `RC ...` integration), and only after Step 4 verification has passed:

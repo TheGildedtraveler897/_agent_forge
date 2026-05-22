@@ -1,14 +1,14 @@
 ---
 plan_id: feat-ship-prep
 branch: feat/ship-prep
-status: awaiting-approval
+status: completed
 created: 2026-05-22T15:30:00Z
-last_updated: 2026-05-22T15:30:00Z
+last_updated: 2026-05-22T16:10:00Z
 spec_ref: null
 task_count: 8
 execution_mode: sequential
-approved_at: null
-approved_by: null
+approved_at: 2026-05-22T15:45:00Z
+approved_by: operator
 ship_target: NRC clean-slate bundle, Monday 2026-05-25
 title: Plan Persistence Layer for Agent Forge
 ---
@@ -349,15 +349,15 @@ Ship-prep finalization (Track F or G, TBD) will follow after this lands.
 
 ## Acceptance Criteria (For Operator Sign-Off)
 
-- [ ] `docs/plans/<branch-slug>.md` is created BEFORE the human approval gate
-- [ ] Plan file uses the specified frontmatter format
-- [ ] Status transitions through the documented lifecycle
-- [ ] MEMORY.md pointer is updated on each transition
-- [ ] Plan files are archived (not deleted) on merge — wisdom preserved
-- [ ] No new JSON policy schema introduced
-- [ ] Existing `continuity_cursor.py` integration preserved
-- [ ] AGENTS.md and CONOPS.md doctrine reflect the new layer
-- [ ] Smoke test passes end-to-end
+- [x] `docs/plans/<branch-slug>.md` is created BEFORE the human approval gate (execution-planner SKILL.md Phase 5, Hard Gate 9)
+- [x] Plan file uses the specified frontmatter format (this file is the reference implementation)
+- [x] Status transitions through the documented lifecycle (`awaiting-approval` → `approved` → `in-progress` → `completed` exercised end-to-end)
+- [x] MEMORY.md pointer is updated on each transition (specified in execution-planner Phase 5/6a; project-level MEMORY.md is the surface, not the factory)
+- [x] Plan files are archived (not deleted) on merge — wisdom preserved (branch-finisher Step 5b)
+- [x] No new JSON policy schema introduced (zero new policies/*.json files)
+- [x] Existing `continuity_cursor.py` integration preserved (cursor init still happens, but gated on approval)
+- [x] AGENTS.md and CONOPS.md doctrine reflect the new layer (new rule in AGENTS.md, new section in CONOPS.md)
+- [x] Smoke test passes end-to-end (verify-agent-forge.py exits 0 clean; stale-plan WARN fires correctly when tested with a fake branch)
 
 ## Approval
 

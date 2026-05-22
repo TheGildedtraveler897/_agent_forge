@@ -27,6 +27,7 @@ Purpose: turn an approved spec (from `spec-architect`) into a task-by-task imple
 6. **Verification command.** Every task ends with the exact command to run to prove the task is done.
 7. **Branch preflight.** Non-trivial implementation work must not run on `main` or `master`. Include `scripts/enforce-branch-discipline.sh` in the plan preflight, and create or switch to a named task branch before execution begins.
 8. **Terminal handoff.** On approval, hand off to `tdd-engineer` (sequential execution) or `subagent-dispatcher` (parallel execution). Do not invoke implementation skills from here.
+9. **Persisted plan artifact.** The plan must be written to `docs/plans/<branch-slug>.md` with frontmatter `status: awaiting-approval` BEFORE presenting it for review. This guarantees the plan survives session glitches, context overflow, or model swaps, and is discoverable by peer agents on other hosts via the `MEMORY.md active_tasks` pointer. Never present a plan body without first persisting it.
 
 ## Workflow
 
@@ -56,16 +57,91 @@ Before writing the plan to disk, verify:
 - **Type consistency scan.** Function names, signatures, and file paths are identical wherever they appear.
 - **Independence check.** If tasks are being handed to parallel agents, tasks that share a file or shared state must be marked sequential, not parallel.
 
-### Phase 5 — Write the plan
-Write to `docs/plans/YYYY-MM-DD-<slug>.md`. Include at the top:
-- Link to the approved spec.
-- Whether execution will be sequential (`tdd-engineer`) or parallel (`subagent-dispatcher`).
-- Total task count and rough effort estimate.
-- Branch name and branch preflight command.
-- If `dev/active/<slug>/` does not exist, create it, seed `tasks.md` from the plan's task IDs, and initialize `cursor.json` with `python3 scripts/continuity_cursor.py start --slug <slug> --plan docs/plans/YYYY-MM-DD-<slug>.md --task T-01 --next-action "<short next action>"`.
+### Phase 5 — Write the plan with awaiting-approval status
 
-### Phase 6 — Human gate
-Present the plan for review. On approval, name the next skill explicitly. On rejection, loop back to the failed phase.
+The plan is persisted to disk **before** the human approval gate. This is non-negotiable: if the session glitches mid-review, the plan must survive.
+
+- Resolve the current branch: `git branch --show-current`.
+- Slugify it (replace `/` with `-`). Example: `feat/ship-prep` → `feat-ship-prep`.
+- Target path: `docs/plans/<branch-slug>.md`.
+- If a plan file already exists for this branch:
+  - Read its frontmatter status.
+  - If status is `approved` or `in-progress`, **halt** and surface a confirmation prompt to the operator. Existing work may be in-flight; overwriting without consent would orphan a continuity cursor.
+  - If status is `awaiting-approval`, `superseded`, or `completed`, overwrite is safe.
+- Write the plan file with this frontmatter:
+
+  ```yaml
+  ---
+  plan_id: <branch-slug>
+  branch: <full branch name>
+  status: awaiting-approval
+  created: <ISO 8601 UTC>
+  last_updated: <same as created>
+  spec_ref: <docs/specs/YYYY-MM-DD-<slug>.md, or null>
+  task_count: <int>
+  execution_mode: sequential | parallel
+  approved_at: null
+  approved_by: null
+  title: <one-line plan title>
+  ---
+  ```
+
+- Body includes:
+  - Link to the approved spec (if one exists).
+  - Branch name and branch preflight command.
+  - Total task count and rough effort estimate.
+  - All micro-tasks T-01..T-NN per the Task Template.
+
+- Append a one-line pointer to project `MEMORY.md` `active_tasks` section via `memory-archivist`:
+
+  ```
+  - Plan: docs/plans/<branch-slug>.md — <one-line title> (status: awaiting-approval, tasks: <count>)
+  ```
+
+- Commit the plan file with message: `Plan: <branch-slug> (awaiting approval)`.
+
+**Do not** initialize `dev/active/<slug>/` at this stage. The continuity cursor is created only on approval (Phase 6c), because cursor state implies execution intent.
+
+### Phase 6 — Human approval gate
+
+Present the plan **file path** (not the full plan body inline) for review:
+
+> "Plan saved to `docs/plans/<branch-slug>.md` (status: awaiting-approval). Please review and approve, request changes, or reject."
+
+#### Phase 6a — On approval
+
+- Update plan frontmatter:
+  - `status: approved`
+  - `last_updated: <now>`
+  - `approved_at: <now>`
+  - `approved_by: <operator identifier>`
+- Update the MEMORY.md pointer status field.
+- Initialize the continuity cursor:
+  ```
+  python3 scripts/continuity_cursor.py start \
+    --slug <branch-slug> \
+    --plan docs/plans/<branch-slug>.md \
+    --task T-01 \
+    --next-action "<short next action>"
+  ```
+  This creates `dev/active/<branch-slug>/` with `cursor.json`, `tasks.md`, etc.
+- Commit: `Plan: <branch-slug> (approved)`.
+- Name the next skill explicitly: `tdd-engineer` (sequential) or `subagent-dispatcher` (parallel).
+
+#### Phase 6b — On rejection
+
+- Update plan frontmatter:
+  - `status: superseded`
+  - `last_updated: <now>`
+- Update the MEMORY.md pointer status field.
+- Commit: `Plan: <branch-slug> (superseded)`.
+- Loop back to the failed phase. The superseded file remains on disk as iteration history until the next plan overwrites it.
+
+#### Phase 6c — On revision request
+
+- Treat as a loop-back to Phase 1 or 3 (operator names the phase).
+- Phase 5 will overwrite the file with a new `awaiting-approval` plan once the revision is ready.
+- No frontmatter update at this stage — the existing `awaiting-approval` file is the iteration baseline.
 
 ## Task Template
 
@@ -102,7 +178,9 @@ Verification:
 
 ## Output
 
-- A `docs/plans/YYYY-MM-DD-<slug>.md` file.
+- A `docs/plans/<branch-slug>.md` file with status frontmatter (initially `awaiting-approval`, transitioning to `approved` or `superseded` after the human gate).
+- A one-line pointer in project `MEMORY.md active_tasks` section.
+- On approval, an initialized `dev/active/<branch-slug>/` directory with cursor state.
 - An explicit statement naming the next skill: `tdd-engineer` or `subagent-dispatcher`.
 
 ## Non-goals

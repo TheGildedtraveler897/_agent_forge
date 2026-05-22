@@ -139,6 +139,45 @@ This is the bounded-decay counterpart to append-first: the harvester captures, t
 
 The file now uses schema v2 and includes the seeded local stdio `forge-factory` server. Canonical records carry semantic prefixes, host-safe aliases, transport/auth/trust metadata, project routing, and tool filters. The runtime gate validates MCP by checking rendered host config plus a direct stdio `tools/list` smoke; host-native MCP management UIs are useful spot checks but are not the canonical proof surface.
 
+## Plan Persistence Layer
+
+`execution-planner` writes its output to `docs/plans/<branch-slug>.md` with frontmatter that tracks plan status across the approval and execution lifecycle. This is the durable artifact that enables multi-agent plan continuity: a Claude session can produce a plan, glitch, and a peer Codex or Gemini agent can pick up from the on-disk file without losing the iteration context that produced it.
+
+The layer is intentionally lightweight. There is no `policies/plans.json`, no renderer pipeline, no validator extension. It's project-governance convention enforced by the relevant skills, not a host-rendered primitive. Hosts (Claude, Codex, Gemini) do not have native plan formats; only skills (`execution-planner`, `tdd-engineer`, `subagent-dispatcher`, `branch-finisher`) read plan files. So the omni-factory five-step pattern does not apply.
+
+### Three-Tier State Model
+
+- **Plan file** (`docs/plans/<branch-slug>.md`) — Full task breakdown with status frontmatter. Committed with the branch. Never auto-loaded by any host.
+- **MEMORY.md pointer** — One-line entry in the `active_tasks` section. Auto-loaded by all three hosts on session start via the memory bridge. Approximately 100 bytes; bounded.
+- **Continuity cursor** (`dev/active/<slug>/cursor.json`) — Per-task position state, managed by `scripts/continuity_cursor.py`. Created only when plan status transitions to `approved` (cursor state implies execution intent).
+
+### Status Lifecycle
+
+```
+awaiting-approval → approved → in-progress → completed
+                  ↓
+              superseded   (rejected or re-planned)
+```
+
+Transitions are driven by skills, not by hosts:
+- `execution-planner` writes `awaiting-approval`; advances to `approved` or `superseded` at the human gate.
+- `tdd-engineer` (and `subagent-dispatcher`) advance `approved → in-progress` on first task start.
+- `branch-finisher` advances `in-progress → completed` on successful merge, then archives the plan.
+
+### Cleanup Policy
+
+`branch-finisher` archives the plan file to `docs/archive/PLANS_COMPLETED.md` on merge (one-line summary per plan) and deletes the active file. One plan per branch maximum; re-planning the same branch overwrites the file. There is no `docs/plans/.history/` directory — the git log is the iteration history.
+
+Stale plans (orphaned by deleted branches) are flagged by `scripts/verify-agent-forge.py` as warnings, not failures. Operator decides whether to mark `superseded`, archive, or delete.
+
+### Token Hygiene
+
+Plan files are never auto-loaded. Only the `MEMORY.md` pointer (~100 bytes) loads on session start. Agents read the full plan on demand when executing or handing off. This keeps the working context lean while the durable artifact remains reachable to any peer agent on any host.
+
+### Coexistence With Existing Primitives
+
+The plan persistence layer does not replace `dev/active/<slug>/cursor.json` — the cursor remains the per-task continuity surface, but only for approved plans. The plan file is upstream of the cursor: cursor creation is gated on plan approval, and cursor deletion is part of `branch-finisher` cleanup. `MEMORY.md active_tasks` is the cross-host pointer of record; never write plan content into `MEMORY.md` itself.
+
 ## Bootstrap And Sync Flow
 
 1. `bootstrap-project.sh` creates the thinnest complete governed project scaffold.
