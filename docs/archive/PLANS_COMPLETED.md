@@ -16,4 +16,4 @@ Each entry is a single line under `## Entries`:
 
 ## Entries
 
-_No plans archived yet._
+- 2026-05-22 feat-ship-prep — Plan Persistence Layer for Agent Forge (8 tasks, created 2026-05-22)
