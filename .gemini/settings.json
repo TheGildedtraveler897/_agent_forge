@@ -1,0 +1,63 @@
+{
+  "context": {
+    "fileName": "GEMINI.md"
+  },
+  "hooks": {
+    "BeforeTool": [
+      {
+        "hooks": [
+          {
+            "command": "python3 ~/Projects/_agent_forge/skills/global/telemetry-guardian/guardian.py",
+            "description": "Universal pre-tool guardrail. Blocks destructive invocations such as --no-verify, force-push-to-main, and wildcard home deletion. Opt out per-session with AGENT_FORGE_GUARDIAN=off.",
+            "name": "pre-tool-execution-guardian",
+            "timeout": 5000,
+            "type": "command"
+          }
+        ],
+        "matcher": "Bash"
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "command": "python3 ~/Projects/_agent_forge/skills/global/memory-bridge/bridge.py inbound --project . --host gemini",
+            "description": "Import new Gemini sidecar notes back into canonical MEMORY.md at session end.",
+            "name": "memory-bridge-inbound-gemini",
+            "timeout": 30000,
+            "type": "command"
+          }
+        ],
+        "matcher": ""
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "command": "python3 ~/Projects/_agent_forge/skills/global/memory-bridge/bridge.py outbound --project . --host gemini",
+            "description": "Bridge canonical MEMORY.md into a Gemini project-local memory sidecar at session start.",
+            "name": "memory-bridge-outbound-gemini",
+            "timeout": 10000,
+            "type": "command"
+          }
+        ],
+        "matcher": ""
+      }
+    ]
+  },
+  "mcpServers": {
+    "forge-factory": {
+      "args": [
+        "/home/pheonixprotocol/Projects/_agent_forge/scripts/mcp/forge_factory_server.py"
+      ],
+      "command": "python3",
+      "description": "Local Agent Forge factory MCP server.",
+      "includeTools": [
+        "read_handoff"
+      ],
+      "timeout": 60000,
+      "trust": false
+    }
+  }
+}

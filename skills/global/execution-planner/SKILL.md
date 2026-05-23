@@ -87,6 +87,7 @@ The plan is persisted to disk **before** the human approval gate. This is non-ne
   ```
 
 - Body includes:
+  - **Durable Context**: A dedicated `## Durable Context` section at the top of the body. This is a low-context, branch-specific persistent memory layer. **If a plan file already exists, the agent MUST preserve the contents of this section exactly when overwriting or updating.**
   - Link to the approved spec (if one exists).
   - Branch name and branch preflight command.
   - Total task count and rough effort estimate.
