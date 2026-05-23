@@ -1,6 +1,6 @@
 ---
 name: onboarding-guide
-description: Walk a first-time operator through what the Agent Forge factory is, what just got generated on their machine, what the green or red lights mean, and what to do next. Plain-English explanations of the agentic vocabulary (MCP, hooks, sandboxing, memory) translated as they appear. Three modes — guided tour, non-interactive state check, and single-topic explainer. Use right after `bootstrap-project.sh` or any time a new operator opens the repo cold.
+description: Walk a first-time operator through the Agent Forge factory inline in chat — what it is, what just got generated on their machine, what the green or red lights mean, what to do next. Seven paced beats with prompts between them. Plain-English explanations of agentic vocabulary as terms appear. Use when the user types `/onboarding-guide` in Claude Code, Codex, or Gemini.
 context_cost: light
 model_tier: any
 capability_class: workflow
@@ -9,13 +9,19 @@ targets: ["claude", "codex", "gemini"]
 
 # Onboarding Guide
 
-A walkthrough for someone meeting the factory for the first time. Aimed at three readers in one document: a smart operator new to coding-agent CLIs, a technical operator who knows git/bash but not agentic vocabulary, and a senior architect skimming for component map and gates.
+## Inline-Delivery Contract (read this first)
+
+**When you (the assistant) are invoked as `/onboarding-guide` in a conversational host CLI (Claude Code, Codex, Gemini), YOU walk the user through the tour right here in the chat.** Render the beats below directly as your reply. Ask the user the prompts marked `PROMPT THE USER:` and wait for their reply between beats. Do **not** spawn a subprocess for the tour. The companion `onboard.py` script is for non-conversational contexts (terminal-only operators, CI) and is invoked only when the user explicitly asks for `check` (machine-state report) or `explain <topic>` (single-concept explainer) via Bash.
+
+**The first reply after `/onboarding-guide` must contain visible chat output** — at minimum, Beat 0's greeting and the experience-level question. A silent or subprocess-only reply is a regression.
+
+If the user asks "what is X?" mid-tour, or types `/onboarding-guide explain <topic>`, read the matching `## <topic>` section from `EXPLAINERS.md` (sibling file in this directory) and serve it back in your reply.
 
 ## Mission
 
 Translate the factory from "a folder with a lot of files" into "I see what each piece does and what to do next" — without sycophancy, without condescension, without jargon that hasn't been translated first.
 
-## Tone discipline (read before extending this skill)
+## Tone Discipline (read before extending this skill)
 
 - **No sycophancy.** No "Great question!", no "You're doing amazing!". The operator's time is the scarce resource; respect it.
 - **No condescension.** No "Don't worry if this is hard". Just explain it.
@@ -27,69 +33,269 @@ Translate the factory from "a folder with a lot of files" into "I see what each 
 - **Ask, don't assume.** When the operator's experience level is unclear, ask one short question and adapt. Do not lecture them through context they already have.
 - **Show, don't tell.** Run the actual commands. Show the actual output. Translate it. "Here's what we just verified: [output]. In plain terms: [translation]."
 
+---
+
+## The Seven Beats (Beat 0 through Beat 7)
+
+Each beat is small (≤12 lines of visible output before the next pause or prompt) and ends in either a `PROMPT THE USER:` line or a "press Enter / continue when ready" pause. Render the content as your assistant reply. Render code blocks and tables as Markdown. Do not collapse multiple beats into a single mega-reply; pace them so the user can absorb each one before the next.
+
+---
+
+### Beat 0 — Greeting + Experience Prompt
+
+Render this block as your reply, then wait for the user's answer:
+
+```
+========================================================
+  Agent Forge — quick tour
+========================================================
+
+You just unzipped a factory that makes three AI coding tools
+(Claude, Codex, Gemini) speak the same language.
+
+Same skill, same safety rule, same shared brain — rendered
+into each tool's native format from one source.
+
+I'll keep this short. Answer the prompt below; I'll pause between
+beats so you can absorb each one.
+
+(Last reviewed against vendor docs: 2026-05-22. State of the field
+changes; re-verify before relying on specifics.)
+```
+
+**PROMPT THE USER:**
+
+> Have you used any of the three AI coding CLIs (Claude Code / OpenAI Codex / Google Gemini CLI) before?
+>
+> - **(a)** Yes — two or three of them. I'll keep things terse.
+> - **(o)** One of them. I'll translate jargon on first use.
+> - **(n)** None yet — starting fresh. I'll translate every term.
+> - **(u)** Not sure — check my machine for me. (If chosen, run `which claude codex gemini` via Bash and report what's installed; then pick the closest level for the rest of the tour.)
+
+Wait for the user's reply. Record the level mentally; it shapes how much you translate going forward.
+
+---
+
+### Beat 1 — Role Prompt
+
+Render this block as your next reply:
+
+```
+Quick second question — what brings you here today?
+```
+
+**PROMPT THE USER:**
+
+> - **(c)** Curious — I want to understand what this is.
+> - **(b)** Builder — I want to extend or contribute.
+> - **(o)** Operator — I'm setting up the factory for a team.
+> - **(d)** Decider — I'm evaluating whether to adopt this.
+
+Wait for the user's reply. Record the role; it shapes the role-tuned closing line in Beat 7.
+
+---
+
+### Beat 2 — What Is This Folder?
+
+Render this block as your next reply. Read `~/Projects/_agent_forge/registry.json` via the Read tool first; count the entries under `skills` and substitute the count where indicated.
+
+```
+◆ This folder is a factory.
+
+You write a skill once — a short markdown file describing what
+an AI tool should do. The factory turns that one file into three
+different configurations, one for each AI tool.
+
+You don't copy-paste. You don't maintain three versions.
+The factory does the translation.
+
+✓ Right now this factory holds <N> skills.
+```
+
+(Where `<N>` is the count from `registry.json`. If the file is unreadable, omit the count line rather than fabricating.)
+
+**PAUSE:** End the reply with "press Enter when ready, or ask 'what is X?' if any term above is unfamiliar" and wait. If the user asks an explainer-style question, read the matching section from `EXPLAINERS.md` and serve it; then continue to Beat 3 when they press Enter.
+
+---
+
+### Beat 3 — The Cross-Host Translation Table
+
+Render this block as your next reply. The tease first; then on the user's next "Enter," render the table.
+
+**First reply (the tease):**
+
+```
+◆ Here's the trick.
+
+Each AI tool calls things by different names.
+
+  Claude calls it a 'slash command' or a 'subagent.'
+  Codex  calls it a 'skill.'
+  Gemini calls it a 'command' or a 'subagent.'
+
+Same idea. Three names.
+```
+
+End with: "press Enter to see all the names side-by-side."
+
+**Second reply (the payoff — render the ASCII table verbatim inside a code fence):**
+
+```
+Concept           Claude       Codex            Gemini
+-----------------------------------------------------------
+Workflow skill    command      skill            command
+Expert skill      subagent     (none native)    subagent
+Slash syntax      /name        (no slash)       /name
+Pre-tool hook     PreToolUse   PreToolUse       BeforeTool
+Stop event        Stop         Stop             SessionEnd
+MCP config        .mcp.json    config.toml      settings.json
+Memory target     native       sidecar          sidecar
+Boot file         CLAUDE.md    AGENTS.md        GEMINI.md
+```
+
+Underneath, add two short lines:
+
+> Three vendors, similar primitives, different names.
+> You don't have to memorize this — the factory translates.
+
+**PAUSE:** "press Enter to continue."
+
+---
+
+### Beat 4 — The Seatbelt (Telemetry Guardian)
+
+Render this block as your next reply. Optionally, before rendering, run `wc -l ~/.agent-forge/guardian.log 2>/dev/null || echo 0` via Bash to get a live event count; if the file doesn't exist or the count is zero, omit the "logged N events" line.
+
+```
+◆ The seatbelt
+
+Agents will run shell commands for you. That's the point.
+It's also the risk.
+
+The factory runs one check before every shell command on every
+AI tool. It refuses obviously destructive patterns:
+
+  - force-push to main
+  - rm -rf $HOME
+  - git reset --hard <ref>
+  - --no-verify, --no-gpg-sign
+
+Intentionally dumb. Predictability beats sophistication.
+
+✓ It's logged <N> events on this machine.   (only if N > 0)
+```
+
+**PAUSE:** "press Enter to continue."
+
+---
+
+### Beat 5 — The Shared Brain (MEMORY.md)
+
+Render this block as your next reply:
+
+```
+◆ The shared brain
+
+All three AI tools read one file per project: MEMORY.md.
+
+Build commands. Project quirks. Recent decisions. Known failures.
+What Claude learns today, Codex sees tomorrow.
+
+Append-first. Secrets blocked at write time. Only Claude has
+native auto-memory; for Codex and Gemini the factory bridges
+to sidecar files in .codex/memory/ and .gemini/memory/.
+```
+
+**PAUSE:** "press Enter to continue."
+
+---
+
+### Beat 6 — Install Gate
+
+Detect missing host CLIs first. Run `which claude codex gemini` via Bash. For each CLI present, note it as ✓; for each missing, mention it explicitly.
+
+**If all three are present:**
+
+```
+◆ Install check
+
+  ✓ claude is on PATH
+  ✓ codex  is on PATH
+  ✓ gemini is on PATH
+
+All three host CLIs are installed. Nothing to do here.
+```
+
+**If any are missing**, render the install lookup table below for only the missing CLIs:
+
+| CLI | Vendor | What it's for | Docs | Install command |
+|---|---|---|---|---|
+| `claude` | Anthropic | Best memory story; native slash commands and subagents. | https://docs.anthropic.com/claude/docs/claude-code | `npm install -g @anthropic-ai/claude-cli` |
+| `codex` | OpenAI | Strongest default sandbox (bwrap on Linux, Seatbelt on macOS). | https://platform.openai.com/docs/codex | Follow the docs link — install method varies by platform. |
+| `gemini` | Google | Vision-capable; cheapest non-trivial tier. | https://ai.google.dev/gemini-api/docs/cli | `npm install -g @google/gemini-cli` |
+
+Then offer: "Or install all three at once: `bash ~/Projects/_agent_forge/scripts/bootstrap-workstation.sh`."
+
+**PROMPT THE USER:** "Want me to walk you through installing one of these, or skip ahead?" If they want a walk-through, name the CLI's vendor + tagline + docs URL + install command, then ask which to install next. If they want to skip, continue to Beat 7.
+
+---
+
+### Beat 7 — Role-Tuned Next Action + Goodbye
+
+Render this block as your next reply. Pick the role-specific bullet that matches the role the user gave in Beat 1.
+
+```
+◆ That's the tour.
+
+Working mental model now in place:
+  - The factory (one source, three deliveries)
+  - The cross-host translation table
+  - The safety gate
+  - The shared brain
+```
+
+Then the role-tuned action:
+
+| Role | Next-action paragraph |
+|---|---|
+| **Curious (c)** | "Read the `state-of-the-field` explainer next — type `/onboarding-guide explain state-of-the-field`. It names what's converged across the three vendors and what hasn't, dated and cited. Then pick one skill that piqued your interest and read its `SKILL.md` end-to-end." |
+| **Builder (b)** | "Read `docs/SOTA_2026_AUDIT.md` before authoring a new skill — that file is the verified state of cross-vendor standards. Then use `skill-author` to start authoring. Test on at least two hosts before merging." |
+| **Operator (o)** | "Bake `scripts/verify-agent-forge.py` and `scripts/validate-triad-runtime.py` into your team's CI. The structural verifier confirms files on disk; the runtime gate confirms each host's CLI can actually see what the factory shipped — that's the part that catches Gemini event-name drift the structural verifier can't." |
+| **Decider (d)** | "`policies/hooks.json` is the auditable deny list — those are your procurement talking points. `docs/SOTA_2026_AUDIT.md` is the procurement-grade evidence trail of what's standardized across the three vendors and what isn't, with primary-source citations." |
+
+End with one short line:
+
+```
+Welcome to Agent Forge.
+```
+
+---
+
 ## Modes
 
-The skill ships an executable Python helper at `onboard.py` next to this file. Invoke with `python3 ~/Projects/_agent_forge/skills/global/onboarding-guide/onboard.py <mode>`.
+The skill has three modes from the operator's perspective:
 
-### `tour` (default)
-
-**Paced, interactive walkthrough.** The tour reveals one beat at a time and asks `[Enter]` between beats. It does not dump multiple sections in one go. This is intentional — the design rule is *one screen, one beat, one question or pause.*
-
-Eight beats:
-
-| # | Beat | What happens |
+| Mode | Where it runs | What it does |
 |---|---|---|
-| 0 | Greet + experience prompt | One-screen intro; `prompt_choice` asks experience (yes-many / one / none / check-for-me). |
-| 1 | Role prompt | `prompt_choice` asks role (curious / builder / operator / decider). |
-| 2 | What is this folder? | One short paragraph naming the factory, plus the live skill count as proof. |
-| 3 | Meet the Crew | Dynamic breakdown of installed host CLIs tailored to the user's role (Beginner vs Senior). |
-| 4 | The Architecture | Hub and Spoke ASCII diagram explaining Agents vs. Subagents, populated with local skills. |
-| 5 | The translation table | First a one-screen tease, then the cross-host translation table renders. |
-| 6 | The Danger Zone | Seatbelt rules (`telemetry-guardian`) and File Collision warnings. |
-| 7 | Sandbox Quest | Interactive handoff providing a harmless, copy-pasteable command to test the CLI. |
+| `tour` (default) | **Inline in chat** (this file) | The seven beats above, paced. |
+| `check` | Terminal via Bash | Non-interactive machine-state report (six probes). The assistant invokes `python3 ~/Projects/_agent_forge/skills/global/onboarding-guide/onboard.py check` and shows the output. |
+| `explain <topic>` | Inline or terminal | Single-concept explainer. The assistant reads the matching `## <topic>` section from `EXPLAINERS.md` and serves it back; the terminal fallback is `python3 onboard.py explain <topic>` which reads the same file. |
 
-Each beat is small (about 10 lines of print before a pause or question). No beat dumps a wall of text; if a beat grows, split it.
+The non-conversational `tour` subcommand of `onboard.py` is now a redirect message ("The tour now runs inline in Claude Code / Codex / Gemini. Type `/onboarding-guide`. For machine-state check, run `python3 onboard.py check`.") — operators in pure-terminal contexts use `check` and `explain`; the inline tour is reserved for host CLIs.
 
-Flags:
-
-- `--quick` — skip the paced beats and print a 90-second non-interactive summary (bullets + probe verdicts + first red fix command). Used when an operator wants the gist.
-- `--no-pause` — run the full paced tour without waiting for `[Enter]`. Used by smoke tests and CI; not recommended for first-time operators.
-
-The audit log (`<project>/.forge_state/onboarding.log`, when a governed project is present) records the operator's chosen experience level, chosen role, and how many beats they completed.
-
-### `check`
-
-Non-interactive machine-state report. Same diagnostics as the tour but no questions, no narration, just the verdicts. Useful for re-running after fixes.
-
-Output: structured one-screen report with one of three colors per check (green / yellow / red), a one-line plain-English explanation, and the exact command to fix anything red.
-
-### `explain <topic>`
-
-Single-concept explainer. Topics:
-
-- **Tier-0 host CLIs:** `claude-cli`, `codex-cli`, `gemini-cli` — each names the vendor, the boot-file convention, the memory story (native vs sidecar), and ends with "When to pick this host."
-- **Core primitives:** `factory`, `skill`, `agent`, `agent-team`, `hook`, `mcp`, `memory`, `sandbox`, `guardian`.
-- **Cross-host plumbing:** `host-dirs` (the four `.claude/` / `.codex/` / `.agents/` / `.gemini/` directories and why they exist).
-- **Validation:** `triad-validator`, `validation-pyramid`.
-- **Lifecycle:** `bootstrap`, `governed-project`, `suitcase`.
-
-Each prints a 100–200 word plain-English explanation with one concrete example from the operator's actual repo state.
-
-## Discipline / what this skill does NOT do
+## Discipline / What This Skill Does NOT Do
 
 The skill is read-only and observational. By design, it does not:
 
 - Modify `MEMORY.md`, `LESSONS_LEARNED.md`, or any canonical source.
 - Auto-fix detected problems. It reports the diagnosis and recommends the fix command; the operator runs it.
 - Invoke long-running CLI calls (`claude -p` / `codex exec` / `gemini -p`) from within the tour. Per the 2026-04-26 leftover-subprocess-tree lesson, those run from a real terminal only. The tour describes what `validate-triad-runtime.py --probe-invocations` does and points the operator to run it; the tour does not run it itself.
-- Modify `bootstrap-project.sh`. The integration hook (calling this skill at end of bootstrap) is documented in `docs/HANDOFF.md` as a future Codex enhancement, not done here.
+- Modify `bootstrap-project.sh`. The integration hook (calling this skill at end of bootstrap) is documented in `docs/HANDOFF.md` as a future enhancement, not done here.
 - Write to `MEMORY.md`. The tour is read-only of canonical state.
 
-The only file the skill writes is its own audit log at `<project>/.forge_state/onboarding.log` — one append-only line per tour run with timestamp + completion-status + sections reached. No PII; no command output captured; no operator answers persisted.
+## State-Detection Contract
 
-## State-detection contract
-
-The tour and `check` mode both run the same six probes:
+The full diagnostic surface (the same six probes shown to the operator via `/onboarding-guide check`) is implemented in `onboard.py`:
 
 1. Is `_agent_forge` deployed at `~/Projects/_agent_forge` with the canonical files (`AGENTS.md`, `policies/hooks.json`, `policies/memory.json`, `registry.json`)?
 2. Is `verify-agent-forge.py` exit 0?
@@ -100,43 +306,27 @@ The tour and `check` mode both run the same six probes:
 
 Each probe gets a green / yellow / red verdict and, on red, a one-line plain-English diagnosis plus the exact command to fix it. No "see docs/X" rabbit holes.
 
-## Output contract
+The inline tour does not run all six probes by default (it would slow Beat 0). Only Probe 3 (`which claude codex gemini`) runs inline, for the install gate at Beat 6. The full six-probe report is available via `/onboarding-guide check` (the assistant invokes `python3 onboard.py check` via Bash and shows the output) or by the operator running the script directly.
 
-stdout: the tour itself (or the `check` report, or the `explain` body). Always plain text — no ANSI colors that don't render in some terminals; uses ASCII glyphs `[OK]` / `[WARN]` / `[FAIL]` for verdicts. (If terminal supports color, the helper may add it, but content is readable without.)
+## When to Extend
 
-stderr: human-readable trace of what the helper is reading from disk. Useful for debugging the helper itself; the operator usually never reads stderr.
+- **New beat.** Add a new section above with the same structure: render block, optional `PROMPT THE USER:`, pause marker. Keep each beat under ~12 lines of visible output. If a beat grows past that, split into two beats with their own pauses.
+- **New `explain` topic.** Add a `## <topic>` section to `EXPLAINERS.md` (alphabetical). One ~100–200 word entry. Reference a specific file in the operator's repo state if possible. If the topic is a host-CLI variant, end with "When to pick this host: ..." so a new operator can choose.
+- **New diagnostic probe.** Add a function to the `PROBES` list in `onboard.py`. Each probe returns `(verdict, summary, fix_command)`. Verdicts are `"green"`, `"yellow"`, `"red"`. The probe is then automatically available to `check` mode.
+- **New host.** If a fourth host CLI is added in the future: add a column to the translation table in Beat 3; add a row to the install-gate lookup in Beat 6; add a tier-0 explainer (`<host>-cli`) to `EXPLAINERS.md`; add a corresponding column to the `_EVENT_ALIASES` map in `scripts/omni_factory.py`. The triad runtime validator extension is out of scope for this skill but tracked in `docs/HOST_INTEGRATIONS.md`.
 
-Exit codes:
-- `tour` and `explain`: always 0 (informational; not a gate).
-- `check`: 0 if all six probes green or yellow; 1 if any probe red.
+### Acceptance Criteria for Maintainers
 
-## When to extend
+- **Inline-delivery acceptance gate:** Type `/onboarding-guide` in a fresh Claude Code session in this repo. Within the assistant's first reply, Beat 0's greeting and the experience-level prompt must appear as visible chat output. No subprocess attempt. No "did nothing" silence. This is the primary regression gate.
+- The seven beats read naturally aloud at a normal pace in under 10 minutes including pauses. If a contributor adds a beat that pushes total length past that, split into two skills or move content into an `explain` topic.
+- Every agentic term used in the tour appears either in `EXPLAINERS.md` or in the on-screen jargon-translation aside. If a new term shows up untranslated, that is a regression.
+- Cross-host names (PreToolUse / BeforeTool, MCP config file names, etc.) in the Beat 3 table must match the canonical → native mapping in `scripts/omni_factory.py:_EVENT_ALIASES` and in `docs/HOST_INTEGRATIONS.md`. If the table drifts from the code, the code is right and the table needs updating.
+- No beat may exceed ~12 lines of visible output before a `PROMPT THE USER:` or pause. Walls of text are the failure mode this design exists to prevent.
 
-- **New beat.** Each beat lives inline in `cmd_tour` as a clearly commented block ending in `pause(no_pause=no_pause)` or a `prompt_choice` call. Keep each beat under ~12 lines of `print()` before the pause. If a beat grows past that, split into two beats with their own pauses.
-- **New `explain` topic.** Add an entry to the `EXPLAINERS` dict in `onboard.py`. Place new entries alphabetically by key. One ~100–200 word string. Reference a specific file in the operator's repo state if possible. If the topic is a host-CLI variant, end with "When to pick this host: ..." so a new operator can choose.
-- **New diagnostic probe.** Add a function to the `PROBES` list. Each probe returns `(verdict, summary, fix_command)`. Verdicts are `"green"`, `"yellow"`, `"red"`.
-- **New host.** If a fourth host CLI is added in the future: add a row to the table inside `_print_translation_table` and a column to the `CLI_INFO` dict so the install gate covers it. Add a tier-0 explainer (`<host>-cli`). Add a corresponding column to the `_EVENT_ALIASES` map in `scripts/omni_factory.py`. The triad runtime validator extension is out of scope for this skill but tracked in `docs/HOST_INTEGRATIONS.md`.
+When extending, re-read the **Tone Discipline** section above first. Tone drift is the most common way this skill degrades in maintenance.
 
-### Helpers available for new beats
-
-- `pause(prompt, no_pause)` — wait for `[Enter]`. Non-TTY safe (returns immediately when stdin is piped); `--no-pause` flag also bypasses.
-- `prompt_choice(question, options, default)` — numbered choice prompt. Options is a list of `(key, label, description)` tuples. Returns the chosen key. Invalid input returns the default.
-- `ask_yn(question, default)` — yes/no prompt. Default is bool; returns bool.
-- `_detect_cli_state()` — returns `(present, missing)` for the three host CLIs.
-- `_count_skills()` — reads `registry.json` and returns the skill count for live-proof lines.
-- `_print_translation_table()` — renders the cross-host name table with aligned columns.
-- `install_gate(no_pause)` — the per-CLI install hand-holding flow.
-
-### Acceptance criteria for maintainers
-
-- The tour reads naturally aloud at a normal pace in under 10 minutes including pauses. If a contributor adds a beat that pushes total length past that, split into two skills or move content into an `explain` topic.
-- Every agentic term used in the tour appears either in `EXPLAINERS` or in the on-screen jargon-translation aside. If a new term shows up untranslated, that is a regression.
-- Cross-host names (PreToolUse / BeforeTool, MCP config file types, etc.) in `_print_translation_table` must match the canonical → native mapping in `scripts/omni_factory.py:_EVENT_ALIASES` and in `docs/HOST_INTEGRATIONS.md`. If the table drifts from the code, the code is right and the table needs updating.
-- No beat may exceed ~12 lines of `print()` output before a `pause` or `prompt_choice` call. Walls of text are the failure mode this design exists to prevent.
-- ASCII diagrams must remain aligned and readable on standard terminal widths (80 columns). Do not use characters that fail to render on basic UTF-8 terminals.
-
-When extending, re-read the **Tone discipline** section above first. Tone drift is the most common way this skill degrades in maintenance.
-
-## Why this skill exists
+## Why This Skill Exists
 
 Before this skill, a first-time operator who finished `bootstrap-project.sh` saw a wall of `[OK]` lines from `verify-agent-forge.py` and a triad-validator JSON dump and was expected to know what to do with that. Most won't. The factory's strength — canonical-first, three host CLIs, runtime validation gate — is invisible to a fresh operator until someone walks them through it. This skill is that walkthrough, automated, and consistent across all three host CLIs because it is itself just a skill the factory ships.
+
+Earlier versions ran the tour as a subprocess (`python3 onboard.py tour`) from the host CLI. That broke in conversational contexts: the subprocess has no terminal pipeline back to the chat, so the user typed `/onboarding-guide` and saw nothing. The inline-delivery contract above is the fix: the assistant renders the content directly in the conversation, no subprocess needed for the tour. The script remains for terminal-only modes (`check`, `explain`).
