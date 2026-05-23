@@ -73,38 +73,6 @@
       }
     },
     {
-      "name": "code-review-doctrine",
-      "display_name": "code-review-doctrine",
-      "scope": "global",
-      "project": null,
-      "capability_class": "workflow",
-      "canonical_skill": "skills/global/code-review-doctrine/SKILL.md",
-      "targets": [
-        "claude",
-        "codex",
-        "gemini"
-      ],
-      "delivery_projects": [],
-      "claude": {
-        "mode": "skill",
-        "generated": true,
-        "command_name": "doctrine-review",
-        "agent_name": null
-      },
-      "gemini": {
-        "mode": "skill",
-        "generated": true,
-        "command_name": "doctrine-review",
-        "agent_name": null
-      },
-      "codex": {
-        "generated": true,
-        "global_skill": true,
-        "project_skill": false,
-        "custom_agent": false
-      }
-    },
-    {
       "name": "company-onboarder",
       "display_name": "company-onboarder",
       "scope": "global",
@@ -649,38 +617,6 @@
       }
     },
     {
-      "name": "principal-architect",
-      "display_name": "principal-architect",
-      "scope": "global",
-      "project": null,
-      "capability_class": "expert",
-      "canonical_skill": "skills/global/principal-architect/SKILL.md",
-      "targets": [
-        "claude",
-        "codex",
-        "gemini"
-      ],
-      "delivery_projects": [],
-      "claude": {
-        "mode": "agent",
-        "generated": true,
-        "command_name": null,
-        "agent_name": "principal-architect"
-      },
-      "gemini": {
-        "mode": "agent",
-        "generated": true,
-        "command_name": null,
-        "agent_name": "principal-architect"
-      },
-      "codex": {
-        "generated": true,
-        "global_skill": true,
-        "project_skill": false,
-        "custom_agent": true
-      }
-    },
-    {
       "name": "project-bootstrap",
       "display_name": "project-bootstrap",
       "scope": "global",
@@ -728,38 +664,6 @@
         "mode": "skill",
         "generated": true,
         "command_name": "prompt-auto-activator",
-        "agent_name": null
-      },
-      "codex": {
-        "generated": true,
-        "global_skill": true,
-        "project_skill": false,
-        "custom_agent": false
-      }
-    },
-    {
-      "name": "quality-gate",
-      "display_name": "quality-gate",
-      "scope": "global",
-      "project": null,
-      "capability_class": "workflow",
-      "canonical_skill": "skills/global/quality-gate/SKILL.md",
-      "targets": [
-        "claude",
-        "codex",
-        "gemini"
-      ],
-      "delivery_projects": [],
-      "claude": {
-        "mode": "skill",
-        "generated": true,
-        "command_name": "quality-gate",
-        "agent_name": null
-      },
-      "gemini": {
-        "mode": "skill",
-        "generated": true,
-        "command_name": "quality-gate",
         "agent_name": null
       },
       "codex": {

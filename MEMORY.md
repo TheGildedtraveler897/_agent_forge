@@ -30,7 +30,7 @@ _Short-lived in-flight work; rewriteable as state changes. The only non-append-o
 _Rewriteable section — entries reflect current state, not history._
 
 <!-- entries:start -->
-- 2026-05-23T03:34:12Z [gemini] — none
+- 2026-05-23T03:59:11Z [gemini] — Plan: docs/plans/feat-great-consolidation.md
 <!-- entries:end -->
 
 ## Recent Decisions

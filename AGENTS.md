@@ -76,5 +76,5 @@ The default chain for any non-trivial code change under a governed project is:
 Escape hatches inside the chain:
 
 - `root-cause-analyst` — invoked when `tdd-engineer` hits its three-fix stop or any time a bug must be understood before it is patched.
-- `code-review-doctrine` — invoked for both giving and receiving code review; receiving discipline requires STOP-and-ASK on unclear feedback.
+- `paranoid-reviewer` — invoked for deep static analysis and doctrine review; replaces legacy code-review and quality-gate flows.
 - `skill-author` — meta-skill used only when authoring or revising a skill under `skills/`.

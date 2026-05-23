@@ -62,7 +62,7 @@
       "spec-architect",
       "execution-planner",
       "context-engineer",
-      "quality-gate"
+      "paranoid-reviewer"
     ]
   },
   "codex_mapping": {
@@ -74,7 +74,7 @@
       "spec-architect",
       "execution-planner",
       "context-engineer",
-      "quality-gate"
+      "paranoid-reviewer"
     ]
   },
   "gemini_mapping": {
@@ -87,7 +87,7 @@
       "spec-architect",
       "execution-planner",
       "context-engineer",
-      "quality-gate"
+      "paranoid-reviewer"
     ]
   }
 }

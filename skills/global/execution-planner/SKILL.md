@@ -20,7 +20,8 @@ Purpose: turn an approved spec (from `spec-architect`) into a task-by-task imple
 ## Hard Gates
 
 1. **Scope split.** If the spec touches more than one subsystem (independent module, service, or data store), emit one plan file per subsystem. Do not mix subsystems in a single plan.
-2. **Micro-task size.** Every task is sized to complete in 2–5 minutes of focused work. If a task grows larger, split it.
+2. **Context Rot Limit (Max 4 Tasks).** To prevent "Lost in the Middle" degradation, no single plan may exceed 4 atomic tasks. If the approved spec requires more than 4 tasks, segment the work and plan only the first 4 tasks. The remaining work must be deferred to a follow-up plan via a fresh session.
+3. **Micro-task size.** Every task is sized to complete in 2–5 minutes of focused work. If a task grows larger, split it.
 3. **Exact file paths.** Every task names the precise file(s) it will create or modify. No "the relevant module" or "the helper file".
 4. **Complete code blocks.** No `...`, no `TBD`, no `// implementation here`. If the exact code cannot be written into the plan, the task is not yet decision-complete — refine the spec.
 5. **Embedded RED test.** Every task that produces production code includes a named failing test as step one. The test path and test name must be explicit.
