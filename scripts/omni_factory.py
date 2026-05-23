@@ -1528,7 +1528,7 @@ def sync_claude(project_name: str | None, projects_root: Path, claude_home: Path
         if capability.scope != "global" or "claude" not in capability.hosts:
             continue
         user_skills[capability.capability_id] = capability.skill_dir
-        read_path = skill_read_path_for_home(claude_home / "commands", capability)
+        read_path = skill_read_path_for_home(claude_home / "skills", capability)
         if capability.is_workflow:
             name = f"{capability.claude_command_name or capability.capability_id}.md"
             user_commands[name] = render_claude_command(capability, read_path)
@@ -1537,7 +1537,7 @@ def sync_claude(project_name: str | None, projects_root: Path, claude_home: Path
             user_agents[name] = render_claude_agent(capability, read_path)
 
     sync_symlink_dir(claude_home / "skills", user_skills)
-    sync_managed_dir(claude_home / "commands", user_commands, CLAUDE_COMMAND_MARKER)
+    sync_managed_dir(claude_home / "skills", user_commands, CLAUDE_COMMAND_MARKER)
     sync_managed_dir(claude_home / "agents", user_agents, CLAUDE_AGENT_MARKER)
 
     if project_name:
@@ -1659,7 +1659,7 @@ def sync_gemini(project_name: str | None, projects_root: Path, gemini_home: Path
     # Purge redundant ~/.gemini/skills to avoid host-level conflicts
     sync_symlink_dir(gemini_home / "skills", {})
     
-    sync_managed_dir(gemini_home / "commands", user_commands, GEMINI_COMMAND_MARKER)
+    sync_managed_dir(gemini_home / "skills", user_commands, GEMINI_COMMAND_MARKER)
     sync_managed_dir(gemini_home / "agents", user_agents, MARKDOWN_MANAGED_COMMENT)
 
     # Manage ~/.gemini/settings.json to disable workflow skills and avoid command conflicts

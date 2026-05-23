@@ -84,7 +84,7 @@ class CurrentHostRendererTests(unittest.TestCase):
             omni_factory.sync_claude(None, ROOT.parent, claude_home)
 
             self.assertTrue((claude_home / "skills" / "onboarding-guide").is_symlink())
-            self.assertTrue((claude_home / "commands" / "onboarding-guide.md").is_file())
+            self.assertTrue((claude_home / "skills" / "onboarding-guide.md").is_file())
 
     def test_project_gemini_context_deduplicates_imports(self) -> None:
         rendered = omni_factory.render_project_gemini_md(ROOT)

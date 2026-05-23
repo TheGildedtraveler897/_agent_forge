@@ -27,8 +27,8 @@ Bootstrap a governed project under ~/Projects with Agent Forge contracts:
   - docs/CONOPS.md
   - docs/HANDOFF.md
   - .claude/CLAUDE.md symlink
-  - .claude/agents, .claude/commands, and .claude/skills directories
-  - .gemini/agents, .gemini/commands, .gemini/skills, and .gemini/settings.json
+  - .claude/agents, .claude/skills, and .claude/skills directories
+  - .gemini/agents, .gemini/skills, .gemini/skills, and .gemini/settings.json
   - .agents/skills
   - .codex/agents, .codex/config.toml, and .codex/hooks.json
 
@@ -131,10 +131,10 @@ fi
 mkdir -p \
   "${TARGET_ROOT}/docs" \
   "${TARGET_ROOT}/.claude/agents" \
-  "${TARGET_ROOT}/.claude/commands" \
+  "${TARGET_ROOT}/.claude/skills" \
   "${TARGET_ROOT}/.claude/skills" \
   "${TARGET_ROOT}/.gemini/agents" \
-  "${TARGET_ROOT}/.gemini/commands" \
+  "${TARGET_ROOT}/.gemini/skills" \
   "${TARGET_ROOT}/.gemini/skills" \
   "${TARGET_ROOT}/.agents/skills" \
   "${TARGET_ROOT}/.codex/agents"

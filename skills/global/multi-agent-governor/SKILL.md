@@ -22,7 +22,7 @@ Audit the target project for multi-agent governance drift.
 2. Claude wiring:
    - `.claude/CLAUDE.md`
    - `.claude/agents/`
-   - `.claude/commands/`
+   - `.claude/skills/`
    - `.claude/skills/`
 3. Codex native delivery:
    - `.agents/skills/`
@@ -31,7 +31,7 @@ Audit the target project for multi-agent governance drift.
 4. Gemini native delivery:
    - `GEMINI.md`
    - `.agents/skills/`
-   - `.gemini/commands/`
+   - `.gemini/skills/`
    - `.gemini/agents/`
    - `.gemini/skills/`
    - `.gemini/settings.json`

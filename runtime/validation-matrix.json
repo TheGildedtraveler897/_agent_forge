@@ -9,7 +9,7 @@
       "surface": "user-agents"
     },
     {
-      "fixture": "~/.claude/commands",
+      "fixture": "~/.claude/skills",
       "host": "claude",
       "id": "claude_user_commands",
       "pass": null,
@@ -73,7 +73,7 @@
       "surface": "user-skills"
     },
     {
-      "fixture": "~/.gemini/commands",
+      "fixture": "~/.gemini/skills",
       "host": "gemini",
       "id": "gemini_user_commands",
       "pass": null,

@@ -835,7 +835,7 @@ EXPLAINERS = {
     "gemini-cli": (
         "Gemini CLI is Google's coding-agent CLI. It loads `GEMINI.md` boot files "
         "hierarchically and is vision-capable. Skills are delivered as TOML or Markdown "
-        "into `<project>/.gemini/commands/` and `<project>/.gemini/agents/`. Gemini "
+        "into `<project>/.gemini/skills/` and `<project>/.gemini/agents/`. Gemini "
         "supports a subset of hook events — `permission_request` and `user_prompt_submit` "
         "are not exposed, so the factory drops those records at render time and documents "
         "the exclusion. Settings live in `<project>/.gemini/settings.json`. Like Codex, "

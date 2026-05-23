@@ -53,10 +53,10 @@ Teams remain portable JSON manifests. They describe role contracts, collapse/esc
 Claude:
 
 - `~/.claude/agents`
-- `~/.claude/commands`
+- `~/.claude/skills`
 - `~/.claude/skills`
 - `<project>/.claude/agents`
-- `<project>/.claude/commands`
+- `<project>/.claude/skills`
 - `<project>/.claude/skills`
 - `<project>/.mcp.json`
 
@@ -71,12 +71,12 @@ Codex:
 Gemini:
 
 - `~/.gemini/agents`
-- `~/.gemini/commands`
+- `~/.gemini/skills`
 - `~/.agents/skills`
 - `~/.gemini/GEMINI.md`
 - `<project>/GEMINI.md`
 - `<project>/.gemini/agents`
-- `<project>/.gemini/commands`
+- `<project>/.gemini/skills`
 - `<project>/.gemini/skills`
 - `<project>/.gemini/settings.json`
 

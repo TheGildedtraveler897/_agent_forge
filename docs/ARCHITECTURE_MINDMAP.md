@@ -139,10 +139,10 @@
 
 **Claude:**
 - `~/.claude/agents/` — Global agents
-- `~/.claude/commands/` — Global commands
+- `~/.claude/skills/` — Global commands
 - `~/.claude/projects/<encoded>/memory/MEMORY.md` — Auto-loaded machine-local memory
 - `<project>/.claude/agents` — Project agents
-- `<project>/.claude/commands` — Project commands
+- `<project>/.claude/skills` — Project commands
 - `<project>/.claude/skills` — Project skills
 - `<project>/.mcp.json` — Project MCP
 - `<project>/CLAUDE.md` (boot file, hierarchical walk)
@@ -158,11 +158,11 @@
 
 **Gemini:**
 - `~/.gemini/agents` — Global agents
-- `~/.gemini/commands` — Global commands
+- `~/.gemini/skills` — Global commands
 - `~/.agents/skills` — Global Agent Skills
 - `~/.gemini/GEMINI.md` (boot file)
 - `<project>/.gemini/agents` — Project agents
-- `<project>/.gemini/commands` — Project commands
+- `<project>/.gemini/skills` — Project commands
 - `<project>/.gemini/skills` — Project skills
 - `<project>/.gemini/settings.json` — Project MCP
 - `<project>/.gemini/memory/MEMORY.md` — Sidecar memory bridge
