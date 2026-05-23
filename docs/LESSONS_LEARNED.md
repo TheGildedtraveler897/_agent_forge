@@ -44,6 +44,16 @@ This file is the append-first knowledge anchor for Agent Forge. Validated workar
 - `Promotion Target:` None — this is a one-time fix; the file documents the policy on disk.
 - `Status:` active
 
+### 2026-05-22 - Host-specific canonical hook events are intentional, not drift
+
+- `Date:` 2026-05-22
+- `Context:` SOTA 2026 drift audit (Track 4b of `feat-sota-2026-alignment`). The Phase 1 research found Gemini CLI fires `BeforeAgent`, `AfterAgent`, `BeforeToolSelection`, `AfterModel`, `BeforeModel` lifecycle events that have no Claude / Codex equivalent — they are semantically distinct lifecycle points, not just renames. Audit flagged this as a drift risk: if the canonical schema only represents Claude/Codex's event set, authors cannot write hook records that fire on Gemini-only events.
+- `Lesson:` Verification showed all five events were already wired into `scripts/omni_factory.py:_EVENT_ALIASES` by an earlier SOTA pass — `None` aliases for Claude and Codex, PascalCase native names for Gemini. The canonical schema represents the events; the renderer drops them silently for hosts whose alias is `None`. The asymmetric design is intentional: not every canonical event needs all-three coverage. Per-host depth wins over forced symmetry.
+- `Architectural Decision:` Document the asymmetry explicitly so future contributors don't try to "fix" it. CONOPS § Hook Governance gains a bullet stating host-specific canonical events are explicitly allowed. `policies/hooks.json` top-level description gains a sentence naming the Gemini-only events as an example of the pattern.
+- `Evidence:` `scripts/omni_factory.py:869-873` (Claude `None` aliases), `:909-913` (Codex `None` aliases), `:930-934` (Gemini native aliases). `docs/CONOPS.md` § Hook Governance (new bullet). `policies/hooks.json` description string (updated).
+- `Promotion Target:` `docs/HOST_INTEGRATIONS.md` § Unified Hook Lifecycle — already references `_EVENT_ALIASES`; should explicitly list the Gemini-only events with a one-line "no Claude / Codex equivalent" note.
+- `Status:` active
+
 ### 2026-05-22 - Codex subagents already render as TOML (verified non-drift)
 
 - `Date:` 2026-05-22

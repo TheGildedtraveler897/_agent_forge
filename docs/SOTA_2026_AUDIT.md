@@ -232,11 +232,11 @@ Each drift surface below is being addressed in the current sprint or explicitly 
 - **Agent Forge state on verification:** `omni_factory.py` already renders `.codex/agents/<skill>.toml` files with flat top-level keys (`agent_forge_managed`, `name`, `description`, `sandbox_mode`, `developer_instructions`) plus `[[skills.config]]` for the SKILL.md reference. `tomllib.load()` succeeds on every rendered file across five different governed projects. The flat-top-level layout is valid TOML and matches Codex's documented expected schema; the `[agent]` wrapper was a stylistic inference, not a documented requirement.
 - **Track:** 4a — verified non-drift. No code change. Lesson appended to `docs/LESSONS_LEARNED.md` (`2026-05-22 — Codex subagents already render as TOML`). Promotion target: `docs/HOST_INTEGRATIONS.md` § Codex subagent rendering, to document the actual schema so this verification doesn't have to be redone.
 
-### 5.2 Gemini-only hook events absent from canonical schema
+### 5.2 Gemini-only hook events — VERIFIED REPRESENTED + DOCUMENTED (2026-05-22)
 
-- **2026 standard:** Gemini fires `BeforeAgent`, `AfterAgent`, `BeforeToolSelection`, `AfterModel` — no Claude / Codex equivalents.
-- **Agent Forge state:** Canonical `policies/hooks.json` event list does not represent these four events. Authors cannot write records that fire on Gemini-only events.
-- **Track:** 4b — extend canonical event list; aliases `None` for Claude / Codex, PascalCase for Gemini; document the asymmetry in `docs/CONOPS.md`.
+- **2026 standard:** Gemini fires `BeforeAgent`, `AfterAgent`, `BeforeToolSelection`, `AfterModel`, `BeforeModel` — no Claude / Codex equivalents.
+- **Agent Forge state on verification:** All five events are already present in `scripts/omni_factory.py:_EVENT_ALIASES` (`before_agent`, `after_agent`, `before_tool_selection`, `after_model`, `before_model`) with `None` aliases for Claude and Codex and the matching PascalCase native names for Gemini. This was wired in by an earlier SOTA pass; the canonical schema represents the events even though no current `policies/hooks.json` record uses them.
+- **Track:** 4b — verified represented in code. The work is documentation only: `docs/CONOPS.md` § Hook Governance gains a fourth bullet explicitly allowing host-specific canonical events; `policies/hooks.json` description string gains a sentence naming the Gemini-only events and the None-alias drop behavior, so a future author reading the canonical file knows the asymmetry is intentional.
 
 ### 5.3 `AGENTS.override.md` precedence (Codex)
 
