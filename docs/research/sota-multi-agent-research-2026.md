@@ -1,5 +1,7 @@
 # SOTA 2026 Multi-Agent Research
 
+*Citation hygiene last reviewed: 2026-05-22. Cross-referenced against `docs/SOTA_2026_AUDIT.md` which is the load-bearing primary-source anchor for SOTA decisions; any new citation added here should also land there.*
+
 This document serves as the foundational academic and industry research driving "The Great Consolidation" of Agent Forge. It anchors the architectural decisions to empirical data regarding LLM performance, tool design, and context management.
 
 ## 1. Tool Overlap & Agent-Computer Interfaces (ACI)
@@ -17,14 +19,14 @@ This document serves as the foundational academic and industry research driving 
 **Concept:** Coding agents fail on complex tasks primarily due to declining signal-to-noise ratios as context grows, rather than a fundamental lack of reasoning ability.
 **Primary Source 1:** *Context Rot: How Increasing Input Tokens Impacts LLM Performance* (Chroma Research, 2025).
 **Primary Source 2:** *Lost in the Middle: How Language Models Use Long Contexts* (Liu et al., 2023/2024).
-**Primary Source 3:** *LLMs Get Lost in Multi-Turn Conversation* (Laban et al., 2025).
+**Primary Source 3:** *LLMs Get Lost in Multi-Turn Conversation* (Laban et al., ICLR 2026, arXiv 2505.06120).
 **Key Findings:**
 *   While modern LLMs have massive context windows (1M+ tokens), their ability to retrieve specific constraints from the *middle* of that context degrades heavily.
 *   In multi-turn coding sessions, as agents explore files and execute tools, the "noise" accumulates. The agent forgets early architectural constraints (the "Lost in Conversation" phenomenon).
 *   **Architectural Mandate:** Strict phase-based execution and context flushing. Task plans must be capped at a maximum of 4 atomic tasks. If a feature requires more, the orchestrator must flush the context, consolidate the state, and spawn a new subagent.
 **Links:**
-*   [Lost in the Middle (ArXiv)](https://arxiv.org/abs/2307.03172)
-*   [LLMs Get Lost in Conversation (ArXiv)](https://arxiv.org/abs/2505.09111)
+*   [Lost in the Middle (Liu et al., TACL 2024)](https://arxiv.org/abs/2307.03172)
+*   [LLMs Get Lost in Multi-Turn Conversation (Laban et al., ICLR 2026)](https://arxiv.org/abs/2505.06120) *(note: an earlier circulated handover prompt cited arXiv 2505.09111 — that ID is wrong; it points to an unrelated cosmic-ray-physics paper. Correct ID is 2505.06120.)*
 
 ## 3. State-Machine Orchestration
 **Concept:** Complex multi-agent workflows should be modeled as Directed Acyclic Graphs (DAGs) or State Machines, where state is externalized, rather than relying on unstructured chat threads.

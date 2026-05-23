@@ -44,6 +44,26 @@ This file is the append-first knowledge anchor for Agent Forge. Validated workar
 - `Promotion Target:` None — this is a one-time fix; the file documents the policy on disk.
 - `Status:` active
 
+### 2026-05-22 - Host-specific canonical hook events are intentional, not drift
+
+- `Date:` 2026-05-22
+- `Context:` SOTA 2026 drift audit (Track 4b of `feat-sota-2026-alignment`). The Phase 1 research found Gemini CLI fires `BeforeAgent`, `AfterAgent`, `BeforeToolSelection`, `AfterModel`, `BeforeModel` lifecycle events that have no Claude / Codex equivalent — they are semantically distinct lifecycle points, not just renames. Audit flagged this as a drift risk: if the canonical schema only represents Claude/Codex's event set, authors cannot write hook records that fire on Gemini-only events.
+- `Lesson:` Verification showed all five events were already wired into `scripts/omni_factory.py:_EVENT_ALIASES` by an earlier SOTA pass — `None` aliases for Claude and Codex, PascalCase native names for Gemini. The canonical schema represents the events; the renderer drops them silently for hosts whose alias is `None`. The asymmetric design is intentional: not every canonical event needs all-three coverage. Per-host depth wins over forced symmetry.
+- `Architectural Decision:` Document the asymmetry explicitly so future contributors don't try to "fix" it. CONOPS § Hook Governance gains a bullet stating host-specific canonical events are explicitly allowed. `policies/hooks.json` top-level description gains a sentence naming the Gemini-only events as an example of the pattern.
+- `Evidence:` `scripts/omni_factory.py:869-873` (Claude `None` aliases), `:909-913` (Codex `None` aliases), `:930-934` (Gemini native aliases). `docs/CONOPS.md` § Hook Governance (new bullet). `policies/hooks.json` description string (updated).
+- `Promotion Target:` `docs/HOST_INTEGRATIONS.md` § Unified Hook Lifecycle — already references `_EVENT_ALIASES`; should explicitly list the Gemini-only events with a one-line "no Claude / Codex equivalent" note.
+- `Status:` active
+
+### 2026-05-22 - Codex subagents already render as TOML (verified non-drift)
+
+- `Date:` 2026-05-22
+- `Context:` SOTA 2026 drift audit (Track 4a of `feat-sota-2026-alignment`). The primary-source research agent inferred that Codex subagents require a `[agent]` TOML section based on Codex 2026 vendor docs, but did not read an actual rendered file. Audit flagged this as a potential drift surface to verify.
+- `Lesson:` On verification, `omni_factory.py` already renders `.codex/agents/<skill>.toml` files with the required Codex schema (`agent_forge_managed = true`, top-level `name`, `description`, `sandbox_mode`, `developer_instructions`, and a `[[skills.config]]` table for the referenced `SKILL.md` path). The audit's `[agent]` section guess was a stylistic inference; flat top-level keys are also valid TOML and match Codex's documented expected schema. No drift.
+- `Architectural Decision:` Keep the current renderer behavior. If Codex's vendor docs ever explicitly require a `[agent]` wrapper section, that's a deeper rewrite gated on primary-source confirmation; not warranted by inference.
+- `Evidence:` `tomllib.load()` succeeds on every `.codex/agents/*.toml` in five different governed projects (`RoboNaaz`, `playlist-archive`, `homelab`, `ZorroClaw`, `jarvis`). All files have the same five top-level keys plus `[[skills.config]]`. Per-file inspection: `/home/pheonixprotocol/Projects/RoboNaaz/.codex/agents/brand-guardian.toml`.
+- `Promotion Target:` `docs/HOST_INTEGRATIONS.md` § Codex subagent rendering — document the actual schema so future contributors don't re-investigate.
+- `Status:` active
+
 ### 2026-05-22 - Plan persistence layer survived its first multi-merge cycle
 
 - `Date:` 2026-05-22

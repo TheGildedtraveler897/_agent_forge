@@ -32,6 +32,10 @@ Each capability lives in its own skill directory with one `SKILL.md`. Frontmatte
 
 The skill body remains the durable instruction contract.
 
+### Standard vs Local Extensions
+
+The base `SKILL.md` format — `name` + `description` required, body loaded lazily on invocation — follows the [agentskills.io](https://agentskills.io) open standard, which Claude Code, OpenAI Codex, and Gemini CLI all implement as of 2026-05-22. The standard defines `name` and `description` as required and treats skills as host-portable by default. It does **not** define `targets`, `capability_class`, `delivery_projects`, `claude_command_name`, `gemini_command_name`, `codex_sandbox_mode`, or `requires_mcp_servers`. Those are Agent Forge **local extensions**, used by the renderer to scope delivery per-host and per-project because the three hosts have different sandbox postures and capability surfaces (Claude: command / subagent; Codex: skill; Gemini: command / subagent) and not every skill makes sense to deliver everywhere. The renderer honors them strictly; an omitted `targets` defaults to all three hosts. A contributor reading a `SKILL.md` should not assume any host CLI parses these fields directly — only Agent Forge's renderer does, and it strips them before writing the host-native rendered skill files.
+
 ## Authoring Pattern: Policy + Renderers + Capability
 
 New cross-host primitives follow a five-step rhythm. The pattern is load-bearing as of the RC milestone, having shipped clean across hooks (2026-04-24), the universal state layer (2026-04-25), the memory bridge (2026-04-27), MCP namespace prefixing (2026-04-27), and the user-prompt advisory (2026-04-28).
@@ -89,6 +93,10 @@ Not every host exposes equivalent native primitives. The factory uses native pat
 
 Do not fake parity. When a host lacks a stable native target, validate the sidecar as bridge evidence and document the conservatism rather than claiming equivalence.
 
+### Codex AGENTS.md Override Precedence
+
+Codex 2026 supports an `AGENTS.override.md` file at the project root that takes precedence over the parent-tree `AGENTS.md` for that project's Codex session. `bootstrap-project.sh` stubs this file with a comment-only header when scaffolding a new governed project; the stub is idempotent (it is not regenerated if it already exists, so an operator's project-local overrides survive re-bootstrap). The omni-factory renderers do **not** write to `AGENTS.override.md` — the file is operator-authored, not factory-generated. Empty or comment-only override files have no effect; only non-comment content is parsed by Codex. Use this file for project-local exceptions to rules that otherwise live in `~/Projects/AGENTS.md` or the project's `AGENTS.md`. Document the override in the project's `docs/CONOPS.md` so the rationale survives.
+
 ## Hook Governance
 
 `policies/hooks.json` (schema v3) is the canonical authoring surface for hooks across Claude, Codex, and Gemini. The seeded `pre-tool-execution-guardian` is the universal pre-tool veto; subsequent records have shipped for memory bridge lifecycle and the user-prompt advisory.
@@ -96,6 +104,7 @@ Do not fake parity. When a host lacks a stable native target, validate the sidec
 - The schema supports five handler types (`command`, `http`, `mcp_tool`, `prompt`, `agent`); only command handlers are currently live across all three hosts.
 - Canonical events translate to host-native event names through a curated allow-list in `scripts/omni_factory.py:_EVENT_ALIASES`. Drift in this allow-list is a silent-correctness class: surface JSON parse alone does not catch it, which is why `validate-triad-runtime.py` derives expected native event keys from every active record.
 - A canonical event whose alias is `None` for a given host is dropped by that host's renderer; the record's `targets` array must reflect the same exclusion explicitly so intent is documented.
+- **Host-specific canonical events are explicitly allowed.** Some lifecycle events exist on only one host. Gemini CLI fires `BeforeAgent`, `AfterAgent`, `BeforeToolSelection`, `AfterModel`, and `BeforeModel` events that have no Claude / Codex equivalent — they are semantically distinct lifecycle points, not just renames of Claude's `SubagentStart` / `PreToolUse` / etc. The canonical event list represents these (with `None` aliases for the non-supporting hosts) so authors can write records that fire on Gemini-only events. The renderer drops them silently for hosts whose alias is `None`. The asymmetric design is intentional: not every canonical event needs all-three coverage; per-host depth wins over forced symmetry.
 
 Full rendering rules, the canonical event translation table, and the add-a-hook workflow live in `docs/HOST_INTEGRATIONS.md` §Unified Hook Lifecycle.
 

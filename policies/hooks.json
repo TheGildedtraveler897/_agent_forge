@@ -1,6 +1,6 @@
 {
   "version": 3,
-  "description": "Canonical hook inventory. Renderers translate each record into the host's native format. Events use snake_case canonical ids and host allow-lists convert to native event keys. V3 records use explicit handler objects; v2 command records are accepted only as a compatibility path.",
+  "description": "Canonical hook inventory. Renderers translate each record into the host's native format. Events use snake_case canonical ids and host allow-lists convert to native event keys via scripts/omni_factory.py:_EVENT_ALIASES. V3 records use explicit handler objects; v2 command records are accepted only as a compatibility path. Host-specific canonical events are explicitly allowed: e.g. before_agent / after_agent / before_tool_selection / before_model / after_model exist only on Gemini (Claude and Codex aliases are None), and the renderer drops them silently for hosts whose alias is None. Authors writing such records must reflect the exclusion in the record's targets array so intent is documented.",
   "shared": [
     {
       "id": "pre-tool-execution-guardian",

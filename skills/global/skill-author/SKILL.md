@@ -22,12 +22,12 @@ Purpose: produce new Agent Forge skills that pass `scripts/verify-agent-forge.py
 ## Frontmatter contract
 
 Required:
-- `name`: matches the folder name exactly.
-- `description`: one line, starting with or containing "Use when…".
-- `capability_class`: `workflow` | `expert` | `reference`.
-- `targets`: `["claude", "codex", "gemini"]` unless the skill deliberately excludes a host.
+- `name`: matches the folder name exactly. (Part of the [agentskills.io](https://agentskills.io) open standard.)
+- `description`: one line, starting with or containing "Use when…". (Part of the agentskills.io open standard.)
+- `capability_class`: `workflow` | `expert` | `reference`. **Agent Forge local extension** — used by the renderer to scope delivery; not part of agentskills.io.
+- `targets`: `["claude", "codex", "gemini"]` unless the skill deliberately excludes a host. **Agent Forge local extension** — used by the renderer to scope delivery; not part of agentskills.io. An omitted `targets` defaults to all three hosts.
 
-Optional:
+Optional (all are **Agent Forge local extensions**, not part of agentskills.io — used by the renderer for scoping and naming):
 - `context_cost`: `light` | `medium` | `heavy`.
 - `model_tier`: `any` | `opus` | `sonnet` | `haiku`.
 - `claude_command_name` / `gemini_command_name`: override the default command name (default is the folder name).
