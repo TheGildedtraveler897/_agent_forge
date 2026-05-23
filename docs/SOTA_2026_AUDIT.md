@@ -244,11 +244,11 @@ Each drift surface below is being addressed in the current sprint or explicitly 
 - **Agent Forge state on close:** `scripts/bootstrap-project.sh` now stubs `AGENTS.override.md` with a comment-only header when scaffolding a new governed project. The stub creation is idempotent (`[[ ! -f ... ]]` guard), so re-running bootstrap on an existing project never clobbers an operator's project-local overrides. The omni-factory renderers were already silent on `AGENTS.override.md` — no code change needed there (verified via `grep`).
 - **Track:** 4c — closed. `docs/CONOPS.md` § Codex AGENTS.md Override Precedence added under "Native vs Sidecar Surfaces" documenting the precedence model and the operator-authored / factory-skipped contract.
 
-### 5.4 `targets:` field labeled as standard
+### 5.4 `targets:` field labeled as standard — LABELED AS LOCAL EXTENSION (2026-05-22)
 
-- **2026 standard:** `agentskills.io` defines `name` and `description` as required; treats skills as host-portable by default. `targets:` is **not** in the standard.
-- **Agent Forge state:** Every skill carries `targets:` array. This is a fine local extension but is not labeled as such in `docs/CONOPS.md` or `skills/global/skill-author/SKILL.md`.
-- **Track:** 4d — documentation-only fix; one paragraph in `docs/CONOPS.md`, one sentence each in `skill-author/SKILL.md` and the new `state-of-the-field` explainer.
+- **2026 standard:** `agentskills.io` defines `name` and `description` as required; treats skills as host-portable by default. `targets:`, `capability_class:`, `delivery_projects:`, `claude_command_name:`, `gemini_command_name:`, `codex_sandbox_mode:`, and `requires_mcp_servers:` are **not** in the standard.
+- **Agent Forge state on close:** All seven extensions are now explicitly labeled as Agent Forge local extensions in two places: `docs/CONOPS.md` § Standard vs Local Extensions (under "Capability Model") and `skills/global/skill-author/SKILL.md` § Frontmatter contract. The `state-of-the-field` explainer in `EXPLAINERS.md` already named the same distinction in Track 3. Contributors reading any of these surfaces now know the renderer is what parses these fields, not the host CLIs themselves.
+- **Track:** 4d — closed. Documentation-only. No code change.
 
 ---
 

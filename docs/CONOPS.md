@@ -32,6 +32,10 @@ Each capability lives in its own skill directory with one `SKILL.md`. Frontmatte
 
 The skill body remains the durable instruction contract.
 
+### Standard vs Local Extensions
+
+The base `SKILL.md` format — `name` + `description` required, body loaded lazily on invocation — follows the [agentskills.io](https://agentskills.io) open standard, which Claude Code, OpenAI Codex, and Gemini CLI all implement as of 2026-05-22. The standard defines `name` and `description` as required and treats skills as host-portable by default. It does **not** define `targets`, `capability_class`, `delivery_projects`, `claude_command_name`, `gemini_command_name`, `codex_sandbox_mode`, or `requires_mcp_servers`. Those are Agent Forge **local extensions**, used by the renderer to scope delivery per-host and per-project because the three hosts have different sandbox postures and capability surfaces (Claude: command / subagent; Codex: skill; Gemini: command / subagent) and not every skill makes sense to deliver everywhere. The renderer honors them strictly; an omitted `targets` defaults to all three hosts. A contributor reading a `SKILL.md` should not assume any host CLI parses these fields directly — only Agent Forge's renderer does, and it strips them before writing the host-native rendered skill files.
+
 ## Authoring Pattern: Policy + Renderers + Capability
 
 New cross-host primitives follow a five-step rhythm. The pattern is load-bearing as of the RC milestone, having shipped clean across hooks (2026-04-24), the universal state layer (2026-04-25), the memory bridge (2026-04-27), MCP namespace prefixing (2026-04-27), and the user-prompt advisory (2026-04-28).
