@@ -107,10 +107,10 @@ Expected: `overall pass=true` with `hook_pass + memory_pass + bridge_pass + mcp_
 Inside Claude Code, with `~/Projects/my-first-app` as the working directory, invoke the `onboarding-guide` skill:
 
 ```
-/onboarding-guide tour
+/onboarding-guide
 ```
 
-Five short sections in plain English. Read-only.
+The tour runs inline in the chat — seven paced beats, two short prompts (experience and role), the cross-host translation table, and a per-host install gate. Read-only.
 
 ## Step 9 — First demo task
 
