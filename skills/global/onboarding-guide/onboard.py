@@ -388,24 +388,48 @@ def _print_translation_table() -> None:
             print(line)
 
 
+def _get_example_skills() -> tuple[str, str]:
+    """Return (workflow_name, expert_name) from the registry, or defaults."""
+    workflow, expert = "tdd-engineer", "legal-counsel"
+    if not REGISTRY_PATH.exists():
+        return workflow, expert
+    try:
+        data = json.loads(REGISTRY_PATH.read_text())
+        for skill in data.get("skills", []):
+            cls = skill.get("capability_class")
+            if cls == "workflow" and workflow == "tdd-engineer":
+                workflow = skill.get("name", workflow)
+            elif cls == "expert" and expert == "legal-counsel":
+                expert = skill.get("name", expert)
+    except Exception:
+        pass
+    return workflow, expert
+
+
 CLI_INFO: dict[str, dict[str, str]] = {
     "claude": {
         "vendor": "Anthropic",
         "tagline": "Best memory story; native slash commands and subagents.",
         "url": "https://docs.anthropic.com/claude/docs/claude-code",
         "command": "npm install -g @anthropic-ai/claude-cli  # or follow the docs",
+        "beginner": "Use Claude when you need to change 15 files at once or rewrite a whole system. It's the best at looking at the big picture and not forgetting what you asked.",
+        "senior": "Claude excels at deep-context, multi-file refactoring and autonomous state management. Default to Claude for sweeping architecture changes or hunting down complex bugs across module boundaries.",
     },
     "codex": {
         "vendor": "OpenAI",
         "tagline": "Strongest default sandbox (bwrap on Linux, Seatbelt on macOS).",
         "url": "https://platform.openai.com/docs/codex",
         "command": "Follow the docs link — install method varies by platform.",
+        "beginner": "Use Codex when you have a very specific, repeatable task, like writing tests or formatting code perfectly.",
+        "senior": "Codex is your deterministic engine. Use it for heavily plugin-driven workflows, localized syntax transformations, and structured data extraction.",
     },
     "gemini": {
         "vendor": "Google",
         "tagline": "Vision-capable; cheapest non-trivial tier.",
         "url": "https://ai.google.dev/gemini-api/docs/cli",
         "command": "npm install -g @google/gemini-cli  # or follow the docs",
+        "beginner": "Use Gemini when you want something fast, or if you need to pull in information from the web or Google Workspace to help you code.",
+        "senior": "Gemini offers the lowest latency and massive context windows. Use it for rapid prototyping, generating boilerplate, or digesting massive logs/documentation directly into your terminal.",
     },
 }
 
@@ -609,6 +633,51 @@ def cmd_tour(args: argparse.Namespace) -> int:
         print()
     pause(no_pause=no_pause)
 
+    # Beat 1.5 — Meet the Crew (Dynamic based on PATH & Role) -----------------
+    print()
+    print(bold("◆ Meet the Crew"))
+    print()
+    print("  You have up to three AI tools available. Here is when to use them.")
+    print()
+    tone_key = "beginner" if level == "n" or role == "c" else "senior"
+    
+    # We only show installed CLIs to reduce noise, unless none are installed
+    present_clis, _ = _detect_cli_state()
+    clis_to_show = present_clis if present_clis else ("claude", "codex", "gemini")
+    
+    for cli in clis_to_show:
+        info = CLI_INFO[cli]
+        print(f"  {bold(cli.capitalize())} ({info['vendor']})")
+        print(f"    {dim(info[tone_key])}")
+        print()
+    pause(no_pause=no_pause)
+
+    # Beat 1.6 — The Architecture (Hub and Spoke) ----------------------------
+    print()
+    print(bold("◆ The Architecture: Agents vs. Subagents"))
+    print()
+    print("  The terms can be confusing. Let's look at how the tools in this folder")
+    print("  actually run on your machine:")
+    print()
+    
+    wf_name, ex_name = _get_example_skills()
+    
+    print("        [ You (The Operator) ]")
+    print("                 │")
+    print("                 ▼")
+    print(f"      [ Main CLI ({clis_to_show[0].capitalize() if present_clis else 'Claude'}) ]   <-- The 'Agent' (Manager / Hub)")
+    print("          │             │")
+    print(dim("     (Workflows)   (Delegation)"))
+    print("          │             │")
+    print("          ▼             ▼")
+    print(f"   {green(f'[/{wf_name}]')}   {yellow(f'[@{ex_name}]')} <-- 'Subagents' (Specialists / Spokes)")
+    print()
+    print(f"  {green('Workflows')} are instant actions that run in your current chat.")
+    print(f"  {yellow('Subagents')} are isolated background workers. We spin them up so their")
+    print("  massive context window doesn't clutter your main terminal.")
+    print()
+    pause(no_pause=no_pause)
+
     # Beat 2 — The tease -----------------------------------------------------
     print()
     print(bold("◆ Here's the trick."))
@@ -634,28 +703,28 @@ def cmd_tour(args: argparse.Namespace) -> int:
     print()
     pause(no_pause=no_pause)
 
-    # Beat 4 — The seatbelt --------------------------------------------------
+    # Beat 4 — The seatbelt and Danger Zone -----------------------------------
     print()
-    print(bold("◆ The seatbelt"))
+    print(bold("◆ The Danger Zone (Seatbelts & Collisions)"))
     print()
     print("  Agents will run shell commands for you. That's the point.")
     print("  It's also the risk.")
     print()
+    print(f"  {bold('Rule 1: The Seatbelt')}")
     print("  The factory runs one check before every shell command on every")
     print("  AI tool. It refuses obviously destructive patterns:")
+    print(f"    {dim('- force-push to main, rm -rf $HOME, --no-verify')}")
     print()
-    print(f"    {dim('- force-push to main')}")
-    print(f"    {dim('- rm -rf $HOME')}")
-    print(f"    {dim('- git reset --hard <ref>')}")
-    print(f"    {dim('- --no-verify, --no-gpg-sign')}")
-    print()
-    print("  Intentionally dumb. Predictability beats sophistication.")
+    print(f"  {bold('Rule 2: File Collisions')}")
+    print("  Never let two subagents modify the exact same file at the exact same")
+    print("  time. They will overwrite each other. Use `subagent-dispatcher` for")
+    print("  sequential delegation, or isolate them in separate Git worktrees.")
     print()
     log = Path.home() / ".agent-forge" / "guardian.log"
     if log.exists():
         try:
             n_events = sum(1 for _ in log.open())
-            print(f"  {green('✓')} It's logged {bold(str(n_events))} events on this machine.")
+            print(f"  {green('✓')} The seatbelt has logged {bold(str(n_events))} events on this machine.")
             print()
         except Exception:
             pass
@@ -677,29 +746,30 @@ def cmd_tour(args: argparse.Namespace) -> int:
     # Beat 6 — Install gate --------------------------------------------------
     install_gate(no_pause=no_pause)
 
-    # Beat 7 — Wrap with role-tuned next action ------------------------------
+    # Beat 7 — Sandbox Quest (Interactive Handoff) ---------------------------
     print()
-    print(bold("◆ That's the tour."))
+    print(bold("◆ Sandbox Quest: Try it now"))
+    print()
+    print("  You've read the theory. Let's prove it works.")
+    print("  Copy and paste the command below into your terminal to trigger a")
+    print("  harmless read-only workflow.")
+    print()
+    
+    quest_cmd = "claude -p \"/explain mcp\""
+    if present_clis:
+        if "claude" in present_clis:
+            quest_cmd = "claude -p \"/explain mcp\""
+        elif "gemini" in present_clis:
+            quest_cmd = "gemini -p \"/explain mcp\""
+        elif "codex" in present_clis:
+            quest_cmd = "codex -- /explain mcp"
+    
+    print(f"    {bold(green(quest_cmd))}")
     print()
     print("  Working mental model now in place:")
-    print("    - The factory (one source, three deliveries)")
-    print("    - The cross-host translation table")
-    print("    - The safety gate")
-    print("    - The shared brain")
-    print()
-    print(bold("  What's next, for someone like you:"))
-    print()
-    role_next = {
-        "c": ("Try `explain <topic>` on anything that piqued your curiosity.\n"
-              "    Topics: claude-cli, codex-cli, gemini-cli, agent, skill, hook, mcp, memory."),
-        "b": ("Read `docs/CONOPS.md` for the architecture and use\n"
-              "    `skills/global/skill-author/SKILL.md` to author new skills correctly."),
-        "o": ("Bake `scripts/verify-agent-forge.py` and `scripts/validate-triad-runtime.py`\n"
-              "    into your team's CI before letting anyone merge canonical changes."),
-        "d": ("Read `docs/CONOPS.md` for the durable architecture. `policies/hooks.json`\n"
-              "    is the auditable deny list — those are your procurement talking points."),
-    }
-    print(f"    {role_next.get(role, role_next['c'])}")
+    print("    - Hub & Spoke (Agents vs Subagents)")
+    print("    - The Seatbelt & File Collisions")
+    print("    - The Shared Brain")
     print()
     print(green("  Welcome to Agent Forge."))
     print()

@@ -1,4 +1,6 @@
 ## Entries
+- 2026-05-23 feat-onboarding-visuals — Onboarding Guide Visual & Interactive Overhaul (1 tasks, created 2026-05-23)
+## Entries
 - 2026-05-23 feat-durable-context — Execution Planner Upgrade (Durable Context) (1 tasks, created 2026-05-23)
 # Plans Completed
 
