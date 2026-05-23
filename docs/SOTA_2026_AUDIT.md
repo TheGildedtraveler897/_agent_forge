@@ -226,11 +226,11 @@ The following appeared in a handover prompt circulating in earlier planning sess
 
 Each drift surface below is being addressed in the current sprint or explicitly documented as out-of-scope. Status updated as tracks land.
 
-### 5.1 Codex subagent rendering — TOML required (verify first)
+### 5.1 Codex subagent rendering — VERIFIED NON-DRIFT (2026-05-22)
 
-- **2026 standard:** Codex requires `[agent]` TOML sections in `.codex/agents/*.toml`.
-- **Agent Forge state:** Renderer behavior in `scripts/omni_factory.py` needs to be inspected against an actual rendered file. The current-state-inventory agent did not read rendered output; it inferred TOML from the canonical `.codex/agents/` path. **Verify before acting.**
-- **Track:** 4a — verify; fix only if confirmed drift.
+- **2026 standard:** Codex 2026 requires TOML in `.codex/agents/`. The primary-source research agent inferred a `[agent]` section wrapper but did not read an actual rendered file.
+- **Agent Forge state on verification:** `omni_factory.py` already renders `.codex/agents/<skill>.toml` files with flat top-level keys (`agent_forge_managed`, `name`, `description`, `sandbox_mode`, `developer_instructions`) plus `[[skills.config]]` for the SKILL.md reference. `tomllib.load()` succeeds on every rendered file across five different governed projects. The flat-top-level layout is valid TOML and matches Codex's documented expected schema; the `[agent]` wrapper was a stylistic inference, not a documented requirement.
+- **Track:** 4a — verified non-drift. No code change. Lesson appended to `docs/LESSONS_LEARNED.md` (`2026-05-22 — Codex subagents already render as TOML`). Promotion target: `docs/HOST_INTEGRATIONS.md` § Codex subagent rendering, to document the actual schema so this verification doesn't have to be redone.
 
 ### 5.2 Gemini-only hook events absent from canonical schema
 
