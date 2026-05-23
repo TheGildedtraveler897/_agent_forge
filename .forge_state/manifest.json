@@ -11,7 +11,7 @@
     "outbound_event": "session_start",
     "secrets_policy_inheritance": "deny"
   },
-  "last_updated": "2026-05-23T01:57:11Z",
+  "last_updated": "2026-05-23T02:22:13Z",
   "project": "_agent_forge",
   "retention": {
     "max_entries_per_section": 50,
