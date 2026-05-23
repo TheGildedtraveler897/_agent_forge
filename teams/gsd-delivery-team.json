@@ -1,0 +1,53 @@
+{
+  "name": "gsd-delivery-team",
+  "summary": "Phase-based Get Shit Done (GSD) delivery team designed to eliminate context rot via strict cognitive mode switching.",
+  "roles": [
+    {
+      "name": "principal-architect",
+      "responsibility": "Phase 1 (Discuss): Lock in the design and architecture before planning begins.",
+      "inputs": ["user goal", "repo state"],
+      "outputs": ["architecture decision"],
+      "stop_condition": "Human operator selects a technical approach."
+    },
+    {
+      "name": "execution-planner",
+      "responsibility": "Phase 2 (Plan): Break the approved design into atomic, executable tasks.",
+      "inputs": ["architecture decision"],
+      "outputs": ["implementation plan"],
+      "stop_condition": "Plan is approved."
+    },
+    {
+      "name": "builder",
+      "responsibility": "Phase 3 (Execute): Orchestrate implementation across fresh context windows.",
+      "inputs": ["implementation plan"],
+      "outputs": ["code changes"],
+      "stop_condition": "All tasks in the plan are completed."
+    },
+    {
+      "name": "qa-and-review",
+      "responsibility": "Phase 4 (Review & Gate): Paranoid code review and E2E validation.",
+      "inputs": ["code changes", "test output"],
+      "outputs": ["findings report", "verification attestation"],
+      "stop_condition": "Zero critical bugs found and E2E tests pass."
+    }
+  ],
+  "collapse_condition": "Never collapse. GSD strictly mandates phase separation.",
+  "escalate_condition": "Always escalate. Each phase MUST use a fresh context window to prevent context rot.",
+  "handoff_artifacts": [
+    "architecture decision",
+    "implementation plan",
+    "findings report"
+  ],
+  "claude_mapping": {
+    "primitives": ["skills", "agents"],
+    "preferred_entries": ["principal-architect", "execution-planner", "subagent-dispatcher", "paranoid-reviewer", "e2e-qa-tester"]
+  },
+  "codex_mapping": {
+    "primitives": ["skills", "delegated runtime agents"],
+    "preferred_entries": ["principal-architect", "execution-planner", "subagent-dispatcher", "paranoid-reviewer", "e2e-qa-tester"]
+  },
+  "gemini_mapping": {
+    "primitives": ["skills", "agents"],
+    "preferred_entries": ["principal-architect", "execution-planner", "subagent-dispatcher", "paranoid-reviewer", "e2e-qa-tester"]
+  }
+}

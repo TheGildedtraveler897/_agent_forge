@@ -201,6 +201,38 @@
       }
     },
     {
+      "name": "e2e-qa-tester",
+      "display_name": "e2e-qa-tester",
+      "scope": "global",
+      "project": null,
+      "capability_class": "expert",
+      "canonical_skill": "skills/global/e2e-qa-tester/SKILL.md",
+      "targets": [
+        "claude",
+        "codex",
+        "gemini"
+      ],
+      "delivery_projects": [],
+      "claude": {
+        "mode": "agent",
+        "generated": true,
+        "command_name": null,
+        "agent_name": "e2e-qa-tester"
+      },
+      "gemini": {
+        "mode": "agent",
+        "generated": true,
+        "command_name": null,
+        "agent_name": "e2e-qa-tester"
+      },
+      "codex": {
+        "generated": true,
+        "global_skill": true,
+        "project_skill": false,
+        "custom_agent": true
+      }
+    },
+    {
       "name": "evidence-packager",
       "display_name": "evidence-packager",
       "scope": "global",
@@ -553,6 +585,38 @@
       }
     },
     {
+      "name": "paranoid-reviewer",
+      "display_name": "paranoid-reviewer",
+      "scope": "global",
+      "project": null,
+      "capability_class": "expert",
+      "canonical_skill": "skills/global/paranoid-reviewer/SKILL.md",
+      "targets": [
+        "claude",
+        "codex",
+        "gemini"
+      ],
+      "delivery_projects": [],
+      "claude": {
+        "mode": "agent",
+        "generated": true,
+        "command_name": null,
+        "agent_name": "paranoid-reviewer"
+      },
+      "gemini": {
+        "mode": "agent",
+        "generated": true,
+        "command_name": null,
+        "agent_name": "paranoid-reviewer"
+      },
+      "codex": {
+        "generated": true,
+        "global_skill": true,
+        "project_skill": false,
+        "custom_agent": true
+      }
+    },
+    {
       "name": "portability-auditor",
       "display_name": "portability-auditor",
       "scope": "global",
@@ -582,6 +646,38 @@
         "global_skill": true,
         "project_skill": false,
         "custom_agent": false
+      }
+    },
+    {
+      "name": "principal-architect",
+      "display_name": "principal-architect",
+      "scope": "global",
+      "project": null,
+      "capability_class": "expert",
+      "canonical_skill": "skills/global/principal-architect/SKILL.md",
+      "targets": [
+        "claude",
+        "codex",
+        "gemini"
+      ],
+      "delivery_projects": [],
+      "claude": {
+        "mode": "agent",
+        "generated": true,
+        "command_name": null,
+        "agent_name": "principal-architect"
+      },
+      "gemini": {
+        "mode": "agent",
+        "generated": true,
+        "command_name": null,
+        "agent_name": "principal-architect"
+      },
+      "codex": {
+        "generated": true,
+        "global_skill": true,
+        "project_skill": false,
+        "custom_agent": true
       }
     },
     {
@@ -1001,6 +1097,17 @@
         "governor-auditor",
         "portability-reviewer",
         "remediation-planner"
+      ]
+    },
+    {
+      "name": "gsd-delivery-team",
+      "canonical_manifest": "teams/gsd-delivery-team.json",
+      "purpose": "Phase-based Get Shit Done (GSD) delivery team designed to eliminate context rot via strict cognitive mode switching.",
+      "roles": [
+        "principal-architect",
+        "execution-planner",
+        "builder",
+        "qa-and-review"
       ]
     },
     {
