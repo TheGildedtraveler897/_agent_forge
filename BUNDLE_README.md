@@ -18,15 +18,21 @@ It also ships:
 
 **Linux or macOS:**
 ```bash
-./_agent_forge/scripts/deploy-factory.sh
+./_agent_forge/scripts/deploy-and-bootstrap.sh
 ```
 
-**Windows (native PowerShell, no WSL required):**
+**Windows ZIP transfer (native PowerShell, no WSL required):**
 ```powershell
-pwsh -File .\_agent_forge\scripts\deploy-factory.ps1
+powershell.exe -ExecutionPolicy Bypass -File .\agent-forge-suitcase-<timestamp>-deploy-and-bootstrap.ps1 -BundleZip .\agent-forge-suitcase-<timestamp>.zip -DestinationRoot .\af
 ```
 
-This copies the canonical factory into `~/Projects/_agent_forge` and renders Claude / Codex / Gemini surfaces into your user-home host directories. Pass `-ClaudeOnly` on Windows if you only have Claude Code installed.
+This copies the canonical factory into `~/Projects/_agent_forge` and renders Claude / Codex / Gemini surfaces into your user-home host directories. Windows defaults to Claude-only; pass `-AllHosts` after Codex and Gemini are installed. The Windows entry point unblocks the ZIP before extraction, avoids Explorer's partial-extract failure mode, and warns when the destination path is long enough to risk MAX_PATH issues.
+
+If the bundle is already safely extracted, Windows operators can run:
+
+```powershell
+powershell.exe -ExecutionPolicy Bypass -File .\_agent_forge\scripts\deploy-factory.ps1 -ClaudeOnly
+```
 
 **Step 2 — Run the inline onboarding tour.** Open Claude Code (or Codex, or Gemini CLI) in any project, and type:
 
@@ -67,6 +73,13 @@ python3 _agent_forge/skills/global/onboarding-guide/onboard.py check
 It reports six green/yellow/red probes and tells you the exact command to fix anything red.
 
 For per-host troubleshooting, see `_agent_forge/docs/QUICKSTART.md` and `_agent_forge/docs/HOST_INTEGRATIONS.md`.
+
+Windows troubleshooting:
+
+- If PowerShell refuses to run a script, use the `powershell.exe -ExecutionPolicy Bypass -File ...` form shown above.
+- If extraction appears incomplete, do not use Explorer's Extract All. Re-run `deploy-and-bootstrap.ps1`; it calls `Unblock-File` before `Expand-Archive` and validates the extracted tree.
+- If extraction fails under a deeply nested folder, move the ZIP to a short path such as `C:\af` and re-run. This avoids MAX_PATH edge cases.
+- If newly installed tools are not on PATH, close PowerShell and open a new terminal.
 
 ## Where to go next
 
