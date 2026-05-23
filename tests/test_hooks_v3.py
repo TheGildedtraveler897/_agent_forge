@@ -66,6 +66,17 @@ class HookV3RenderingTests(unittest.TestCase):
         self.assertNotIn("auto-activator.sh", serialized)
         self.assertNotIn("UserPromptSubmit", serialized)
 
+    def test_live_hook_policy_has_no_disabled_examples(self) -> None:
+        for bucket in ("shared", "claude", "codex", "gemini"):
+            for hook in (omni_factory.load_json(omni_factory.HOOKS_PATH).get(bucket) or []):
+                self.assertNotEqual(hook.get("enabled"), False, hook.get("id"))
+
+        examples = ROOT / "docs" / "HOOK_EXAMPLES.md"
+        self.assertTrue(examples.is_file())
+        body = examples.read_text(encoding="utf-8")
+        self.assertIn("example-http-audit", body)
+        self.assertIn("example-agent-review", body)
+
 
 if __name__ == "__main__":
     unittest.main()

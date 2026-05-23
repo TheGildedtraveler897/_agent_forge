@@ -36,7 +36,7 @@ Optional (all are **Agent Forge local extensions**, not part of agentskills.io â
 - `requires_mcp_servers`: list of MCP server IDs the skill depends on.
 
 Legacy:
-- `hosts`: accepted as an alias for `targets` during migration. Prefer `targets` for new skills.
+- `hosts`: deprecated legacy alias for `targets`. Sunset date: 2026-06-30. `scripts/verify-agent-forge.py` now rejects any `hosts:` frontmatter; migrate old skills to `targets:` before committing.
 
 ## Workflow
 

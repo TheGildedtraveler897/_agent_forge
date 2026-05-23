@@ -1,4 +1,5 @@
 {
   "version": 1,
+  "_comment": "A fresh factory may have no governed projects yet. Add one with scripts/bootstrap-project.sh --name <name>.",
   "governed_projects": []
 }
