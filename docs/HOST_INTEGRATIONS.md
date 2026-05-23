@@ -31,6 +31,7 @@ Generated surfaces:
 
 - `~/.claude/agents/`
 - `~/.claude/commands/`
+- `~/.claude/skills/`
 - `<project>/.claude/agents/`
 - `<project>/.claude/commands/`
 - `<project>/.claude/skills/`
@@ -64,7 +65,7 @@ Generated surfaces:
 
 - `~/.gemini/agents/`
 - `~/.gemini/commands/`
-- `~/.gemini/skills/`
+- `~/.agents/skills/`
 - `~/.gemini/GEMINI.md`
 - `<project>/GEMINI.md`
 - `<project>/.gemini/agents/`
@@ -202,7 +203,7 @@ Event names use snake_case and are translated to each host's native casing by th
 Per sync, the factory writes:
 
 - Claude → `<project>/.claude/settings.json` with a top-level `"hooks"` block.
-- Codex → `<project>/.codex/hooks.json` (existing), plus `[features] codex_hooks = true` in `.codex/config.toml` when any hook applies.
+- Codex → `<project>/.codex/hooks.json` (existing), plus `[features] hooks = true` in `.codex/config.toml` when any hook applies.
 - Gemini → `<project>/.gemini/settings.json` with a `"hooks"` block merged alongside `context` and `mcpServers`.
 
 Global user-home hook surfaces (`~/.claude/settings.json`, `~/.gemini/settings.json`) are left alone by the factory; the canonical delivery is per-project.

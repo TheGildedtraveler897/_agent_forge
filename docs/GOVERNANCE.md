@@ -77,6 +77,7 @@ The factory now has three governed host families plus a cross-host layer:
 - Claude:
 - `~/.claude/agents/`
 - `~/.claude/commands/`
+- `~/.claude/skills/`
 - `<project>/.claude/agents/`
 - `<project>/.claude/commands/`
 - `<project>/.claude/skills/`
@@ -93,7 +94,7 @@ The factory now has three governed host families plus a cross-host layer:
 - Gemini:
 - `~/.gemini/commands/`
 - `~/.gemini/agents/`
-- `~/.gemini/skills/`
+- `~/.agents/skills/`
 - `<project>/GEMINI.md`
 - `<project>/.gemini/commands/`
 - `<project>/.gemini/agents/`

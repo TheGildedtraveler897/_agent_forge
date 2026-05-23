@@ -131,9 +131,9 @@ Each of these hosts has its own dialect for the same primitives:
 
 | Host | User-home surfaces | Per-project surfaces |
 |---|---|---|
-| **Claude** | `~/.claude/{agents,commands}` | `<project>/.claude/{agents,commands,skills,settings.json}`, `<project>/.mcp.json` |
+| **Claude** | `~/.claude/{agents,commands,skills}` | `<project>/.claude/{agents,commands,skills,settings.json}`, `<project>/.mcp.json` |
 | **Codex** | `~/.agents/skills` | `<project>/.agents/skills`, `<project>/.codex/{agents,config.toml,hooks.json}` |
-| **Gemini** | `~/.gemini/{agents,commands,skills}`, `~/.gemini/GEMINI.md` | `<project>/GEMINI.md`, `<project>/.gemini/{agents,commands,skills,settings.json}` |
+| **Gemini** | `~/.gemini/{agents,commands}` plus `~/.agents/skills`, `~/.gemini/GEMINI.md` | `<project>/GEMINI.md`, `<project>/.gemini/{agents,commands,skills,settings.json}` |
 | **Cross-host** | n/a | `<project>/MEMORY.md`, `<project>/.forge_state/{README.md,manifest.json,archivist.log,bridge.json,bridge.log}` |
 
 ### The validation pyramid

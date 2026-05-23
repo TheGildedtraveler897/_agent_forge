@@ -575,7 +575,7 @@ def render_codex_agent(capability: Capability, project_root: Path) -> str:
 
 
 def render_project_gemini_md(project_root: Path) -> str:
-    imports = [
+    raw_imports = [
         relpath(project_root, ROOT / "AGENTS.md"),
         relpath(project_root, KNOWLEDGE_ANCHOR_PATH),
         "AGENTS.md",
@@ -583,7 +583,8 @@ def render_project_gemini_md(project_root: Path) -> str:
         "docs/HANDOFF.md",
     ]
     if _memory_sections() and (project_root / "MEMORY.md").exists():
-        imports.append("MEMORY.md")
+        raw_imports.append("MEMORY.md")
+    imports = list(dict.fromkeys(raw_imports))
     lines = [MARKDOWN_MANAGED_COMMENT, "", "# Agent Forge Gemini Context", ""]
     lines.extend(f"@{item}" for item in imports)
     lines.append("")
@@ -872,15 +873,19 @@ _EVENT_ALIASES: dict[str, dict[str, str | None]] = {
         "before_tool_selection": None,
     },
     "codex": {
-        # Codex hook docs now use PascalCase event keys in hooks.json. The
-        # prior snake_case rendering was a silent-correctness risk mirroring
-        # the Gemini BeforeTool drift fixed in Sprint 1.
+        # Codex hook docs use PascalCase event keys in hooks.json. Keep this
+        # allow-list aligned with the public event table; aliases set to None
+        # mean the canonical event is not supported by Codex.
         "pre_tool_use": "PreToolUse",
         "post_tool_use": "PostToolUse",
         "permission_request": "PermissionRequest",
         "user_prompt_submit": "UserPromptSubmit",
         "session_start": "SessionStart",
         "stop": "Stop",
+        "subagent_start": "SubagentStart",
+        "subagent_stop": "SubagentStop",
+        "pre_compact": "PreCompact",
+        "post_compact": "PostCompact",
         "pre_commit": "PreToolUse",
         "post_edit": "PostToolUse",
         "permission_denied": None,
@@ -888,8 +893,6 @@ _EVENT_ALIASES: dict[str, dict[str, str | None]] = {
         "post_tool_batch": None,
         "user_prompt_expansion": None,
         "notification": None,
-        "subagent_start": None,
-        "subagent_stop": None,
         "task_created": None,
         "task_completed": None,
         "stop_failure": None,
@@ -900,8 +903,6 @@ _EVENT_ALIASES: dict[str, dict[str, str | None]] = {
         "file_changed": None,
         "worktree_create": None,
         "worktree_remove": None,
-        "pre_compact": None,
-        "post_compact": None,
         "elicitation": None,
         "elicitation_result": None,
         "session_end": None,
@@ -1387,7 +1388,7 @@ def render_codex_config(project_name: str, project_root: Path, capabilities: lis
     ]
 
     if _hooks_for_host("codex"):
-        lines.extend(["", "[features]", "codex_hooks = true"])
+        lines.extend(["", "[features]", "hooks = true"])
 
     relevant_ids = set()
     for capability in capabilities:
@@ -1424,11 +1425,12 @@ def render_codex_config(project_name: str, project_root: Path, capabilities: lis
         if server["tool_deny"]:
             items = ", ".join(toml_string(item) for item in server["tool_deny"])
             lines.append(f"disabled_tools = [{items}]")
-        env_map = {key: f"${key}" for key in server["env_passthrough"]}
-        env_map.update(server["env_literal"])
-        if env_map:
+        if server["env_passthrough"]:
+            items = ", ".join(toml_string(item) for item in server["env_passthrough"])
+            lines.append(f"env_vars = [{items}]")
+        if server["env_literal"]:
             lines.append("[mcp_servers." + server["server_alias"] + ".env]")
-            for key, value in env_map.items():
+            for key, value in server["env_literal"].items():
                 lines.append(f"{key} = {toml_string(value)}")
         if server["headers"]:
             lines.append("[mcp_servers." + server["server_alias"] + ".http_headers]")
@@ -1479,11 +1481,12 @@ def render_user_codex_mcp_block() -> str:
         if server["tool_deny"]:
             items = ", ".join(toml_string(item) for item in server["tool_deny"])
             lines.append(f"disabled_tools = [{items}]")
-        env_map = {key: f"${key}" for key in server["env_passthrough"]}
-        env_map.update(server["env_literal"])
-        if env_map:
+        if server["env_passthrough"]:
+            items = ", ".join(toml_string(item) for item in server["env_passthrough"])
+            lines.append(f"env_vars = [{items}]")
+        if server["env_literal"]:
             lines.append("[mcp_servers." + server["server_alias"] + ".env]")
-            for key, value in env_map.items():
+            for key, value in server["env_literal"].items():
                 lines.append(f"{key} = {toml_string(value)}")
         if server["headers"]:
             lines.append("[mcp_servers." + server["server_alias"] + ".http_headers]")
@@ -1520,9 +1523,11 @@ def sync_claude(project_name: str | None, projects_root: Path, claude_home: Path
     capabilities = discover_capabilities()
     user_agents: dict[str, str] = {}
     user_commands: dict[str, str] = {}
+    user_skills: dict[str, Path] = {}
     for capability in capabilities:
         if capability.scope != "global" or "claude" not in capability.hosts:
             continue
+        user_skills[capability.capability_id] = capability.skill_dir
         read_path = skill_read_path_for_home(claude_home / "commands", capability)
         if capability.is_workflow:
             name = f"{capability.claude_command_name or capability.capability_id}.md"
@@ -1531,6 +1536,7 @@ def sync_claude(project_name: str | None, projects_root: Path, claude_home: Path
             name = f"{capability.capability_id}.md"
             user_agents[name] = render_claude_agent(capability, read_path)
 
+    sync_symlink_dir(claude_home / "skills", user_skills)
     sync_managed_dir(claude_home / "commands", user_commands, CLAUDE_COMMAND_MARKER)
     sync_managed_dir(claude_home / "agents", user_agents, CLAUDE_AGENT_MARKER)
 

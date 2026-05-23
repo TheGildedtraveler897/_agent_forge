@@ -68,7 +68,7 @@ Codex:
 Gemini:
 
 - boot file: `GEMINI.md`
-- generated surfaces: `.gemini/agents`, `.gemini/commands`, `.gemini/skills`, `.gemini/settings.json` (hooks + MCP)
+- generated surfaces: `.gemini/agents`, `.gemini/commands`, `.agents/skills`, `.gemini/skills`, `.gemini/settings.json` (hooks + MCP)
 
 Cross-host (one file per governed project, reachable from all three hosts via the AGENTS chain or a Gemini `@import`):
 

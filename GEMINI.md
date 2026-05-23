@@ -4,7 +4,6 @@
 
 @AGENTS.md
 @docs/LESSONS_LEARNED.md
-@AGENTS.md
 @docs/CONOPS.md
 @docs/HANDOFF.md
 @MEMORY.md

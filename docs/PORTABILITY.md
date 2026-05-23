@@ -22,6 +22,7 @@ Claude:
 
 - `~/.claude/agents/`
 - `~/.claude/commands/`
+- `~/.claude/skills/`
 - `<project>/.claude/agents/`
 - `<project>/.claude/commands/`
 - `<project>/.claude/skills/`
@@ -39,7 +40,7 @@ Gemini:
 
 - `~/.gemini/agents/`
 - `~/.gemini/commands/`
-- `~/.gemini/skills/`
+- `~/.agents/skills/`
 - `~/.gemini/GEMINI.md`
 - `<project>/GEMINI.md`
 - `<project>/.gemini/agents/`

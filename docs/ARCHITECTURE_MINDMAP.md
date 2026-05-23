@@ -159,7 +159,7 @@
 **Gemini:**
 - `~/.gemini/agents` — Global agents
 - `~/.gemini/commands` — Global commands
-- `~/.gemini/skills` — Global skills
+- `~/.agents/skills` — Global Agent Skills
 - `~/.gemini/GEMINI.md` (boot file)
 - `<project>/.gemini/agents` — Project agents
 - `<project>/.gemini/commands` — Project commands

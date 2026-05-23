@@ -89,7 +89,7 @@ The bootstrap creates the minimum governed footprint and auto-syncs Claude, Code
 - [ ] `~/Projects/_agent_forge` exists
 - [ ] `~/.claude/agents` and `~/.claude/commands` are populated
 - [ ] `~/.agents/skills` is populated
-- [ ] `~/.gemini/agents`, `~/.gemini/commands`, `~/.gemini/skills`, and `~/.gemini/GEMINI.md` exist
+- [ ] `~/.gemini/agents`, `~/.gemini/commands`, `~/.agents/skills`, and `~/.gemini/GEMINI.md` exist
 - [ ] selected CLIs respond to `--version`
 - [ ] auth completed for each selected CLI
 - [ ] `verify-agent-forge.py` reports 0 failures
