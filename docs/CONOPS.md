@@ -1,5 +1,5 @@
 # Agent Forge CONOPS
-Last updated: 2026-04-28 (RC milestone — doctrine promotion pass)
+Last updated: 2026-05-23 (SOTA 2026 deep-refactor audit)
 
 ## Mission
 
@@ -58,10 +58,10 @@ Claude:
 
 - `~/.claude/agents`
 - `~/.claude/skills`
-- `~/.claude/skills`
+- `<project>/.claude/commands`
 - `<project>/.claude/agents`
 - `<project>/.claude/skills`
-- `<project>/.claude/skills`
+- `<project>/.claude/settings.json`
 - `<project>/.mcp.json`
 
 Codex:
@@ -71,18 +71,20 @@ Codex:
 - `<project>/.codex/agents`
 - `<project>/.codex/config.toml`
 - `<project>/.codex/hooks.json`
+- `<project>/.codex/memory/AGENTS_MEMORY.md`
 
 Gemini:
 
+- `~/.agents/skills`
 - `~/.gemini/agents`
 - `~/.gemini/skills`
-- `~/.agents/skills`
-- `~/.gemini/GEMINI.md`
+- `~/.gemini/settings.json`
 - `<project>/GEMINI.md`
+- `<project>/.gemini/commands`
 - `<project>/.gemini/agents`
 - `<project>/.gemini/skills`
-- `<project>/.gemini/skills`
 - `<project>/.gemini/settings.json`
+- `<project>/.gemini/memory/MEMORY.md`
 
 ### Native vs Sidecar Surfaces
 
