@@ -1,6 +1,6 @@
 ---
 name: infra-architect
-description: Audit and validate infrastructure, Docker Compose files, and hardware procurement. Use when reviewing configs, planning homelab changes, or sourcing hardware. Focuses on security, portability, and total cost of ownership (TCO).
+description: Audit and validate infrastructure, Docker Compose files, and hardware procurement. Use when reviewing configs, planning self-hosted infrastructure changes, or sourcing hardware. Focuses on security, portability, and total cost of ownership (TCO).
 capability_class: expert
 targets: ["claude", "codex", "gemini"]
 ---
