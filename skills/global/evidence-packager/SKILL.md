@@ -40,7 +40,7 @@ Which orchestration pattern best fits a portable, team-based multi-agent factory
 |---|---|---|
 | Google ADK blog (2025) | Official | 8 patterns; start simple, add complexity when needed |
 | Anthropic context eng. (2025) | Official | Smallest high-signal token set wins |
-| ArXiv 2511.08475 | Academic | Modular interface design prevents role overlap |
+| ArXiv 2XXX.XXXXX (placeholder) | Academic | Modular interface design prevents role overlap |
 
 ## Confirmed Findings
 - Supervisor/coordinator is the default enterprise pattern (Google, Microsoft, OpenAI)
