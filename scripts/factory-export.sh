@@ -253,7 +253,7 @@ QUICKSTART (pick your platform)
 
   Windows (native PowerShell, no WSL required):
     cd <unpacked-bundle>
-    pwsh -File .\_agent_forge\scripts\deploy-factory.ps1
+    powershell.exe -ExecutionPolicy Bypass -File .\_agent_forge\scripts\deploy-factory.ps1
 
   Then in Claude Code, invoke the onboarding-guide skill for an
   interactive walkthrough:
@@ -263,6 +263,7 @@ REQUIREMENTS
   Linux / macOS: Python 3.10+, git, tar
   macOS: MacPorts (NOT Homebrew)
   Windows: Python 3.10+, git, PowerShell 5.1+ (ships with Windows 10+)
+  Windows Codex runtime: use WSL2 unless codex --version works in native PowerShell
 
   Plus at least one host CLI:
     - Claude Code  (anthropic.com)

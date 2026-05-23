@@ -34,6 +34,7 @@ CODEX_AGENT_MARKER = "agent_forge_managed = true"
 MARKDOWN_MANAGED_COMMENT = "<!-- Managed by Agent Forge omni-factory. Do not edit by hand. -->"
 BOOTSTRAP_REPLACE_MARKER = "Managed by Agent Forge bootstrap. The sync script will replace this stub."
 CAPABILITY_TARGETS = ("claude", "codex", "gemini")
+MANAGED_COPY_MARKER = ".agent-forge-managed-copy"
 
 
 @dataclass(frozen=True)
@@ -211,16 +212,39 @@ def remove_managed_text(path: Path, state: dict[str, Any]) -> None:
     unmark_managed(state, path)
 
 
+def is_managed_skill_copy(path: Path) -> bool:
+    return path.is_dir() and (path / MANAGED_COPY_MARKER).is_file()
+
+
+def copy_managed_skill_dir(target: Path, source: Path) -> None:
+    if target.exists() or target.is_symlink():
+        if target.is_symlink():
+            target.unlink()
+        elif is_managed_skill_copy(target):
+            shutil.rmtree(target)
+        else:
+            raise RuntimeError(f"Refusing to replace unmanaged skill target: {target}")
+    shutil.copytree(source, target, ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
+    marker = f"Managed by Agent Forge omni-factory. Source: {source.resolve()}\n"
+    write_text(target / MANAGED_COPY_MARKER, marker)
+
+
 def ensure_symlink(target: Path, source: Path) -> None:
     ensure_parent(target)
     if target.exists() or target.is_symlink():
-        if not target.is_symlink():
-            raise RuntimeError(f"Refusing to replace non-symlink target: {target}")
-        actual = target.resolve()
-        if actual == source.resolve():
-            return
-        target.unlink()
-    target.symlink_to(source)
+        if target.is_symlink():
+            actual = target.resolve()
+            if actual == source.resolve():
+                return
+            target.unlink()
+        elif is_managed_skill_copy(target):
+            shutil.rmtree(target)
+        else:
+            raise RuntimeError(f"Refusing to replace unmanaged skill target: {target}")
+    try:
+        target.symlink_to(source, target_is_directory=source.is_dir())
+    except OSError:
+        copy_managed_skill_dir(target, source)
 
 
 def sync_symlink_dir(target_dir: Path, desired: dict[str, Path]) -> None:
@@ -233,6 +257,8 @@ def sync_symlink_dir(target_dir: Path, desired: dict[str, Path]) -> None:
             continue
         if existing.is_symlink():
             existing.unlink()
+        elif is_managed_skill_copy(existing):
+            shutil.rmtree(existing)
 
 
 def sync_managed_dir(target_dir: Path, desired: dict[str, str], marker: str) -> None:
@@ -253,7 +279,6 @@ def sync_managed_dir(target_dir: Path, desired: dict[str, str], marker: str) -> 
         if existing.name in desired:
             continue
         if existing.is_symlink():
-            existing.unlink()
             continue
         if existing.is_file() and marker in existing.read_text():
             existing.unlink()

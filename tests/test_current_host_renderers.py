@@ -5,6 +5,7 @@ import json
 import sys
 import tempfile
 import unittest
+from unittest import mock
 from pathlib import Path
 
 
@@ -83,7 +84,23 @@ class CurrentHostRendererTests(unittest.TestCase):
             claude_home = Path(tmp) / "claude-home"
             omni_factory.sync_claude(None, ROOT.parent, claude_home)
 
-            self.assertTrue((claude_home / "skills" / "onboarding-guide").is_symlink())
+            skill_path = claude_home / "skills" / "onboarding-guide"
+            self.assertTrue(
+                skill_path.is_symlink()
+                or (skill_path / omni_factory.MANAGED_COPY_MARKER).is_file()
+            )
+            self.assertTrue((claude_home / "skills" / "onboarding-guide.md").is_file())
+
+    def test_claude_sync_falls_back_to_managed_skill_copy_when_symlink_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            claude_home = Path(tmp) / "claude-home"
+            with mock.patch.object(Path, "symlink_to", side_effect=OSError("symlink unavailable")):
+                omni_factory.sync_claude(None, ROOT.parent, claude_home)
+
+            skill_path = claude_home / "skills" / "onboarding-guide"
+            self.assertTrue(skill_path.is_dir())
+            self.assertTrue((skill_path / omni_factory.MANAGED_COPY_MARKER).is_file())
+            self.assertTrue((skill_path / "SKILL.md").is_file())
             self.assertTrue((claude_home / "skills" / "onboarding-guide.md").is_file())
 
     def test_project_gemini_context_deduplicates_imports(self) -> None:

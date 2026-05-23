@@ -23,10 +23,10 @@ It also ships:
 
 **Windows (native PowerShell, no WSL required):**
 ```powershell
-pwsh -File .\_agent_forge\scripts\deploy-factory.ps1
+powershell.exe -ExecutionPolicy Bypass -File .\_agent_forge\scripts\deploy-factory.ps1
 ```
 
-This copies the canonical factory into `~/Projects/_agent_forge` and renders Claude / Codex / Gemini surfaces into your user-home host directories. Pass `-ClaudeOnly` on Windows if you only have Claude Code installed.
+This copies the canonical factory into `~/Projects/_agent_forge` and renders Claude / Codex / Gemini surfaces into your user-home host directories. Pass `-ClaudeOnly` on Windows if you only have Claude Code installed. For Codex runtime testing on Windows, use WSL2 unless `codex --version` already works in native PowerShell.
 
 **Step 2 — Run the inline onboarding tour.** Open Claude Code (or Codex, or Gemini CLI) in any project, and type:
 

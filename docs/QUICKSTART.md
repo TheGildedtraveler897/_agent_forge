@@ -38,7 +38,7 @@ This copies the canonical skills, hooks, and policies into your host CLI's user-
 **Windows (native PowerShell, no WSL):**
 
 ```powershell
-pwsh -File .\_agent_forge\scripts\deploy-factory.ps1
+powershell.exe -ExecutionPolicy Bypass -File .\_agent_forge\scripts\deploy-factory.ps1
 ```
 
 This writes to:
@@ -57,7 +57,7 @@ If you don't already have Claude Code / Codex / Gemini installed, the workstatio
 ./_agent_forge/scripts/bootstrap-workstation.sh
 ```
 
-The bootstrap is **Linux-and-macOS-via-MacPorts only**. Windows operators should install Claude Code following Anthropic's official Windows instructions.
+The bootstrap is **Linux-and-macOS-via-MacPorts only**. Windows operators should install Claude Code following Anthropic's official Windows instructions. For Codex runtime testing on Windows, use WSL2 unless `codex --version` already works in native PowerShell.
 
 ## Step 4 — Authenticate
 
@@ -89,7 +89,7 @@ cd ~/Projects/_agent_forge
 On Windows (native PowerShell):
 
 ```powershell
-pwsh -File .\scripts\bootstrap-project.ps1 -Name my-first-app
+powershell.exe -ExecutionPolicy Bypass -File .\scripts\bootstrap-project.ps1 -Name my-first-app
 ```
 
 The bootstrap creates the minimum required files at `~/Projects/my-first-app/` (`AGENTS.md`, `CLAUDE.md`, `docs/CONOPS.md`, `docs/HANDOFF.md`, `.claude/CLAUDE.md`), appends an entry to `projects.json`, and syncs all three host-native surfaces.

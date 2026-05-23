@@ -192,11 +192,12 @@ From a fresh Debian/Ubuntu, macOS (MacPorts), or Windows (native) workstation:
 #    Linux / macOS:
 ./_agent_forge/scripts/deploy-factory.sh
 #    Windows (native PowerShell, no WSL):
-pwsh -File .\_agent_forge\scripts\deploy-factory.ps1
+powershell.exe -ExecutionPolicy Bypass -File .\_agent_forge\scripts\deploy-factory.ps1
 
 # 3. (Optional) Install the host CLIs if you don't already have them.
 ./_agent_forge/scripts/bootstrap-workstation.sh
 #    Note: macOS path requires MacPorts. Windows skips CLI install — install Claude Code yourself.
+#    For Codex runtime testing on Windows, use WSL2 unless codex --version already works in native PowerShell.
 
 # 4. Authenticate the host CLIs.
 claude        # Anthropic browser login

@@ -43,7 +43,7 @@ This installs Agent Forge into `~/Projects/_agent_forge` on your machine. No adm
 
 **Windows (PowerShell):**
 ```powershell
-pwsh -File .\_agent_forge\scripts\deploy-factory.ps1
+powershell.exe -ExecutionPolicy Bypass -File .\_agent_forge\scripts\deploy-factory.ps1
 ```
 
 The script copies the canonical sources, generates the host-native rendering, and exits with a one-line summary. If it asks to install the host CLIs, say no for this demo — the demo runs entirely from the Python skill helper.
