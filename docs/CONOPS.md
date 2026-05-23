@@ -89,6 +89,10 @@ Not every host exposes equivalent native primitives. The factory uses native pat
 
 Do not fake parity. When a host lacks a stable native target, validate the sidecar as bridge evidence and document the conservatism rather than claiming equivalence.
 
+### Codex AGENTS.md Override Precedence
+
+Codex 2026 supports an `AGENTS.override.md` file at the project root that takes precedence over the parent-tree `AGENTS.md` for that project's Codex session. `bootstrap-project.sh` stubs this file with a comment-only header when scaffolding a new governed project; the stub is idempotent (it is not regenerated if it already exists, so an operator's project-local overrides survive re-bootstrap). The omni-factory renderers do **not** write to `AGENTS.override.md` — the file is operator-authored, not factory-generated. Empty or comment-only override files have no effect; only non-comment content is parsed by Codex. Use this file for project-local exceptions to rules that otherwise live in `~/Projects/AGENTS.md` or the project's `AGENTS.md`. Document the override in the project's `docs/CONOPS.md` so the rationale survives.
+
 ## Hook Governance
 
 `policies/hooks.json` (schema v3) is the canonical authoring surface for hooks across Claude, Codex, and Gemini. The seeded `pre-tool-execution-guardian` is the universal pre-tool veto; subsequent records have shipped for memory bridge lifecycle and the user-prompt advisory.

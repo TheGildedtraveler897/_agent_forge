@@ -238,11 +238,11 @@ Each drift surface below is being addressed in the current sprint or explicitly 
 - **Agent Forge state on verification:** All five events are already present in `scripts/omni_factory.py:_EVENT_ALIASES` (`before_agent`, `after_agent`, `before_tool_selection`, `after_model`, `before_model`) with `None` aliases for Claude and Codex and the matching PascalCase native names for Gemini. This was wired in by an earlier SOTA pass; the canonical schema represents the events even though no current `policies/hooks.json` record uses them.
 - **Track:** 4b — verified represented in code. The work is documentation only: `docs/CONOPS.md` § Hook Governance gains a fourth bullet explicitly allowing host-specific canonical events; `policies/hooks.json` description string gains a sentence naming the Gemini-only events and the None-alias drop behavior, so a future author reading the canonical file knows the asymmetry is intentional.
 
-### 5.3 `AGENTS.override.md` precedence (Codex)
+### 5.3 `AGENTS.override.md` precedence (Codex) — IMPLEMENTED (2026-05-22)
 
 - **2026 standard:** Codex reads `AGENTS.override.md` (project root) with precedence over the parent-tree `AGENTS.md`.
-- **Agent Forge state:** Not implemented. `bootstrap-project.sh` does not stub `AGENTS.override.md`; the renderer does not know to leave it alone.
-- **Track:** 4c — stub on bootstrap; renderer skip-if-non-comment; document precedence model in `docs/CONOPS.md`.
+- **Agent Forge state on close:** `scripts/bootstrap-project.sh` now stubs `AGENTS.override.md` with a comment-only header when scaffolding a new governed project. The stub creation is idempotent (`[[ ! -f ... ]]` guard), so re-running bootstrap on an existing project never clobbers an operator's project-local overrides. The omni-factory renderers were already silent on `AGENTS.override.md` — no code change needed there (verified via `grep`).
+- **Track:** 4c — closed. `docs/CONOPS.md` § Codex AGENTS.md Override Precedence added under "Native vs Sidecar Surfaces" documenting the precedence model and the operator-authored / factory-skipped contract.
 
 ### 5.4 `targets:` field labeled as standard
 
