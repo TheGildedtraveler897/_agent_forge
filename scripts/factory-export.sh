@@ -119,6 +119,15 @@ tar -C "${WORKSPACE_ROOT}" \
   --exclude='_agent_forge/runtime/validation' \
   --exclude='_agent_forge/dev' \
   --exclude='_agent_forge/dist' \
+  --exclude='*/__pycache__' \
+  --exclude='*.pyc' \
+  --exclude='*.pyo' \
+  --exclude='_agent_forge/**/__pycache__' \
+  --exclude='_agent_forge/**/*.pyc' \
+  --exclude='_agent_forge/**/*.pyo' \
+  --exclude='_agent_forge/.pytest_cache' \
+  --exclude='_agent_forge/.mypy_cache' \
+  --exclude='_agent_forge/.ruff_cache' \
   --exclude='_agent_forge/.forge_state' \
   --exclude='_agent_forge/.claude' \
   --exclude='_agent_forge/.codex' \

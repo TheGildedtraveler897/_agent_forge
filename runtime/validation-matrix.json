@@ -1,4 +1,30 @@
 {
+  "ship_readiness": {
+    "2026-05-23": {
+      "linux": {
+        "artifact_path": "runtime/validation/linux-2026-05-23",
+        "bundle_zip_check_exit": 0,
+        "bundle_name": "agent-forge-suitcase-20260523-validation",
+        "coi_grep_exit": 1,
+        "export_cache_scan_exit": 0,
+        "factory_export_exit": 0,
+        "pass": true,
+        "triad_runtime": "skipped: no governed_projects entry exists",
+        "unit_tests_exit": 0,
+        "verify_agent_forge_exit": 0
+      },
+      "mac": {
+        "artifact_path": "runtime/validation/mac-checklist.md",
+        "method": "manual checklist prepared; no Mac host reachable from this session",
+        "pass": null
+      },
+      "windows": {
+        "artifact_path": "runtime/validation/windows-2026-05-23.md",
+        "method": "manual checklist prepared for fresh Windows VM smoke test",
+        "pass": null
+      }
+    }
+  },
   "rows": [
     {
       "fixture": "~/.claude/agents",

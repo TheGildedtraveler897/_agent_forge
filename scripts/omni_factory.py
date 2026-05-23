@@ -1634,8 +1634,8 @@ def sync_claude(project_name: str | None, projects_root: Path, claude_home: Path
             name = f"{capability.capability_id}.md"
             user_agents[name] = render_claude_agent(capability, read_path)
 
-    sync_symlink_dir(claude_home / "skills", user_skills)
     sync_managed_dir(claude_home / "skills", user_commands, CLAUDE_COMMAND_MARKER)
+    sync_symlink_dir(claude_home / "skills", user_skills)
     sync_managed_dir(claude_home / "agents", user_agents, CLAUDE_AGENT_MARKER)
 
     if project_name:
