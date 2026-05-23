@@ -94,7 +94,33 @@ Each host CLI runs your tool calls inside some kind of isolation. Codex CLI uses
 
 ## skill
 
-A skill is a packaged, reusable workflow. It lives at `skills/global/<name>/SKILL.md` (for cross-project skills) or `skills/projects/<project>/<name>/SKILL.md` (for project-local). The frontmatter declares the metadata (which hosts, which projects, workflow vs. expert class). The body is the durable instruction text. The format follows the [agentskills.io](https://agentskills.io) open standard which all three hosts now implement: `name` and `description` are required, the body is loaded lazily when the skill is invoked (progressive disclosure). Agent Forge adds optional fields like `targets:`, `capability_class:`, and `delivery_projects:` as local extensions; these control which hosts and which governed projects receive the rendered skill.
+A skill is a packaged, reusable workflow. It lives at `skills/global/<name>/SKILL.md` (for cross-project skills) or `skills/projects/<project>/<name>/SKILL.md` (for project-local). The frontmatter declares the metadata (which hosts, which projects, workflow vs. expert class). The body is the durable instruction text. The format follows the [agentskills.io](https://agentskills.io) open standard which all three hosts now implement: `name` and `description` are required, the body is loaded lazily when the skill is invoked (progressive disclosure). Agent Forge adds optional fields like `targets:`, `capability_class:`, and `delivery_projects:` as Agent Forge **local extensions** — they are not part of agentskills.io itself. The renderer honors them; an omitted `targets:` defaults to delivery on all three hosts.
+
+---
+
+## state-of-the-field
+
+*Last reviewed against vendor docs: 2026-05-22. Re-verify before relying on specifics. The source-of-truth for what was actually checked is `docs/SOTA_2026_AUDIT.md`.*
+
+**What has converged across Claude / Codex / Gemini (the cross-vendor SOTA):**
+
+- **Skills** — all three vendors adopted the [agentskills.io](https://agentskills.io) open standard. `SKILL.md` with YAML frontmatter, progressive disclosure (`name` + `description` load eagerly, full body lazily). Optional siblings: `scripts/`, `references/`, `assets/`.
+- **MCP** — all three implement the [Model Context Protocol 2025-11-25 spec](https://modelcontextprotocol.io/specification/latest). JSON-RPC 2.0 transport. Identical field names across hosts. Per-host config locations differ (`.mcp.json` / `.codex/config.toml` / `.gemini/settings.json`), but the server-declaration schema is the same.
+
+**What has NOT converged:**
+
+- **Hooks** — Gemini fires `BeforeAgent`, `BeforeToolSelection`, `AfterModel`, `AfterAgent` events that don't exist on Claude / Codex (they're semantically distinct, not just renamed). The factory's canonical hook schema includes them with `None` aliases for the other two hosts; the renderer drops them silently for hosts that lack the event.
+- **Subagents** — Codex uses **TOML** in `.codex/agents/` (`[agent]` section, `developer_instructions`, `sandbox_mode`); Claude and Gemini use YAML-frontmatter markdown. Not interchangeable. The factory's renderer writes the right format per host.
+- **Native auto-memory** — only Claude has documented native cross-session memory (`~/.claude/projects/<encoded>/memory/MEMORY.md`, auto-loaded). Codex and Gemini have no documented equivalent. The factory bridges outbound from canonical `MEMORY.md` to sidecar files (`.codex/memory/AGENTS_MEMORY.md`, `.gemini/memory/MEMORY.md`); inbound sync has a true native target only on Claude.
+- **`AGENTS.md`** — a convention, not a formal standard. Codex specifically supports an `AGENTS.override.md` precedence file (project-local overrides parent-tree `AGENTS.md`); the factory honors this on bootstrap.
+
+**Where the field is going (what the research says):**
+
+- *Long-context degradation is real.* [Context Rot (Chroma, July 2025)](https://research.trychroma.com/context-rot) and [Lost in the Middle (Liu et al., TACL 2024, arXiv 2307.03172)](https://arxiv.org/abs/2307.03172) show that LLM performance drops as input grows, even on simple retrieval. The factory's response is tiered memory + bounded-decay distillation: append-first in `LESSONS_LEARNED.md` and `HANDOFF.md`, archive-on-promote via `lesson-distiller` and `handoff-archiver`. Keep the most important instructions at the top of canonical files; the middle of long contexts is where attention degrades.
+- *Multi-turn agents forget.* [LLMs Get Lost in Multi-Turn Conversation (Laban et al., ICLR 2026, arXiv 2505.06120)](https://arxiv.org/abs/2505.06120) measured a 39% average performance drop in multi-turn vs single-turn tasks. The factory's response is plan persistence (`docs/plans/<branch-slug>.md`) and subagent dispatch with fresh context.
+- *Tool overlap hurts agents.* [SWE-agent (NeurIPS 2024)](https://proceedings.neurips.cc/paper_files/paper/2024/file/5a7c947568c1b1328ccc5230172e1e7c-Paper-Conference.pdf) showed restricting agents to rigid, single-purpose tools improved GPT-4 on SWE-bench Lite by 10.7 percentage points. The factory's recent "great consolidation" (commit `efc74b8`) merged overlapping planner / reviewer skills with this finding as the warrant.
+
+**Why this matters to you, the operator:** the rate of change in this field is high. A vendor doc you read three months ago may no longer be accurate. `docs/SOTA_2026_AUDIT.md` is dated and re-verifiable; when in doubt, re-check primary sources before acting on a memory of how things used to work.
 
 ---
 
