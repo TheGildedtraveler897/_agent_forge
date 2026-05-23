@@ -1,3 +1,5 @@
+## Entries
+- 2026-05-23 feat-durable-context — Execution Planner Upgrade (Durable Context) (1 tasks, created 2026-05-23)
 # Plans Completed
 
 This file is the bounded-decay archive for plan files. When a branch merges via `branch-finisher`, the plan file in `docs/plans/<branch-slug>.md` is summarized here and removed from the active directory.
