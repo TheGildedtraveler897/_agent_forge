@@ -6,17 +6,26 @@
 
 When a fresh operator finishes `./scripts/bootstrap-project.sh --name <name>` and isn't sure what just happened, point them at the `onboarding-guide` skill:
 
+**Inline tour (the default — runs in the host CLI chat):**
+
+```
+/onboarding-guide
+```
+
+The assistant (Claude / Codex / Gemini) reads `skills/global/onboarding-guide/SKILL.md` and walks the operator through seven paced beats right in the chat: greeting + experience prompt, role prompt, factory introduction, cross-host translation table, the seatbelt, the shared brain, per-host install gate, and a role-tuned next action. Read-only and observational; plain-English translations of every agentic-vocabulary term on first mention.
+
+**Terminal-mode helpers (for non-conversational contexts — CI scripts, fresh boxes without any host CLI yet):**
+
 ```bash
-python3 ~/Projects/_agent_forge/skills/global/onboarding-guide/onboard.py tour
-# or, for the 90-second non-interactive summary:
-python3 ~/Projects/_agent_forge/skills/global/onboarding-guide/onboard.py tour --quick
-# or, to look up a single concept:
+# Six-probe machine-state check:
+python3 ~/Projects/_agent_forge/skills/global/onboarding-guide/onboard.py check
+# Single-concept explainer (reads from EXPLAINERS.md):
 python3 ~/Projects/_agent_forge/skills/global/onboarding-guide/onboard.py explain <topic>
 ```
 
-Read-only and observational. Five guided sections (what the folder is, three tools / one source of truth, the seatbelt, the shared brain, what to do next). Adapts to operator experience via a one-question prompt. Plain-English translations of every agentic-vocabulary term (MCP, hook, sandbox, memory layer) on first mention.
+`python3 onboard.py tour` now prints a redirect message pointing back at `/onboarding-guide` in the host CLI — the inline tour is the canonical path; the terminal subprocess version was retired because it had no pipeline back to the chat in conversational contexts.
 
-**Future integration hook (deferred to a Codex sprint):** `scripts/bootstrap-project.sh` could grow a `--guided` flag that invokes `onboard.py tour` automatically at the end of bootstrap. The skill is intentionally read-only so the integration is a one-line addition to the bootstrap script, with no risk to the suitcase doctrine. Documented here so a future operator implementing the wire-up has the seam clearly named.
+**Future integration hook (deferred):** `scripts/bootstrap-project.sh` could grow a `--guided` flag that prints the `/onboarding-guide` reminder at the end of bootstrap (an explicit operator nudge, not an auto-invocation). Documented here so a future operator implementing the wire-up has the seam clearly named.
 
 ## Task Brief
 

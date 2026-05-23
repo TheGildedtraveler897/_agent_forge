@@ -251,7 +251,7 @@ QUICKSTART (pick your platform)
 
   Then in Claude Code, invoke the onboarding-guide skill for an
   interactive walkthrough:
-    /onboarding-guide tour
+    /onboarding-guide
 
 REQUIREMENTS
   Linux / macOS: Python 3.10+, git, tar
@@ -274,7 +274,7 @@ VERIFY THE INSTALL
   Expect exit 0 with no [FAIL] lines.
 
 NEED HELP
-  After deploy, in Claude Code: /onboarding-guide tour
+  After deploy, in Claude Code: /onboarding-guide
   Skim _agent_forge/docs/QUICKSTART.md.
 STARTEOF
 

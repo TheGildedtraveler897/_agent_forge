@@ -14,19 +14,35 @@ It also ships:
 
 ## What to run first
 
-Pick the command for your platform. Read-only, takes about five minutes.
+**Step 1 — Deploy the factory** (one-time setup, about 30 seconds, makes no destructive changes):
 
 **Linux or macOS:**
 ```bash
-python3 _agent_forge/skills/global/onboarding-guide/onboard.py tour
+./_agent_forge/scripts/deploy-factory.sh
 ```
 
 **Windows (native PowerShell, no WSL required):**
 ```powershell
-python .\_agent_forge\skills\global\onboarding-guide\onboard.py tour
+pwsh -File .\_agent_forge\scripts\deploy-factory.ps1
 ```
 
-The tour will ask two quick questions — your experience level and your role — then walk you through six short sections explaining what every part of the factory is, why it exists, and what to do next. Nothing the tour runs will modify your system.
+This copies the canonical factory into `~/Projects/_agent_forge` and renders Claude / Codex / Gemini surfaces into your user-home host directories. Pass `-ClaudeOnly` on Windows if you only have Claude Code installed.
+
+**Step 2 — Run the inline onboarding tour.** Open Claude Code (or Codex, or Gemini CLI) in any project, and type:
+
+```
+/onboarding-guide
+```
+
+The assistant walks you through seven paced beats right in the chat — what the factory is, the cross-host translation table, the safety gate, the shared brain, and a per-host install gate. The tour is read-only; nothing it shows you modifies your system.
+
+**Step 3 — Machine state check (optional, for terminal-only operators):**
+
+```
+python3 _agent_forge/skills/global/onboarding-guide/onboard.py check
+```
+
+Six probes, plain-English verdicts, exact fix command on any red.
 
 ## What "amazes you" looks like
 
@@ -38,11 +54,11 @@ If you stick around for ten minutes after the tour, you'll see this:
 
 That's the factory's whole pitch made visible: three different vendors, one author surface, no drift.
 
-For the scripted ten-minute walkthrough, after the tour see `_agent_forge/docs/DEMO_PATH.md` (created in a future sprint; ignore the reference if it isn't present yet).
+For the scripted ten-minute walkthrough see `_agent_forge/docs/DEMO_PATH.md`.
 
 ## When it doesn't work
 
-The tour ends with a `check` command. Re-run it after any fix:
+Run the machine-state check after any fix:
 
 ```
 python3 _agent_forge/skills/global/onboarding-guide/onboard.py check

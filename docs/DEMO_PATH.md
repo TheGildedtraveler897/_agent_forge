@@ -52,21 +52,21 @@ The script copies the canonical sources, generates the host-native rendering, an
 
 ## Step 3 — Run the onboarding tour (~3 minutes)
 
-This is the headline. The tour adapts to your experience level and your reason for being here.
+This is the headline. The tour runs **inline in the chat** of whichever host CLI you're using — Claude Code, Codex, or Gemini. The assistant walks you through seven paced beats, asking two short questions along the way.
 
-```bash
-python3 ~/Projects/_agent_forge/skills/global/onboarding-guide/onboard.py tour
+In Claude Code (or Codex, or Gemini CLI), open any project under `~/Projects/` and type:
+
+```
+/onboarding-guide
 ```
 
-(On Windows, replace `~/Projects/` with `$env:USERPROFILE\Projects\` and forward slashes with backslashes. `python` may work in place of `python3` depending on how Python is installed.)
-
 The tour will ask:
-1. Have you used the three host CLIs before? (`y` / `p` / `n` / `s`)
-2. Which best describes why you're here today? (`c` curious / `b` builder / `o` operator / `d` decider / `s` skip)
+1. Have you used any of the three host CLIs before? (`a` many / `o` one / `n` none / `u` check for me)
+2. What brings you here today? (`c` curious / `b` builder / `o` operator / `d` decider)
 
-Pick the answers that fit. The tour walks you through six short sections — what the folder is, the canonical-first model, the cross-host translation table, the seatbelt, the shared brain, and what to do next. Each section ends with one paragraph tuned to your chosen role.
+Pick the answers that fit. The seven beats walk through what the folder is, the canonical-first model, the cross-host translation table, the seatbelt, the shared brain, an install gate for any missing host CLI, and a role-tuned next action.
 
-Pay attention to section 3 ("Three vendors, three names for the same thing"). The compact ASCII table you see there is the entire reason Agent Forge exists: three vendors shipped similar primitives with their own names, and the factory translates between them.
+Pay attention to Beat 3 ("The cross-host translation table"). The compact ASCII table the assistant renders there is the entire reason Agent Forge exists: three vendors shipped similar primitives with their own names, and the factory translates between them.
 
 ---
 
@@ -89,7 +89,7 @@ This step requires at least one host CLI installed. If you have Claude Code:
 ```bash
 claude --version
 # In a Claude Code session under any governed project:
-/onboarding-guide tour
+/onboarding-guide
 ```
 
 Notice the slash-command syntax: `/onboarding-guide`. That's Claude's native way of invoking a workflow skill.
@@ -109,7 +109,7 @@ If you have Gemini, the slash-command syntax matches Claude's:
 ```bash
 gemini --version
 # In a Gemini session:
-/onboarding-guide tour
+/onboarding-guide
 ```
 
 Three different CLIs, one canonical source, no copy-paste maintenance.
