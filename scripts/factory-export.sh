@@ -117,6 +117,12 @@ tar -C "${WORKSPACE_ROOT}" \
   --exclude='_agent_forge/runtime/validation' \
   --exclude='_agent_forge/dev' \
   --exclude='_agent_forge/dist' \
+  --exclude='_agent_forge/.forge_state' \
+  --exclude='_agent_forge/.claude' \
+  --exclude='_agent_forge/.codex' \
+  --exclude='_agent_forge/.gemini' \
+  --exclude='_agent_forge/.agents' \
+  --exclude='_agent_forge/MEMORY.md' \
   -cf - _agent_forge | tar -C "${EXPORT_DIR}" -xf -
 
 # ── Clean-mode: strip source-environment-specific residue ────────────────────
@@ -417,7 +423,9 @@ if export_mode == "onboarding":
     manifest["framework_only"] = True
     manifest["onboarding_mode_note"] = (
         "Production-grade framework bundle. Machine-local runtime state "
-        "(runtime/managed-state.json, runtime/validation/, dev/, dist/) excluded. "
+        "(runtime/managed-state.json, runtime/validation/, dev/, dist/, "
+        ".forge_state/, .claude/, .codex/, .gemini/, .agents/, MEMORY.md) excluded "
+        "— these are regenerated on the target machine by deploy-factory. "
         "START_HERE.txt at bundle root has platform-specific quickstart."
     )
 with open(manifest_path, "w", encoding="utf-8") as fh:
