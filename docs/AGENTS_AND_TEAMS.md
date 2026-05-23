@@ -31,9 +31,9 @@ Use an agent when:
 
 Host mapping:
 
-- Claude: generated subagents
+- Claude: generated Agents
 - Codex: generated custom agents plus skills
-- Gemini: generated subagents plus commands and skills
+- Gemini: generated Agents plus commands and skills
 
 ## Teams
 

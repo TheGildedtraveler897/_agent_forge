@@ -22,13 +22,13 @@
       ],
       "delivery_projects": [],
       "claude": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "branch-finisher",
         "agent_name": null
       },
       "gemini": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "branch-finisher",
         "agent_name": null
@@ -54,13 +54,13 @@
       ],
       "delivery_projects": [],
       "claude": {
-        "mode": "subagent",
+        "mode": "agent",
         "generated": true,
         "command_name": null,
         "agent_name": "brand-guardian"
       },
       "gemini": {
-        "mode": "subagent",
+        "mode": "agent",
         "generated": true,
         "command_name": null,
         "agent_name": "brand-guardian"
@@ -86,13 +86,13 @@
       ],
       "delivery_projects": [],
       "claude": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "doctrine-review",
         "agent_name": null
       },
       "gemini": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "doctrine-review",
         "agent_name": null
@@ -118,13 +118,13 @@
       ],
       "delivery_projects": [],
       "claude": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "init-company",
         "agent_name": null
       },
       "gemini": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "init-company",
         "agent_name": null
@@ -150,13 +150,13 @@
       ],
       "delivery_projects": [],
       "claude": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "context-engineer",
         "agent_name": null
       },
       "gemini": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "context-engineer",
         "agent_name": null
@@ -182,13 +182,13 @@
       ],
       "delivery_projects": [],
       "claude": {
-        "mode": "subagent",
+        "mode": "agent",
         "generated": true,
         "command_name": null,
         "agent_name": "corporate-controller"
       },
       "gemini": {
-        "mode": "subagent",
+        "mode": "agent",
         "generated": true,
         "command_name": null,
         "agent_name": "corporate-controller"
@@ -214,13 +214,13 @@
       ],
       "delivery_projects": [],
       "claude": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "evidence-packager",
         "agent_name": null
       },
       "gemini": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "evidence-packager",
         "agent_name": null
@@ -246,13 +246,13 @@
       ],
       "delivery_projects": [],
       "claude": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "execution-planner",
         "agent_name": null
       },
       "gemini": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "execution-planner",
         "agent_name": null
@@ -278,13 +278,13 @@
       ],
       "delivery_projects": [],
       "claude": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "handoff-archiver",
         "agent_name": null
       },
       "gemini": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "handoff-archiver",
         "agent_name": null
@@ -310,13 +310,13 @@
       ],
       "delivery_projects": [],
       "claude": {
-        "mode": "subagent",
+        "mode": "agent",
         "generated": true,
         "command_name": null,
         "agent_name": "infra-architect"
       },
       "gemini": {
-        "mode": "subagent",
+        "mode": "agent",
         "generated": true,
         "command_name": null,
         "agent_name": "infra-architect"
@@ -342,13 +342,13 @@
       ],
       "delivery_projects": [],
       "claude": {
-        "mode": "subagent",
+        "mode": "agent",
         "generated": true,
         "command_name": null,
         "agent_name": "legal-counsel"
       },
       "gemini": {
-        "mode": "subagent",
+        "mode": "agent",
         "generated": true,
         "command_name": null,
         "agent_name": "legal-counsel"
@@ -374,13 +374,13 @@
       ],
       "delivery_projects": [],
       "claude": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "lesson-distiller",
         "agent_name": null
       },
       "gemini": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "lesson-distiller",
         "agent_name": null
@@ -406,13 +406,13 @@
       ],
       "delivery_projects": [],
       "claude": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "live-hook-prober",
         "agent_name": null
       },
       "gemini": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "live-hook-prober",
         "agent_name": null
@@ -438,13 +438,13 @@
       ],
       "delivery_projects": [],
       "claude": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "memory-archivist",
         "agent_name": null
       },
       "gemini": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "memory-archivist",
         "agent_name": null
@@ -470,13 +470,13 @@
       ],
       "delivery_projects": [],
       "claude": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "memory-bridge",
         "agent_name": null
       },
       "gemini": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "memory-bridge",
         "agent_name": null
@@ -502,13 +502,13 @@
       ],
       "delivery_projects": [],
       "claude": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "multi-agent-governor",
         "agent_name": null
       },
       "gemini": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "multi-agent-governor",
         "agent_name": null
@@ -534,13 +534,13 @@
       ],
       "delivery_projects": [],
       "claude": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "onboarding-guide",
         "agent_name": null
       },
       "gemini": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "onboarding-guide",
         "agent_name": null
@@ -566,13 +566,13 @@
       ],
       "delivery_projects": [],
       "claude": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "portability-audit",
         "agent_name": null
       },
       "gemini": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "portability-audit",
         "agent_name": null
@@ -598,13 +598,13 @@
       ],
       "delivery_projects": [],
       "claude": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "project-bootstrap",
         "agent_name": null
       },
       "gemini": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "project-bootstrap",
         "agent_name": null
@@ -629,7 +629,7 @@
       ],
       "delivery_projects": [],
       "claude": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "prompt-auto-activator",
         "agent_name": null
@@ -655,13 +655,13 @@
       ],
       "delivery_projects": [],
       "claude": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "quality-gate",
         "agent_name": null
       },
       "gemini": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "quality-gate",
         "agent_name": null
@@ -687,13 +687,13 @@
       ],
       "delivery_projects": [],
       "claude": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "root-cause-analyst",
         "agent_name": null
       },
       "gemini": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "root-cause-analyst",
         "agent_name": null
@@ -719,13 +719,13 @@
       ],
       "delivery_projects": [],
       "claude": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "skill-author",
         "agent_name": null
       },
       "gemini": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "skill-author",
         "agent_name": null
@@ -751,13 +751,13 @@
       ],
       "delivery_projects": [],
       "claude": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "spec-architect",
         "agent_name": null
       },
       "gemini": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "spec-architect",
         "agent_name": null
@@ -783,13 +783,13 @@
       ],
       "delivery_projects": [],
       "claude": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "sprint-harvester",
         "agent_name": null
       },
       "gemini": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "sprint-harvester",
         "agent_name": null
@@ -815,13 +815,13 @@
       ],
       "delivery_projects": [],
       "claude": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "subagent-dispatcher",
         "agent_name": null
       },
       "gemini": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "subagent-dispatcher",
         "agent_name": null
@@ -847,13 +847,13 @@
       ],
       "delivery_projects": [],
       "claude": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "tdd-engineer",
         "agent_name": null
       },
       "gemini": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "tdd-engineer",
         "agent_name": null
@@ -879,13 +879,13 @@
       ],
       "delivery_projects": [],
       "claude": {
-        "mode": "subagent",
+        "mode": "agent",
         "generated": true,
         "command_name": null,
         "agent_name": "telemetry-guardian"
       },
       "gemini": {
-        "mode": "subagent",
+        "mode": "agent",
         "generated": true,
         "command_name": null,
         "agent_name": "telemetry-guardian"
@@ -911,13 +911,13 @@
       ],
       "delivery_projects": [],
       "claude": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "token-optimizer",
         "agent_name": null
       },
       "gemini": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "token-optimizer",
         "agent_name": null
@@ -943,13 +943,13 @@
       ],
       "delivery_projects": [],
       "claude": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "verification-gate",
         "agent_name": null
       },
       "gemini": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "verification-gate",
         "agent_name": null

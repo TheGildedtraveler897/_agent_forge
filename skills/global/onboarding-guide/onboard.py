@@ -654,7 +654,7 @@ def cmd_tour(args: argparse.Namespace) -> int:
 
     # Beat 1.6 — The Architecture (Hub and Spoke) ----------------------------
     print()
-    print(bold("◆ The Architecture: Agents vs. Subagents"))
+    print(bold("◆ The Architecture: Host CLIs vs. Agents"))
     print()
     print("  The terms can be confusing. Let's look at how the tools in this folder")
     print("  actually run on your machine:")
@@ -665,15 +665,15 @@ def cmd_tour(args: argparse.Namespace) -> int:
     print("        [ You (The Operator) ]")
     print("                 │")
     print("                 ▼")
-    print(f"      [ Main CLI ({clis_to_show[0].capitalize() if present_clis else 'Claude'}) ]   <-- The 'Agent' (Manager / Hub)")
+    print(f"      [ Host CLI ({clis_to_show[0].capitalize() if present_clis else 'Claude'}) ]   <-- The 'Host CLI' (Manager / Hub)")
     print("          │             │")
     print(dim("     (Workflows)   (Delegation)"))
     print("          │             │")
     print("          ▼             ▼")
-    print(f"   {green(f'[/{wf_name}]')}   {yellow(f'[@{ex_name}]')} <-- 'Subagents' (Specialists / Spokes)")
+    print(f"   {green(f'[/{wf_name}]')}   {yellow(f'[@{ex_name}]')} <-- 'Agents' (Isolated Specialists)")
     print()
     print(f"  {green('Workflows')} are instant actions that run in your current chat.")
-    print(f"  {yellow('Subagents')} are isolated background workers. We spin them up so their")
+    print(f"  {yellow('Agents')} are isolated background workers. We spin them up so their")
     print("  massive context window doesn't clutter your main terminal.")
     print()
     pause(no_pause=no_pause)
@@ -767,7 +767,7 @@ def cmd_tour(args: argparse.Namespace) -> int:
     print(f"    {bold(green(quest_cmd))}")
     print()
     print("  Working mental model now in place:")
-    print("    - Hub & Spoke (Agents vs Subagents)")
+    print("    - Hub & Spoke (Host CLIs vs Agents)")
     print("    - The Seatbelt & File Collisions")
     print("    - The Shared Brain")
     print()
@@ -845,15 +845,13 @@ EXPLAINERS = {
         "cost-efficient non-trivial tier."
     ),
     "agent": (
-        "An agent is an autonomous something that can read, write, plan, call tools, "
-        "and remember between turns. In this factory, an agent is one of the three host "
-        "CLIs (Claude, Codex, or Gemini) running on your machine. A skill is what an "
-        "agent reads to know how to behave for a specific job. A subagent is an agent "
-        "dispatched by another agent to handle a focused task with its own fresh "
-        "context — useful when you want to keep the main agent's working memory clean "
-        "while a side task runs. The factory calls workflow-class skills 'commands' on "
-        "Claude/Gemini and 'skills' on Codex; it calls expert-class skills 'subagents' "
-        "on Claude/Gemini (Codex has no native expert-agent primitive)."
+        "In 2026, we separate the 'Host CLI' from the 'Agent'. The Host CLI (Claude Code, "
+        "Codex, or Gemini CLI) is the main terminal interface you interact with. An "
+        "'Agent' is a specialized, isolated worker you dispatch to handle a focused task "
+        "with its own fresh context (e.g., `@legal-counsel`). This keeps your main "
+        "Host CLI's working memory clean. The factory defines these as 'expert-class' "
+        "skills. For routine tasks that don't need a separate memory window, you use "
+        "slash commands (`/name`) which are powered by 'workflow-class' skills."
     ),
     "agent-team": (
         "A team in this factory is a portable role contract. It lives at `teams/<name>."

@@ -435,7 +435,7 @@ def build_registry(capabilities: list[Capability], projects: list[ProjectSpec]) 
             "delivery_projects": capability.delivery_projects,
         }
         if "claude" in capability.hosts:
-            mode = "command" if capability.is_workflow else "subagent"
+            mode = "skill" if capability.is_workflow else "agent"
             entry["claude"] = {
                 "mode": mode,
                 "generated": True,
@@ -443,7 +443,7 @@ def build_registry(capabilities: list[Capability], projects: list[ProjectSpec]) 
                 "agent_name": capability.capability_id if capability.is_expert else None,
             }
         if "gemini" in capability.hosts:
-            mode = "command" if capability.is_workflow else "subagent"
+            mode = "skill" if capability.is_workflow else "agent"
             entry["gemini"] = {
                 "mode": mode,
                 "generated": True,
