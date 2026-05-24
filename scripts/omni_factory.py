@@ -346,12 +346,14 @@ def validate_skill_frontmatter() -> tuple[list[str], list[str]]:
 
         targets = meta.get("targets")
         hosts = meta.get("hosts")
-        if targets is None and hosts is None:
+        if hosts is not None:
+            errors.append(
+                f"{rel} uses legacy 'hosts'; migrate to canonical 'targets' "
+                "before the 2026-06-30 sunset"
+            )
+        if targets is None:
             errors.append(f"{rel} frontmatter missing required field 'targets'")
             continue
-        if targets is None and hosts is not None:
-            warnings.append(f"{rel} uses legacy 'hosts'; prefer canonical 'targets'")
-            targets = hosts
         if not isinstance(targets, list) or not targets or not all(isinstance(item, str) for item in targets):
             errors.append(f"{rel} frontmatter 'targets' must be a non-empty string list")
             continue
@@ -359,6 +361,93 @@ def validate_skill_frontmatter() -> tuple[list[str], list[str]]:
         if invalid_targets:
             errors.append(f"{rel} frontmatter has invalid targets: {invalid_targets}")
 
+    return errors, warnings
+
+
+def validate_projects_catalog() -> tuple[list[str], list[str]]:
+    errors: list[str] = []
+    warnings: list[str] = []
+    try:
+        payload = load_json(PROJECTS_CATALOG_PATH)
+    except Exception as exc:
+        return [f"projects.json does not parse: {exc}"], warnings
+
+    projects = payload.get("governed_projects")
+    if not isinstance(projects, list):
+        errors.append("projects.json governed_projects must be a list")
+        return errors, warnings
+    if not projects:
+        warnings.append(
+            "projects.json governed_projects is empty. Bootstrap a project with "
+            "scripts/bootstrap-project.sh --name <name>."
+        )
+        return errors, warnings
+
+    seen: set[str] = set()
+    for entry in projects:
+        if not isinstance(entry, dict):
+            errors.append(f"projects.json governed_projects entry must be an object: {entry!r}")
+            continue
+        name = entry.get("name")
+        root = entry.get("root")
+        if not name:
+            errors.append(f"projects.json governed project missing name: {entry}")
+        elif name in seen:
+            errors.append(f"projects.json duplicate governed project: {name}")
+        else:
+            seen.add(name)
+        if not root:
+            errors.append(f"projects.json governed project missing root: {entry}")
+        required = entry.get("required_files", [])
+        if required is not None and not isinstance(required, list):
+            errors.append(f"projects.json[{name}] required_files must be a list")
+    return errors, warnings
+
+
+def _parse_frontmatter_datetime(meta: dict[str, Any], *keys: str) -> datetime | None:
+    for key in keys:
+        value = meta.get(key)
+        if not isinstance(value, str) or not value:
+            continue
+        try:
+            return datetime.fromisoformat(value.replace("Z", "+00:00"))
+        except ValueError:
+            continue
+    return None
+
+
+def validate_plan_hygiene(now: datetime | None = None) -> tuple[list[str], list[str]]:
+    errors: list[str] = []
+    warnings: list[str] = []
+    now = now or datetime.now(timezone.utc)
+    plans_dir = ROOT / "docs" / "plans"
+    if plans_dir.exists():
+        for plan_path in sorted(plans_dir.glob("*.md")):
+            if plan_path.name == ".gitkeep":
+                continue
+            rel = plan_path.relative_to(ROOT).as_posix()
+            try:
+                meta = parse_frontmatter(plan_path.read_text())
+            except Exception as exc:
+                errors.append(f"{rel} frontmatter does not parse: {exc}")
+                continue
+            status = str(meta.get("status") or "").lower()
+            if status in {"completed", "superseded"}:
+                continue
+            updated = _parse_frontmatter_datetime(meta, "last_updated", "created")
+            if updated is None:
+                warnings.append(f"plan file missing parseable timestamp: {rel}")
+                continue
+            age_days = (now - updated).days
+            if age_days > 7:
+                warnings.append(f"stale plan file ({age_days} days old, status={status or 'unknown'}): {rel}")
+
+    memory_path = ROOT / "MEMORY.md"
+    if memory_path.exists():
+        body = memory_path.read_text()
+        for match in sorted(set(re.findall(r"docs/plans/[A-Za-z0-9._/\-]+\.md", body))):
+            if not (ROOT / match).exists():
+                warnings.append(f"stale MEMORY.md active_tasks pointer: {match}")
     return errors, warnings
 
 
@@ -435,7 +524,7 @@ def build_registry(capabilities: list[Capability], projects: list[ProjectSpec]) 
             "delivery_projects": capability.delivery_projects,
         }
         if "claude" in capability.hosts:
-            mode = "command" if capability.is_workflow else "subagent"
+            mode = "skill" if capability.is_workflow else "agent"
             entry["claude"] = {
                 "mode": mode,
                 "generated": True,
@@ -443,7 +532,7 @@ def build_registry(capabilities: list[Capability], projects: list[ProjectSpec]) 
                 "agent_name": capability.capability_id if capability.is_expert else None,
             }
         if "gemini" in capability.hosts:
-            mode = "command" if capability.is_workflow else "subagent"
+            mode = "skill" if capability.is_workflow else "agent"
             entry["gemini"] = {
                 "mode": mode,
                 "generated": True,
@@ -575,7 +664,7 @@ def render_codex_agent(capability: Capability, project_root: Path) -> str:
 
 
 def render_project_gemini_md(project_root: Path) -> str:
-    imports = [
+    raw_imports = [
         relpath(project_root, ROOT / "AGENTS.md"),
         relpath(project_root, KNOWLEDGE_ANCHOR_PATH),
         "AGENTS.md",
@@ -583,7 +672,8 @@ def render_project_gemini_md(project_root: Path) -> str:
         "docs/HANDOFF.md",
     ]
     if _memory_sections() and (project_root / "MEMORY.md").exists():
-        imports.append("MEMORY.md")
+        raw_imports.append("MEMORY.md")
+    imports = list(dict.fromkeys(raw_imports))
     lines = [MARKDOWN_MANAGED_COMMENT, "", "# Agent Forge Gemini Context", ""]
     lines.extend(f"@{item}" for item in imports)
     lines.append("")
@@ -833,6 +923,15 @@ def validate_mcp_inventory() -> tuple[list[str], list[str]]:
 HOOK_TARGETS = ("claude", "codex", "gemini")
 HOOK_HANDLER_TYPES = ("command", "http", "mcp_tool", "prompt", "agent")
 
+# Canonical hook names cover both events currently exercised by
+# policies/hooks.json and reserved host-specific lifecycle points. Aliases set
+# to None mean the host does not support that lifecycle point and the renderer
+# must skip the record for that host. Gemini-only BeforeAgent,
+# BeforeToolSelection, BeforeModel, AfterModel, and AfterAgent are intentionally
+# represented here because they control prompt admission, tool availability,
+# model request/stream handling, and final-response validation. When adding an
+# event, update this allow-list, policies/hooks.json targets, HOST_INTEGRATIONS,
+# and validate-triad-runtime expectations in the same change.
 _EVENT_ALIASES: dict[str, dict[str, str | None]] = {
     "claude": {
         "pre_tool_use": "PreToolUse",
@@ -872,15 +971,19 @@ _EVENT_ALIASES: dict[str, dict[str, str | None]] = {
         "before_tool_selection": None,
     },
     "codex": {
-        # Codex hook docs now use PascalCase event keys in hooks.json. The
-        # prior snake_case rendering was a silent-correctness risk mirroring
-        # the Gemini BeforeTool drift fixed in Sprint 1.
+        # Codex hook docs use PascalCase event keys in hooks.json. Keep this
+        # allow-list aligned with the public event table; aliases set to None
+        # mean the canonical event is not supported by Codex.
         "pre_tool_use": "PreToolUse",
         "post_tool_use": "PostToolUse",
         "permission_request": "PermissionRequest",
         "user_prompt_submit": "UserPromptSubmit",
         "session_start": "SessionStart",
         "stop": "Stop",
+        "subagent_start": "SubagentStart",
+        "subagent_stop": "SubagentStop",
+        "pre_compact": "PreCompact",
+        "post_compact": "PostCompact",
         "pre_commit": "PreToolUse",
         "post_edit": "PostToolUse",
         "permission_denied": None,
@@ -888,8 +991,6 @@ _EVENT_ALIASES: dict[str, dict[str, str | None]] = {
         "post_tool_batch": None,
         "user_prompt_expansion": None,
         "notification": None,
-        "subagent_start": None,
-        "subagent_stop": None,
         "task_created": None,
         "task_completed": None,
         "stop_failure": None,
@@ -900,8 +1001,6 @@ _EVENT_ALIASES: dict[str, dict[str, str | None]] = {
         "file_changed": None,
         "worktree_create": None,
         "worktree_remove": None,
-        "pre_compact": None,
-        "post_compact": None,
         "elicitation": None,
         "elicitation_result": None,
         "session_end": None,
@@ -1387,7 +1486,7 @@ def render_codex_config(project_name: str, project_root: Path, capabilities: lis
     ]
 
     if _hooks_for_host("codex"):
-        lines.extend(["", "[features]", "codex_hooks = true"])
+        lines.extend(["", "[features]", "hooks = true"])
 
     relevant_ids = set()
     for capability in capabilities:
@@ -1424,11 +1523,12 @@ def render_codex_config(project_name: str, project_root: Path, capabilities: lis
         if server["tool_deny"]:
             items = ", ".join(toml_string(item) for item in server["tool_deny"])
             lines.append(f"disabled_tools = [{items}]")
-        env_map = {key: f"${key}" for key in server["env_passthrough"]}
-        env_map.update(server["env_literal"])
-        if env_map:
+        if server["env_passthrough"]:
+            items = ", ".join(toml_string(item) for item in server["env_passthrough"])
+            lines.append(f"env_vars = [{items}]")
+        if server["env_literal"]:
             lines.append("[mcp_servers." + server["server_alias"] + ".env]")
-            for key, value in env_map.items():
+            for key, value in server["env_literal"].items():
                 lines.append(f"{key} = {toml_string(value)}")
         if server["headers"]:
             lines.append("[mcp_servers." + server["server_alias"] + ".http_headers]")
@@ -1479,11 +1579,12 @@ def render_user_codex_mcp_block() -> str:
         if server["tool_deny"]:
             items = ", ".join(toml_string(item) for item in server["tool_deny"])
             lines.append(f"disabled_tools = [{items}]")
-        env_map = {key: f"${key}" for key in server["env_passthrough"]}
-        env_map.update(server["env_literal"])
-        if env_map:
+        if server["env_passthrough"]:
+            items = ", ".join(toml_string(item) for item in server["env_passthrough"])
+            lines.append(f"env_vars = [{items}]")
+        if server["env_literal"]:
             lines.append("[mcp_servers." + server["server_alias"] + ".env]")
-            for key, value in env_map.items():
+            for key, value in server["env_literal"].items():
                 lines.append(f"{key} = {toml_string(value)}")
         if server["headers"]:
             lines.append("[mcp_servers." + server["server_alias"] + ".http_headers]")
@@ -1520,10 +1621,12 @@ def sync_claude(project_name: str | None, projects_root: Path, claude_home: Path
     capabilities = discover_capabilities()
     user_agents: dict[str, str] = {}
     user_commands: dict[str, str] = {}
+    user_skills: dict[str, Path] = {}
     for capability in capabilities:
         if capability.scope != "global" or "claude" not in capability.hosts:
             continue
-        read_path = skill_read_path_for_home(claude_home / "commands", capability)
+        user_skills[capability.capability_id] = capability.skill_dir
+        read_path = skill_read_path_for_home(claude_home / "skills", capability)
         if capability.is_workflow:
             name = f"{capability.claude_command_name or capability.capability_id}.md"
             user_commands[name] = render_claude_command(capability, read_path)
@@ -1531,7 +1634,8 @@ def sync_claude(project_name: str | None, projects_root: Path, claude_home: Path
             name = f"{capability.capability_id}.md"
             user_agents[name] = render_claude_agent(capability, read_path)
 
-    sync_managed_dir(claude_home / "commands", user_commands, CLAUDE_COMMAND_MARKER)
+    sync_managed_dir(claude_home / "skills", user_commands, CLAUDE_COMMAND_MARKER)
+    sync_symlink_dir(claude_home / "skills", user_skills)
     sync_managed_dir(claude_home / "agents", user_agents, CLAUDE_AGENT_MARKER)
 
     if project_name:
@@ -1653,7 +1757,7 @@ def sync_gemini(project_name: str | None, projects_root: Path, gemini_home: Path
     # Purge redundant ~/.gemini/skills to avoid host-level conflicts
     sync_symlink_dir(gemini_home / "skills", {})
     
-    sync_managed_dir(gemini_home / "commands", user_commands, GEMINI_COMMAND_MARKER)
+    sync_managed_dir(gemini_home / "skills", user_commands, GEMINI_COMMAND_MARKER)
     sync_managed_dir(gemini_home / "agents", user_agents, MARKDOWN_MANAGED_COMMENT)
 
     # Manage ~/.gemini/settings.json to disable workflow skills and avoid command conflicts
@@ -1767,6 +1871,18 @@ def verify() -> int:
     for message in skill_metadata_errors:
         fail(message)
     for message in skill_metadata_warnings:
+        warn(message)
+
+    project_errors, project_warnings = validate_projects_catalog()
+    for message in project_errors:
+        fail(message)
+    for message in project_warnings:
+        warn(message)
+
+    plan_errors, plan_warnings = validate_plan_hygiene()
+    for message in plan_errors:
+        fail(message)
+    for message in plan_warnings:
         warn(message)
 
     capabilities: list[Capability] = []

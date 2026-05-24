@@ -64,7 +64,7 @@
       "subagent-dispatcher",
       "verification-gate",
       "branch-finisher",
-      "code-review-doctrine"
+      "paranoid-reviewer"
     ]
   },
   "codex_mapping": {
@@ -78,7 +78,7 @@
       "subagent-dispatcher",
       "verification-gate",
       "branch-finisher",
-      "code-review-doctrine"
+      "paranoid-reviewer"
     ]
   },
   "gemini_mapping": {
@@ -93,7 +93,7 @@
       "subagent-dispatcher",
       "verification-gate",
       "branch-finisher",
-      "code-review-doctrine"
+      "paranoid-reviewer"
     ]
   }
 }

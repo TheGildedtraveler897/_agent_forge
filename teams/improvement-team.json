@@ -70,7 +70,7 @@
       "stop_condition": "Session-scoped state has been captured into MEMORY.md without overlap into the durable lesson ledger."
     }
   ],
-  "collapse_condition": "Findings are few and the fix is obvious — a single worker can prioritize and apply the improvement directly.",
+  "collapse_condition": "Findings are few and the fix is obvious \u2014 a single worker can prioritize and apply the improvement directly.",
   "escalate_condition": "Findings span multiple repos or doctrine layers, or the improvement requires coordinated changes across skills, teams, and docs.",
   "handoff_artifacts": [
     "prioritized gap list",
@@ -85,7 +85,7 @@
       "subagents when improvement threads split cleanly"
     ],
     "preferred_entries": [
-      "quality-gate",
+      "paranoid-reviewer",
       "context-engineer",
       "sprint-harvester",
       "memory-archivist",
@@ -99,7 +99,7 @@
       "delegated runtime agents when the write surfaces are disjoint"
     ],
     "preferred_entries": [
-      "quality-gate",
+      "paranoid-reviewer",
       "context-engineer",
       "sprint-harvester",
       "memory-archivist",
@@ -114,7 +114,7 @@
       "subagents when improvement threads split cleanly"
     ],
     "preferred_entries": [
-      "quality-gate",
+      "paranoid-reviewer",
       "context-engineer",
       "sprint-harvester",
       "memory-archivist",

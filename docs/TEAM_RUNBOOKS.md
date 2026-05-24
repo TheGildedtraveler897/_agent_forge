@@ -74,7 +74,7 @@ Collapse to single worker when: the question has 1-2 known sources with no confl
 Use:
 - `/evidence-packager` as the main entry for compact output
 - `/context-engineer` to compress findings into a brief if the evidence pack is still too large
-- Explore subagents for parallel source gathering when sources span different domains
+- Explore Agents for parallel source gathering when sources span different domains
 
 Recommended flow:
 1. Define the research question explicitly.
@@ -145,7 +145,7 @@ Collapse to single worker when: the change is small with binary acceptance crite
 Use:
 - `/quality-gate` as the primary scoring tool
 - `/doctrine-review` for doctrine alignment checks
-- Subagents when the review surface should stay separate from the build context
+- Agents when the review surface should stay separate from the build context
 
 Recommended flow:
 1. Compare outcome against stated goal and acceptance criteria.

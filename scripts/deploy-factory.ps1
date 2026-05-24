@@ -59,6 +59,11 @@ function Resolve-PythonCommand {
 }
 
 $python = Resolve-PythonCommand
+$pythonExe = $python[0]
+$pythonArgs = @()
+for ($i = 1; $i -lt $python.Length; $i++) {
+    $pythonArgs += $python[$i]
+}
 
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $sourceFactoryRoot = Resolve-Path (Join-Path $scriptDir '..')
@@ -140,6 +145,7 @@ if (Test-Path $targetFactoryRoot) {
 Write-Host "Copying canonical factory to $targetFactoryRoot"
 if (-not $DryRun) {
     Copy-Item -Recurse -Force $sourceFactoryRoot $targetFactoryRoot
+    Get-ChildItem -LiteralPath $targetFactoryRoot -Recurse -File -ErrorAction SilentlyContinue | Unblock-File -ErrorAction SilentlyContinue
     # Strip machine-local residue from the copy.
     foreach ($residue in @('.git', 'exports', 'dev', 'dist', 'runtime\managed-state.json', 'runtime\validation')) {
         $path = Join-Path $targetFactoryRoot $residue
@@ -168,7 +174,7 @@ function Invoke-Sync {
         Write-Host "  [dry] $($python -join ' ') $($Args -join ' ')"
         return
     }
-    & $python[0] $python[1..($python.Length - 1)] @Args
+    & $pythonExe @pythonArgs @Args
     if ($LASTEXITCODE -ne 0) {
         throw "sync failed: $($Args -join ' ')"
     }
@@ -184,13 +190,13 @@ if (-not $ClaudeOnly) {
     try {
         Invoke-Sync -Args @($omniFactory, 'sync-codex')
     } catch {
-        Write-Warning "Codex sync failed (Codex CLI may not be installed): $_"
+        Write-Warning "Codex surface sync failed: $_"
     }
     Write-Host "Syncing Gemini surfaces..."
     try {
         Invoke-Sync -Args @($omniFactory, 'sync-gemini')
     } catch {
-        Write-Warning "Gemini sync failed (Gemini CLI may not be installed): $_"
+        Write-Warning "Gemini surface sync failed: $_"
     }
 }
 
@@ -198,5 +204,5 @@ Write-Host ""
 Write-Host "Agent Forge deployed to $targetFactoryRoot"
 Write-Host "Next steps:"
 Write-Host "  1. cd $targetFactoryRoot"
-Write-Host "  2. pwsh -File .\scripts\bootstrap-project.ps1 -Name <your-project>"
-Write-Host "  3. In Claude Code at the new project, invoke: /onboarding-guide tour"
+Write-Host "  2. powershell.exe -ExecutionPolicy Bypass -File .\scripts\bootstrap-project.ps1 -Name <your-project>"
+Write-Host "  3. In Claude Code at the new project, invoke: /onboarding-guide"

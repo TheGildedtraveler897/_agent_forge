@@ -1,0 +1,14 @@
+{
+  "imported_entry_hashes": {},
+  "last_errors": {},
+  "last_inbound": {},
+  "last_inbound_diff_hash": {},
+  "last_outbound": {},
+  "last_outbound_hash": {},
+  "native_targets": {
+    "claude": "/home/pheonixprotocol/.claude/projects/-home-pheonixprotocol-Projects-_agent_forge/memory/MEMORY.md",
+    "codex": "/home/pheonixprotocol/Projects/_agent_forge/.codex/memory/AGENTS_MEMORY.md",
+    "gemini": "/home/pheonixprotocol/Projects/_agent_forge/.gemini/memory/MEMORY.md"
+  },
+  "version": 1
+}

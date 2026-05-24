@@ -22,13 +22,13 @@
       ],
       "delivery_projects": [],
       "claude": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "branch-finisher",
         "agent_name": null
       },
       "gemini": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "branch-finisher",
         "agent_name": null
@@ -54,13 +54,13 @@
       ],
       "delivery_projects": [],
       "claude": {
-        "mode": "subagent",
+        "mode": "agent",
         "generated": true,
         "command_name": null,
         "agent_name": "brand-guardian"
       },
       "gemini": {
-        "mode": "subagent",
+        "mode": "agent",
         "generated": true,
         "command_name": null,
         "agent_name": "brand-guardian"
@@ -70,38 +70,6 @@
         "global_skill": true,
         "project_skill": false,
         "custom_agent": true
-      }
-    },
-    {
-      "name": "code-review-doctrine",
-      "display_name": "code-review-doctrine",
-      "scope": "global",
-      "project": null,
-      "capability_class": "workflow",
-      "canonical_skill": "skills/global/code-review-doctrine/SKILL.md",
-      "targets": [
-        "claude",
-        "codex",
-        "gemini"
-      ],
-      "delivery_projects": [],
-      "claude": {
-        "mode": "command",
-        "generated": true,
-        "command_name": "doctrine-review",
-        "agent_name": null
-      },
-      "gemini": {
-        "mode": "command",
-        "generated": true,
-        "command_name": "doctrine-review",
-        "agent_name": null
-      },
-      "codex": {
-        "generated": true,
-        "global_skill": true,
-        "project_skill": false,
-        "custom_agent": false
       }
     },
     {
@@ -118,13 +86,13 @@
       ],
       "delivery_projects": [],
       "claude": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "init-company",
         "agent_name": null
       },
       "gemini": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "init-company",
         "agent_name": null
@@ -150,13 +118,13 @@
       ],
       "delivery_projects": [],
       "claude": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "context-engineer",
         "agent_name": null
       },
       "gemini": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "context-engineer",
         "agent_name": null
@@ -182,16 +150,48 @@
       ],
       "delivery_projects": [],
       "claude": {
-        "mode": "subagent",
+        "mode": "agent",
         "generated": true,
         "command_name": null,
         "agent_name": "corporate-controller"
       },
       "gemini": {
-        "mode": "subagent",
+        "mode": "agent",
         "generated": true,
         "command_name": null,
         "agent_name": "corporate-controller"
+      },
+      "codex": {
+        "generated": true,
+        "global_skill": true,
+        "project_skill": false,
+        "custom_agent": true
+      }
+    },
+    {
+      "name": "e2e-qa-tester",
+      "display_name": "e2e-qa-tester",
+      "scope": "global",
+      "project": null,
+      "capability_class": "expert",
+      "canonical_skill": "skills/global/e2e-qa-tester/SKILL.md",
+      "targets": [
+        "claude",
+        "codex",
+        "gemini"
+      ],
+      "delivery_projects": [],
+      "claude": {
+        "mode": "agent",
+        "generated": true,
+        "command_name": null,
+        "agent_name": "e2e-qa-tester"
+      },
+      "gemini": {
+        "mode": "agent",
+        "generated": true,
+        "command_name": null,
+        "agent_name": "e2e-qa-tester"
       },
       "codex": {
         "generated": true,
@@ -214,13 +214,13 @@
       ],
       "delivery_projects": [],
       "claude": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "evidence-packager",
         "agent_name": null
       },
       "gemini": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "evidence-packager",
         "agent_name": null
@@ -246,13 +246,13 @@
       ],
       "delivery_projects": [],
       "claude": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "execution-planner",
         "agent_name": null
       },
       "gemini": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "execution-planner",
         "agent_name": null
@@ -278,13 +278,13 @@
       ],
       "delivery_projects": [],
       "claude": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "handoff-archiver",
         "agent_name": null
       },
       "gemini": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "handoff-archiver",
         "agent_name": null
@@ -310,13 +310,13 @@
       ],
       "delivery_projects": [],
       "claude": {
-        "mode": "subagent",
+        "mode": "agent",
         "generated": true,
         "command_name": null,
         "agent_name": "infra-architect"
       },
       "gemini": {
-        "mode": "subagent",
+        "mode": "agent",
         "generated": true,
         "command_name": null,
         "agent_name": "infra-architect"
@@ -342,13 +342,13 @@
       ],
       "delivery_projects": [],
       "claude": {
-        "mode": "subagent",
+        "mode": "agent",
         "generated": true,
         "command_name": null,
         "agent_name": "legal-counsel"
       },
       "gemini": {
-        "mode": "subagent",
+        "mode": "agent",
         "generated": true,
         "command_name": null,
         "agent_name": "legal-counsel"
@@ -374,13 +374,13 @@
       ],
       "delivery_projects": [],
       "claude": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "lesson-distiller",
         "agent_name": null
       },
       "gemini": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "lesson-distiller",
         "agent_name": null
@@ -406,13 +406,13 @@
       ],
       "delivery_projects": [],
       "claude": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "live-hook-prober",
         "agent_name": null
       },
       "gemini": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "live-hook-prober",
         "agent_name": null
@@ -438,13 +438,13 @@
       ],
       "delivery_projects": [],
       "claude": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "memory-archivist",
         "agent_name": null
       },
       "gemini": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "memory-archivist",
         "agent_name": null
@@ -470,13 +470,13 @@
       ],
       "delivery_projects": [],
       "claude": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "memory-bridge",
         "agent_name": null
       },
       "gemini": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "memory-bridge",
         "agent_name": null
@@ -502,13 +502,13 @@
       ],
       "delivery_projects": [],
       "claude": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "multi-agent-governor",
         "agent_name": null
       },
       "gemini": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "multi-agent-governor",
         "agent_name": null
@@ -534,13 +534,13 @@
       ],
       "delivery_projects": [],
       "claude": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "onboarding-guide",
         "agent_name": null
       },
       "gemini": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "onboarding-guide",
         "agent_name": null
@@ -550,6 +550,38 @@
         "global_skill": true,
         "project_skill": false,
         "custom_agent": false
+      }
+    },
+    {
+      "name": "paranoid-reviewer",
+      "display_name": "paranoid-reviewer",
+      "scope": "global",
+      "project": null,
+      "capability_class": "expert",
+      "canonical_skill": "skills/global/paranoid-reviewer/SKILL.md",
+      "targets": [
+        "claude",
+        "codex",
+        "gemini"
+      ],
+      "delivery_projects": [],
+      "claude": {
+        "mode": "agent",
+        "generated": true,
+        "command_name": null,
+        "agent_name": "paranoid-reviewer"
+      },
+      "gemini": {
+        "mode": "agent",
+        "generated": true,
+        "command_name": null,
+        "agent_name": "paranoid-reviewer"
+      },
+      "codex": {
+        "generated": true,
+        "global_skill": true,
+        "project_skill": false,
+        "custom_agent": true
       }
     },
     {
@@ -566,13 +598,13 @@
       ],
       "delivery_projects": [],
       "claude": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "portability-audit",
         "agent_name": null
       },
       "gemini": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "portability-audit",
         "agent_name": null
@@ -598,13 +630,13 @@
       ],
       "delivery_projects": [],
       "claude": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "project-bootstrap",
         "agent_name": null
       },
       "gemini": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "project-bootstrap",
         "agent_name": null
@@ -629,41 +661,9 @@
       ],
       "delivery_projects": [],
       "claude": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "prompt-auto-activator",
-        "agent_name": null
-      },
-      "codex": {
-        "generated": true,
-        "global_skill": true,
-        "project_skill": false,
-        "custom_agent": false
-      }
-    },
-    {
-      "name": "quality-gate",
-      "display_name": "quality-gate",
-      "scope": "global",
-      "project": null,
-      "capability_class": "workflow",
-      "canonical_skill": "skills/global/quality-gate/SKILL.md",
-      "targets": [
-        "claude",
-        "codex",
-        "gemini"
-      ],
-      "delivery_projects": [],
-      "claude": {
-        "mode": "command",
-        "generated": true,
-        "command_name": "quality-gate",
-        "agent_name": null
-      },
-      "gemini": {
-        "mode": "command",
-        "generated": true,
-        "command_name": "quality-gate",
         "agent_name": null
       },
       "codex": {
@@ -687,13 +687,13 @@
       ],
       "delivery_projects": [],
       "claude": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "root-cause-analyst",
         "agent_name": null
       },
       "gemini": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "root-cause-analyst",
         "agent_name": null
@@ -719,13 +719,13 @@
       ],
       "delivery_projects": [],
       "claude": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "skill-author",
         "agent_name": null
       },
       "gemini": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "skill-author",
         "agent_name": null
@@ -751,13 +751,13 @@
       ],
       "delivery_projects": [],
       "claude": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "spec-architect",
         "agent_name": null
       },
       "gemini": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "spec-architect",
         "agent_name": null
@@ -783,13 +783,13 @@
       ],
       "delivery_projects": [],
       "claude": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "sprint-harvester",
         "agent_name": null
       },
       "gemini": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "sprint-harvester",
         "agent_name": null
@@ -815,13 +815,13 @@
       ],
       "delivery_projects": [],
       "claude": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "subagent-dispatcher",
         "agent_name": null
       },
       "gemini": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "subagent-dispatcher",
         "agent_name": null
@@ -847,13 +847,13 @@
       ],
       "delivery_projects": [],
       "claude": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "tdd-engineer",
         "agent_name": null
       },
       "gemini": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "tdd-engineer",
         "agent_name": null
@@ -879,13 +879,13 @@
       ],
       "delivery_projects": [],
       "claude": {
-        "mode": "subagent",
+        "mode": "agent",
         "generated": true,
         "command_name": null,
         "agent_name": "telemetry-guardian"
       },
       "gemini": {
-        "mode": "subagent",
+        "mode": "agent",
         "generated": true,
         "command_name": null,
         "agent_name": "telemetry-guardian"
@@ -911,13 +911,13 @@
       ],
       "delivery_projects": [],
       "claude": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "token-optimizer",
         "agent_name": null
       },
       "gemini": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "token-optimizer",
         "agent_name": null
@@ -943,13 +943,13 @@
       ],
       "delivery_projects": [],
       "claude": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "verification-gate",
         "agent_name": null
       },
       "gemini": {
-        "mode": "command",
+        "mode": "skill",
         "generated": true,
         "command_name": "verification-gate",
         "agent_name": null
@@ -1001,6 +1001,17 @@
         "governor-auditor",
         "portability-reviewer",
         "remediation-planner"
+      ]
+    },
+    {
+      "name": "gsd-delivery-team",
+      "canonical_manifest": "teams/gsd-delivery-team.json",
+      "purpose": "Phase-based Get Shit Done (GSD) delivery team designed to eliminate context rot via strict cognitive mode switching.",
+      "roles": [
+        "principal-architect",
+        "execution-planner",
+        "builder",
+        "qa-and-review"
       ]
     },
     {

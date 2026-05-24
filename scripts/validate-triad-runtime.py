@@ -220,6 +220,14 @@ def probe_codex(project_root: Path, evidence_dir: Path, expected: list[str]) -> 
         "cli_exit": code,
         "cli_cmd": " ".join(shlex.quote(c) for c in cmd),
         "sandbox_blocked": sandbox,
+        "warnings": (
+            [
+                "Codex CLI inspection skipped due to sandbox restrictions; "
+                "validated with filesystem evidence from .agents/skills and .codex/hooks.json."
+            ]
+            if sandbox and method == "filesystem-escalated"
+            else []
+        ),
     }
 
 
@@ -839,6 +847,8 @@ def main() -> int:
         mcp_tag = "mcp+" if mcp_res["pass"] else "mcp-"
         distill_tag = "distill+" if distill_res["pass"] else "distill-"
         print(f"[{status}] {host:7s} method={res['method']:22s} missing={len(res['missing'])}/{res['expected_count']}  {hook_tag} {mem_tag} {bridge_tag} {mcp_tag} {distill_tag}{live_tag}")
+        for warning in res.get("warnings", []):
+            print(f"[WARN] {host:7s} {warning}")
         results[host] = res
 
     overall = all(r["pass"] for r in results.values()) if results else False

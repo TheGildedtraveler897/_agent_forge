@@ -57,11 +57,11 @@ Default bootstrap footprint:
 - `docs/HANDOFF.md`
 - `.claude/CLAUDE.md`
 - `.claude/agents/`
-- `.claude/commands/`
+- `.claude/skills/`
 - `.claude/skills/`
 - `.claude/settings.json`
 - `.gemini/agents/`
-- `.gemini/commands/`
+- `.gemini/skills/`
 - `.gemini/skills/`
 - `.gemini/settings.json`
 - `.agents/skills/`
@@ -76,9 +76,10 @@ The factory now has three governed host families plus a cross-host layer:
 
 - Claude:
 - `~/.claude/agents/`
-- `~/.claude/commands/`
+- `~/.claude/skills/`
+- `~/.claude/skills/`
 - `<project>/.claude/agents/`
-- `<project>/.claude/commands/`
+- `<project>/.claude/skills/`
 - `<project>/.claude/skills/`
 - `<project>/.claude/settings.json`
 - `<project>/.mcp.json`
@@ -91,11 +92,11 @@ The factory now has three governed host families plus a cross-host layer:
 - `<project>/.codex/hooks.json`
 
 - Gemini:
-- `~/.gemini/commands/`
-- `~/.gemini/agents/`
 - `~/.gemini/skills/`
+- `~/.gemini/agents/`
+- `~/.agents/skills/`
 - `<project>/GEMINI.md`
-- `<project>/.gemini/commands/`
+- `<project>/.gemini/skills/`
 - `<project>/.gemini/agents/`
 - `<project>/.gemini/skills/`
 - `<project>/.gemini/settings.json`

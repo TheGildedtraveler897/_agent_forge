@@ -14,19 +14,41 @@ It also ships:
 
 ## What to run first
 
-Pick the command for your platform. Read-only, takes about five minutes.
+**Step 1 — Deploy the factory** (one-time setup, about 30 seconds, makes no destructive changes):
 
 **Linux or macOS:**
 ```bash
-python3 _agent_forge/skills/global/onboarding-guide/onboard.py tour
+./_agent_forge/scripts/deploy-and-bootstrap.sh
 ```
 
-**Windows (native PowerShell, no WSL required):**
+**Windows ZIP transfer (native PowerShell, no WSL required):**
 ```powershell
-python .\_agent_forge\skills\global\onboarding-guide\onboard.py tour
+powershell.exe -ExecutionPolicy Bypass -File .\agent-forge-suitcase-<timestamp>-deploy-and-bootstrap.ps1 -BundleZip .\agent-forge-suitcase-<timestamp>.zip -DestinationRoot .\af
 ```
 
-The tour will ask two quick questions — your experience level and your role — then walk you through six short sections explaining what every part of the factory is, why it exists, and what to do next. Nothing the tour runs will modify your system.
+This copies the canonical factory into `~/Projects/_agent_forge` and renders Claude / Codex / Gemini surfaces into your user-home host directories. Windows defaults to Claude-only; pass `-AllHosts` after Codex and Gemini are installed. The Windows entry point unblocks the ZIP before extraction, avoids Explorer's partial-extract failure mode, and warns when the destination path is long enough to risk MAX_PATH issues.
+
+If the bundle is already safely extracted, Windows operators can run:
+
+```powershell
+powershell.exe -ExecutionPolicy Bypass -File .\_agent_forge\scripts\deploy-factory.ps1 -ClaudeOnly
+```
+
+**Step 2 — Run the inline onboarding tour.** Open Claude Code (or Codex, or Gemini CLI) in any project, and type:
+
+```
+/onboarding-guide
+```
+
+The assistant walks you through eight paced beats right in the chat — what the factory is, the cross-host translation table, the safety gate, the shared brain, the cross-host handoff, and a per-host install gate. The tour is read-only; nothing it shows you modifies your system.
+
+**Step 3 — Machine state check (optional, for terminal-only operators):**
+
+```
+python3 _agent_forge/skills/global/onboarding-guide/onboard.py check
+```
+
+Six probes, plain-English verdicts, exact fix command on any red.
 
 ## What "amazes you" looks like
 
@@ -38,11 +60,11 @@ If you stick around for ten minutes after the tour, you'll see this:
 
 That's the factory's whole pitch made visible: three different vendors, one author surface, no drift.
 
-For the scripted ten-minute walkthrough, after the tour see `_agent_forge/docs/DEMO_PATH.md` (created in a future sprint; ignore the reference if it isn't present yet).
+For the scripted ten-minute walkthrough see `_agent_forge/docs/DEMO_PATH.md`.
 
 ## When it doesn't work
 
-The tour ends with a `check` command. Re-run it after any fix:
+Run the machine-state check after any fix:
 
 ```
 python3 _agent_forge/skills/global/onboarding-guide/onboard.py check
@@ -51,6 +73,13 @@ python3 _agent_forge/skills/global/onboarding-guide/onboard.py check
 It reports six green/yellow/red probes and tells you the exact command to fix anything red.
 
 For per-host troubleshooting, see `_agent_forge/docs/QUICKSTART.md` and `_agent_forge/docs/HOST_INTEGRATIONS.md`.
+
+Windows troubleshooting:
+
+- If PowerShell refuses to run a script, use the `powershell.exe -ExecutionPolicy Bypass -File ...` form shown above.
+- If extraction appears incomplete, do not use Explorer's Extract All. Re-run `deploy-and-bootstrap.ps1`; it calls `Unblock-File` before `Expand-Archive` and validates the extracted tree.
+- If extraction fails under a deeply nested folder, move the ZIP to a short path such as `C:\af` and re-run. This avoids MAX_PATH edge cases.
+- If newly installed tools are not on PATH, close PowerShell and open a new terminal.
 
 ## Where to go next
 

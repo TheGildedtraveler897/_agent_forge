@@ -24,6 +24,46 @@ This file is the append-first knowledge anchor for Agent Forge. Validated workar
 
 ## Entries
 
+### 2026-05-23 - Windows ZIP deploy must unblock before extraction
+
+- `Date:` 2026-05-23
+- `Context:` Fresh Windows VM smoke testing showed Explorer's "Extract All" path could leave an incomplete `_agent_forge\` tree after a transferred ZIP, causing `deploy-factory.ps1` to fail because docs, policies, and top-level files were missing.
+- `Lesson:` Native Windows suitcase deploys need a PowerShell entry point that calls `Unblock-File` on the ZIP before extraction, warns on long paths, validates required top-level contents, recursively unblocks the extracted tree, and only then runs the deploy script.
+- `Architectural Decision:` Ship `scripts/deploy-and-bootstrap.ps1` as the Windows-first entry point and generate a matching sidecar script next to every ZIP export. Treat Explorer extraction as a fallback, not the runbook path.
+- `Evidence:` `scripts/deploy-and-bootstrap.ps1`, `scripts/deploy-factory.ps1`, `scripts/factory-export.sh`, `BUNDLE_README.md`, `docs/QUICKSTART.md`, `docs/DEMO_PATH.md`, `tests/test_windows_powershell_scripts.py`, and `runtime/validation/windows-2026-05-23.md`.
+- `Promotion Target:` `docs/QUICKSTART.md` and `BUNDLE_README.md` already promoted the runbook.
+- `Status:` promoted
+
+### 2026-05-23 - Codex subagent TOML details need explicit renderer coverage
+
+- `Date:` 2026-05-23
+- `Context:` The deep SOTA audit re-checked current Codex subagent docs and confirmed `model_reasoning_effort`, `sandbox_mode`, `mcp_servers`, and `skills.config` are documented as supported custom-agent TOML fields.
+- `Lesson:` "Codex uses TOML" is not enough detail for future renderer work. The factory should document and eventually render the fields that control reasoning effort and per-agent MCP inheritance, instead of relying on Claude/Gemini-style frontmatter assumptions.
+- `Architectural Decision:` Keep current flat TOML rendering for now, but track explicit Codex field coverage as follow-on work before claiming full 2026 Codex parity.
+- `Evidence:` `docs/SOTA_2026_AUDIT.md` § 7.3 and `skills/global/onboarding-guide/EXPLAINERS.md` state-of-the-field refresh.
+- `Promotion Target:` `docs/HOST_INTEGRATIONS.md` § Codex subagent rendering.
+- `Status:` active
+
+### 2026-05-23 - Prompt caching is a SOTA cost doctrine, not optional trivia
+
+- `Date:` 2026-05-23
+- `Context:` The deeper 2026 SOTA pass found Anthropic's prompt-caching guidance was absent from Agent Forge docs even though the factory already invests heavily in progressive disclosure and stable doctrine files.
+- `Lesson:` Long-context agent systems should structure stable prefixes deliberately: tools, system/developer instructions, and durable context before per-turn data. Timestamps, IDs, cursor snippets, and other volatile material near the top destroy cache reuse.
+- `Architectural Decision:` Treat stable-prefix ordering as a design rule for future API harnesses, renderer output, and memory summaries. Keep volatile continuity state later in prompts or host-local sidecars.
+- `Evidence:` `docs/SOTA_2026_AUDIT.md` § 7.5, `skills/global/onboarding-guide/EXPLAINERS.md` `prompt-caching`, and `docs/research/sota-multi-agent-research-2026.md` § 4.
+- `Promotion Target:` Future renderer/API-harness docs when those layers are introduced.
+- `Status:` active
+
+### 2026-05-23 - Export bundles must exclude Python bytecode caches
+
+- `Date:` 2026-05-23
+- `Context:` Final COI grep against the regenerated onboarding export returned binary matches inside `__pycache__/*.pyc` files. The matches came from machine-local path strings compiled into bytecode, not from source text.
+- `Lesson:` `.gitignore` is not a packaging boundary. Export scripts must explicitly exclude runtime and cache artifacts, especially bytecode files that can embed absolute source paths.
+- `Architectural Decision:` `scripts/factory-export.sh` now excludes `__pycache__`, `*.pyc`, `*.pyo`, and common Python tool caches before building `.tar.gz` and `.zip` artifacts.
+- `Evidence:` `runtime/validation/linux-2026-05-23/export-coi-grep.*` after the fix, `scripts/factory-export.sh`, and `runtime/validation/linux-2026-05-23/bundle-check.md`.
+- `Promotion Target:` `scripts/factory-export.sh` itself now enforces the rule.
+- `Status:` promoted
+
 ### 2026-05-22 - MCP stdio transport must not use sh-c on Windows
 
 - `Date:` 2026-05-22
@@ -44,6 +84,26 @@ This file is the append-first knowledge anchor for Agent Forge. Validated workar
 - `Promotion Target:` None — this is a one-time fix; the file documents the policy on disk.
 - `Status:` active
 
+### 2026-05-22 - Host-specific canonical hook events are intentional, not drift
+
+- `Date:` 2026-05-22
+- `Context:` SOTA 2026 drift audit (Track 4b of `feat-sota-2026-alignment`). The Phase 1 research found Gemini CLI fires `BeforeAgent`, `AfterAgent`, `BeforeToolSelection`, `AfterModel`, `BeforeModel` lifecycle events that have no Claude / Codex equivalent — they are semantically distinct lifecycle points, not just renames. Audit flagged this as a drift risk: if the canonical schema only represents Claude/Codex's event set, authors cannot write hook records that fire on Gemini-only events.
+- `Lesson:` Verification showed all five events were already wired into `scripts/omni_factory.py:_EVENT_ALIASES` by an earlier SOTA pass — `None` aliases for Claude and Codex, PascalCase native names for Gemini. The canonical schema represents the events; the renderer drops them silently for hosts whose alias is `None`. The asymmetric design is intentional: not every canonical event needs all-three coverage. Per-host depth wins over forced symmetry.
+- `Architectural Decision:` Document the asymmetry explicitly so future contributors don't try to "fix" it. CONOPS § Hook Governance gains a bullet stating host-specific canonical events are explicitly allowed. `policies/hooks.json` top-level description gains a sentence naming the Gemini-only events as an example of the pattern.
+- `Evidence:` `scripts/omni_factory.py:869-873` (Claude `None` aliases), `:909-913` (Codex `None` aliases), `:930-934` (Gemini native aliases). `docs/CONOPS.md` § Hook Governance (new bullet). `policies/hooks.json` description string (updated).
+- `Promotion Target:` `docs/HOST_INTEGRATIONS.md` § Unified Hook Lifecycle — already references `_EVENT_ALIASES`; should explicitly list the Gemini-only events with a one-line "no Claude / Codex equivalent" note.
+- `Status:` active
+
+### 2026-05-22 - Codex subagents already render as TOML (verified non-drift)
+
+- `Date:` 2026-05-22
+- `Context:` SOTA 2026 drift audit (Track 4a of `feat-sota-2026-alignment`). The primary-source research agent inferred that Codex subagents require a `[agent]` TOML section based on Codex 2026 vendor docs, but did not read an actual rendered file. Audit flagged this as a potential drift surface to verify.
+- `Lesson:` On verification, `omni_factory.py` already renders `.codex/agents/<skill>.toml` files with the required Codex schema (`agent_forge_managed = true`, top-level `name`, `description`, `sandbox_mode`, `developer_instructions`, and a `[[skills.config]]` table for the referenced `SKILL.md` path). The audit's `[agent]` section guess was a stylistic inference; flat top-level keys are also valid TOML and match Codex's documented expected schema. No drift.
+- `Architectural Decision:` Keep the current renderer behavior. If Codex's vendor docs ever explicitly require a `[agent]` wrapper section, that's a deeper rewrite gated on primary-source confirmation; not warranted by inference.
+- `Evidence:` `tomllib.load()` succeeds on every `.codex/agents/*.toml` rendered file across multiple governed projects on the verification machine. All files have the same five top-level keys (`agent_forge_managed`, `name`, `description`, `sandbox_mode`, `developer_instructions`) plus a `[[skills.config]]` table for the referenced `SKILL.md` path.
+- `Promotion Target:` `docs/HOST_INTEGRATIONS.md` § Codex subagent rendering — document the actual schema so future contributors don't re-investigate.
+- `Status:` active
+
 ### 2026-05-22 - Plan persistence layer survived its first multi-merge cycle
 
 - `Date:` 2026-05-22
@@ -53,3 +113,13 @@ This file is the append-first knowledge anchor for Agent Forge. Validated workar
 - `Evidence:` `docs/archive/PLANS_COMPLETED.md` entries; commits in master: c5807bf (Track F implementation), c9732a6 (first persisted plan), and the subsequent merge archives.
 - `Promotion Target:` `docs/CONOPS.md` § Plan Persistence Layer — already promoted in Track F.
 - `Status:` promoted
+
+### 2026-05-24 - Onboarding audit Tier 3 Polish Items (Deferred Post-NRC)
+
+- `Date:` 2026-05-24
+- `Context:` Follow-up onboarding audit discovered six polish items across scripts, docs, and explanations. Three were quick wins (beat count sync, demo fallback, ps1 header). Three are heavier and require fresh spec work or host-specific testing (MacPorts rationale, Windows Python version check, npm pre-flight validation, EXPLAINERS vs Beat 5 sidecar specificity). NRC ship deadline is 2026-05-25; these were deferred to post-ship sprint.
+- `Lesson:` Beat numbering and cross-doc consistency require careful sync when new beats are inserted mid-stream. Polish passes should include a sweep for "N beats" references across all doc files (BUNDLE_README, QUICKSTART, DEMO_PATH) to catch off-by-one discrepancies early.
+- `Architectural Decision:` Implemented quick wins: DEMO_PATH and BUNDLE_README/QUICKSTART now reference "eight beats" (not "seven") to account for the new Beat 5.5. Added fallback sentence to DEMO_PATH Step 3 for single-CLI edge case. Clarified deploy-and-bootstrap.ps1 header comment. Deferred T3-A (MacPorts justification), T3-D (Windows Python 3.10+ version check), T3-E (npm pre-flight check), T3-G (EXPLAINERS sidecar specificity) to future sprint pending deeper spec work or OS-specific validation.
+- `Evidence:` Branch `feat/onboarding-multi-agent-story` commits: Beat count sync in BUNDLE_README.md, QUICKSTART.md, DEMO_PATH.md; demo fallback in DEMO_PATH.md line ~55; deploy-and-bootstrap.ps1 header comment refresh.
+- `Promotion Target:` Each deferred item (T3-A/D/E/G) should spawn its own post-NRC lesson entry once the rationale is decided (MacPorts decision, Windows Python policy, npm package reliability strategy, memory bridge side-car naming audit). Do not silently slip these into doctrine — spec first, then promote.
+- `Status:` active

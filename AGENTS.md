@@ -70,11 +70,11 @@ The default chain for any non-trivial code change under a governed project is:
 2. `execution-planner` — decomposition into 2–5 minute micro-tasks with exact file paths, embedded RED tests, and explicit verification commands.
 3. `tdd-engineer` — RED/GREEN/REFACTOR execution with a watched failing test gate and a three-fix architecture stop.
 4. `subagent-dispatcher` — optional parallel or sequential delegation with fresh-context isolation and a two-stage review loop.
-5. `verification-gate` — fresh-evidence completion gate; prior runs, code inspection, and subagent reports are insufficient.
+5. `verification-gate` — fresh-evidence completion gate; prior runs, code inspection, and agent reports are insufficient.
 6. `branch-finisher` — tests-must-pass gate, typed confirmation on destructive actions, post-merge re-verification, no hook or signature bypass.
 
 Escape hatches inside the chain:
 
 - `root-cause-analyst` — invoked when `tdd-engineer` hits its three-fix stop or any time a bug must be understood before it is patched.
-- `code-review-doctrine` — invoked for both giving and receiving code review; receiving discipline requires STOP-and-ASK on unclear feedback.
+- `paranoid-reviewer` — invoked for deep static analysis and doctrine review; replaces legacy code-review and quality-gate flows.
 - `skill-author` — meta-skill used only when authoring or revising a skill under `skills/`.

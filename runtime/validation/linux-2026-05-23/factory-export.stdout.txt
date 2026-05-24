@@ -1,0 +1,6 @@
+Building suitcase (mode: onboarding)...
+Portable factory export created:
+  Directory: /home/pheonixprotocol/Projects/_agent_forge/exports/agent-forge-suitcase-20260523-validation
+  tar.gz:    /home/pheonixprotocol/Projects/_agent_forge/exports/agent-forge-suitcase-20260523-validation.tar.gz
+  zip:       /home/pheonixprotocol/Projects/_agent_forge/exports/agent-forge-suitcase-20260523-validation.zip
+  Windows:   /home/pheonixprotocol/Projects/_agent_forge/exports/agent-forge-suitcase-20260523-validation-deploy-and-bootstrap.ps1

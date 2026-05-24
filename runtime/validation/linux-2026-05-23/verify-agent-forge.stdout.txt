@@ -1,0 +1,80 @@
+[OK]   Present: scripts/bootstrap-project.sh
+[OK]   Present: scripts/bootstrap-workstation.sh
+[OK]   Present: scripts/deploy-and-bootstrap.sh
+[OK]   Present: scripts/deploy-factory.sh
+[OK]   Present: scripts/factory-export.sh
+[OK]   Present: scripts/sync-claude-adapters.sh
+[OK]   Present: scripts/sync-codex-skills.sh
+[OK]   Present: scripts/sync-gemini-adapters.sh
+[OK]   Present: scripts/verify-agent-forge.py
+[OK]   Present: scripts/validate-codex-runtime.py
+[OK]   Present: scripts/omni_factory.py
+[OK]   Present: projects.json
+[OK]   Present: global-mcp.json
+[OK]   Present: policies/hooks.json
+[OK]   Present: CLAUDE.md
+[OK]   Present: GEMINI.md
+[OK]   Present: docs/CONOPS.md
+[OK]   Present: docs/HOST_INTEGRATIONS.md
+[OK]   Present: docs/TRIAD_RUNTIME_VALIDATION.md
+[OK]   Present: docs/LESSONS_LEARNED.md
+[OK]   Present: runtime/validation-matrix.json
+[OK]   Present: evals/scorecard.schema.json
+[WARN] projects.json governed_projects is empty. Bootstrap a project with scripts/bootstrap-project.sh --name <name>.
+[OK]   Capability metadata OK: branch-finisher
+[OK]   Capability metadata OK: brand-guardian
+[OK]   Capability metadata OK: company-onboarder
+[OK]   Capability metadata OK: context-engineer
+[OK]   Capability metadata OK: corporate-controller
+[OK]   Capability metadata OK: e2e-qa-tester
+[OK]   Capability metadata OK: evidence-packager
+[OK]   Capability metadata OK: execution-planner
+[OK]   Capability metadata OK: handoff-archiver
+[OK]   Capability metadata OK: infra-architect
+[OK]   Capability metadata OK: legal-counsel
+[OK]   Capability metadata OK: lesson-distiller
+[OK]   Capability metadata OK: live-hook-prober
+[OK]   Capability metadata OK: memory-archivist
+[OK]   Capability metadata OK: memory-bridge
+[OK]   Capability metadata OK: multi-agent-governor
+[OK]   Capability metadata OK: onboarding-guide
+[OK]   Capability metadata OK: paranoid-reviewer
+[OK]   Capability metadata OK: portability-auditor
+[OK]   Capability metadata OK: project-bootstrap
+[OK]   Capability metadata OK: prompt-auto-activator
+[OK]   Capability metadata OK: root-cause-analyst
+[OK]   Capability metadata OK: skill-author
+[OK]   Capability metadata OK: spec-architect
+[OK]   Capability metadata OK: sprint-harvester
+[OK]   Capability metadata OK: subagent-dispatcher
+[OK]   Capability metadata OK: tdd-engineer
+[OK]   Capability metadata OK: telemetry-guardian
+[OK]   Capability metadata OK: token-optimizer
+[OK]   Capability metadata OK: verification-gate
+[OK]   registry.json matches generated compatibility registry
+[OK]   global-mcp.json inventory valid
+[OK]   Team manifest present: assessment-team
+[OK]   Team manifest present: bootstrap-team
+[OK]   Team manifest present: delivery-team
+[OK]   Team manifest present: governance-team
+[OK]   Team manifest present: gsd-delivery-team
+[OK]   Team manifest present: improvement-team
+[OK]   Team manifest present: planning-team
+[OK]   Team manifest present: research-team
+[OK]   Legacy residue removed: claude
+[OK]   Legacy residue removed: docs/CLAUDE_NATIVE.md
+[OK]   Legacy residue removed: docs/CLAUDE_VALIDATION_RUN.md
+[OK]   policies/hooks.json parses
+[OK]   Hook script present: pre-tool-execution-guardian -> Projects/_agent_forge/skills/global/telemetry-guardian/guardian.py
+[OK]   Hook script present: prompt-auto-activator -> Projects/_agent_forge/skills/global/prompt-auto-activator/auto-activator.py
+[OK]   Hook script present: memory-bridge-validate-claude -> Projects/_agent_forge/skills/global/memory-bridge/bridge.py
+[OK]   Hook script present: memory-bridge-outbound-claude -> Projects/_agent_forge/skills/global/memory-bridge/bridge.py
+[OK]   Hook script present: memory-bridge-inbound-claude -> Projects/_agent_forge/skills/global/memory-bridge/bridge.py
+[OK]   Hook script present: memory-bridge-validate-codex -> Projects/_agent_forge/skills/global/memory-bridge/bridge.py
+[OK]   Hook script present: memory-bridge-outbound-codex -> Projects/_agent_forge/skills/global/memory-bridge/bridge.py
+[OK]   Hook script present: memory-bridge-inbound-codex -> Projects/_agent_forge/skills/global/memory-bridge/bridge.py
+[OK]   Hook script present: memory-bridge-validate-gemini -> Projects/_agent_forge/skills/global/memory-bridge/bridge.py
+[OK]   Hook script present: memory-bridge-outbound-gemini -> Projects/_agent_forge/skills/global/memory-bridge/bridge.py
+[OK]   Hook script present: memory-bridge-inbound-gemini -> Projects/_agent_forge/skills/global/memory-bridge/bridge.py
+[OK]   policies/memory.json parses
+[OK]   policies/distillation.json parses

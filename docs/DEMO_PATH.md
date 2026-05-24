@@ -24,8 +24,8 @@ cd agent-forge-suitcase-<timestamp>
 
 **Windows (PowerShell):**
 ```powershell
-Expand-Archive .\agent-forge-suitcase-<timestamp>.zip -DestinationPath .
-cd .\agent-forge-suitcase-<timestamp>\
+powershell.exe -ExecutionPolicy Bypass -File .\agent-forge-suitcase-<timestamp>-deploy-and-bootstrap.ps1 -BundleZip .\agent-forge-suitcase-<timestamp>.zip -DestinationRoot .\af
+cd .\af\agent-forge-suitcase-<timestamp>\
 ```
 
 You should now have a directory containing `_agent_forge/`, `BUNDLE_README.md`, `START_HERE.txt`, and `MANIFEST.json`.
@@ -38,12 +38,12 @@ This installs Agent Forge into `~/Projects/_agent_forge` on your machine. No adm
 
 **Linux / macOS:**
 ```bash
-./_agent_forge/scripts/deploy-factory.sh
+./_agent_forge/scripts/deploy-and-bootstrap.sh
 ```
 
 **Windows (PowerShell):**
 ```powershell
-pwsh -File .\_agent_forge\scripts\deploy-factory.ps1
+powershell.exe -ExecutionPolicy Bypass -File .\_agent_forge\scripts\deploy-factory.ps1 -ClaudeOnly
 ```
 
 The script copies the canonical sources, generates the host-native rendering, and exits with a one-line summary. If it asks to install the host CLIs, say no for this demo — the demo runs entirely from the Python skill helper.
@@ -52,21 +52,23 @@ The script copies the canonical sources, generates the host-native rendering, an
 
 ## Step 3 — Run the onboarding tour (~3 minutes)
 
-This is the headline. The tour adapts to your experience level and your reason for being here.
+This is the headline. The tour runs **inline in the chat** of whichever host CLI you're using — Claude Code, Codex, or Gemini. The assistant walks you through eight paced beats, asking two short questions along the way.
 
-```bash
-python3 ~/Projects/_agent_forge/skills/global/onboarding-guide/onboard.py tour
+This demo is best with all three CLIs installed. If you have only Claude Code, you'll see the skill once instead of thrice — still a win, just less visible.
+
+In Claude Code (or Codex, or Gemini CLI), open any project under `~/Projects/` and type:
+
+```
+/onboarding-guide
 ```
 
-(On Windows, replace `~/Projects/` with `$env:USERPROFILE\Projects\` and forward slashes with backslashes. `python` may work in place of `python3` depending on how Python is installed.)
-
 The tour will ask:
-1. Have you used the three host CLIs before? (`y` / `p` / `n` / `s`)
-2. Which best describes why you're here today? (`c` curious / `b` builder / `o` operator / `d` decider / `s` skip)
+1. Have you used any of the three host CLIs before? (`a` many / `o` one / `n` none / `u` check for me)
+2. What brings you here today? (`c` curious / `b` builder / `o` operator / `d` decider)
 
-Pick the answers that fit. The tour walks you through six short sections — what the folder is, the canonical-first model, the cross-host translation table, the seatbelt, the shared brain, and what to do next. Each section ends with one paragraph tuned to your chosen role.
+Pick the answers that fit. The eight beats walk through what the folder is, the canonical-first model, the cross-host translation table, the seatbelt, the shared brain, the cross-host handoff, an install gate for any missing host CLI, and a role-tuned next action.
 
-Pay attention to section 3 ("Three vendors, three names for the same thing"). The compact ASCII table you see there is the entire reason Agent Forge exists: three vendors shipped similar primitives with their own names, and the factory translates between them.
+Pay attention to Beat 3 ("The cross-host translation table"). The compact ASCII table the assistant renders there is the entire reason Agent Forge exists: three vendors shipped similar primitives with their own names, and the factory translates between them.
 
 ---
 
@@ -89,7 +91,7 @@ This step requires at least one host CLI installed. If you have Claude Code:
 ```bash
 claude --version
 # In a Claude Code session under any governed project:
-/onboarding-guide tour
+/onboarding-guide
 ```
 
 Notice the slash-command syntax: `/onboarding-guide`. That's Claude's native way of invoking a workflow skill.
@@ -109,10 +111,26 @@ If you have Gemini, the slash-command syntax matches Claude's:
 ```bash
 gemini --version
 # In a Gemini session:
-/onboarding-guide tour
+/onboarding-guide
 ```
 
 Three different CLIs, one canonical source, no copy-paste maintenance.
+
+---
+
+## Step 5b — Watch two hosts share a plan
+
+This is the demo that shows multi-agent collaboration is real, not just translation.
+
+1. In Claude Code: `/spec-architect` "Add a hello-world skill that prints today's date."
+2. When `spec-architect` finishes and the plan is approved, the plan file lands at `docs/plans/<branch-slug>.md` and the `active_tasks` section of `MEMORY.md` gets a one-line pointer.
+3. Quit Claude. Start Codex in the same project: `codex`.
+4. Codex auto-loads `MEMORY.md`. The `active_tasks` pointer is visible. Ask Codex: "Read the active task and execute it." Codex reads the plan file Claude just wrote and runs `tdd-engineer` on the steps.
+5. Quit Codex. Start Gemini: `gemini`. Same MEMORY.md, same plan. Ask Gemini to review the diff with `paranoid-reviewer`.
+
+Three different LLMs, one plan, one MEMORY, three perspectives. The handoff is the file system.
+
+What we did NOT demonstrate: automatic invocation. You started each CLI by hand. That's intentional — there's no orchestration engine. The factory keeps state synchronized; the operator decides which host runs next.
 
 ---
 

@@ -10,6 +10,7 @@ BUNDLE_BASENAME="agent-forge-suitcase-${STAMP}"
 EXPORT_DIR="${OUTPUT_ROOT}/${BUNDLE_BASENAME}"
 ARCHIVE_TGZ="${OUTPUT_ROOT}/${BUNDLE_BASENAME}.tar.gz"
 ARCHIVE_ZIP="${OUTPUT_ROOT}/${BUNDLE_BASENAME}.zip"
+WINDOWS_DEPLOY_SCRIPT="${OUTPUT_ROOT}/${BUNDLE_BASENAME}-deploy-and-bootstrap.ps1"
 EXPORT_MODE="unset"   # "unset" = ask interactively; "onboarding", "clean", or "backup"
 
 # Detect non-interactive stdin so we can fall back to "onboarding" silently.
@@ -103,6 +104,7 @@ fi
 EXPORT_DIR="${OUTPUT_ROOT}/${BUNDLE_BASENAME}"
 ARCHIVE_TGZ="${OUTPUT_ROOT}/${BUNDLE_BASENAME}.tar.gz"
 ARCHIVE_ZIP="${OUTPUT_ROOT}/${BUNDLE_BASENAME}.zip"
+WINDOWS_DEPLOY_SCRIPT="${OUTPUT_ROOT}/${BUNDLE_BASENAME}-deploy-and-bootstrap.ps1"
 
 mkdir -p "${OUTPUT_ROOT}"
 rm -rf "${EXPORT_DIR}"
@@ -117,6 +119,21 @@ tar -C "${WORKSPACE_ROOT}" \
   --exclude='_agent_forge/runtime/validation' \
   --exclude='_agent_forge/dev' \
   --exclude='_agent_forge/dist' \
+  --exclude='*/__pycache__' \
+  --exclude='*.pyc' \
+  --exclude='*.pyo' \
+  --exclude='_agent_forge/**/__pycache__' \
+  --exclude='_agent_forge/**/*.pyc' \
+  --exclude='_agent_forge/**/*.pyo' \
+  --exclude='_agent_forge/.pytest_cache' \
+  --exclude='_agent_forge/.mypy_cache' \
+  --exclude='_agent_forge/.ruff_cache' \
+  --exclude='_agent_forge/.forge_state' \
+  --exclude='_agent_forge/.claude' \
+  --exclude='_agent_forge/.codex' \
+  --exclude='_agent_forge/.gemini' \
+  --exclude='_agent_forge/.agents' \
+  --exclude='_agent_forge/MEMORY.md' \
   -cf - _agent_forge | tar -C "${EXPORT_DIR}" -xf -
 
 # ── Clean-mode: strip source-environment-specific residue ────────────────────
@@ -243,20 +260,20 @@ QUICKSTART (pick your platform)
 
   Linux or macOS:
     cd <unpacked-bundle>
-    ./_agent_forge/scripts/deploy-factory.sh
+    ./_agent_forge/scripts/deploy-and-bootstrap.sh
 
-  Windows (native PowerShell, no WSL required):
-    cd <unpacked-bundle>
-    pwsh -File .\_agent_forge\scripts\deploy-factory.ps1
+  Windows ZIP transfer (native PowerShell, no WSL required):
+    powershell.exe -ExecutionPolicy Bypass -File .\agent-forge-suitcase-<timestamp>-deploy-and-bootstrap.ps1 -BundleZip .\agent-forge-suitcase-<timestamp>.zip -DestinationRoot .\af
 
   Then in Claude Code, invoke the onboarding-guide skill for an
   interactive walkthrough:
-    /onboarding-guide tour
+    /onboarding-guide
 
 REQUIREMENTS
   Linux / macOS: Python 3.10+, git, tar
   macOS: MacPorts (NOT Homebrew)
   Windows: Python 3.10+, git, PowerShell 5.1+ (ships with Windows 10+)
+  Windows Codex runtime: use WSL2 unless codex --version works in native PowerShell
 
   Plus at least one host CLI:
     - Claude Code  (anthropic.com)
@@ -274,7 +291,7 @@ VERIFY THE INSTALL
   Expect exit 0 with no [FAIL] lines.
 
 NEED HELP
-  After deploy, in Claude Code: /onboarding-guide tour
+  After deploy, in Claude Code: /onboarding-guide
   Skim _agent_forge/docs/QUICKSTART.md.
 STARTEOF
 
@@ -294,7 +311,7 @@ Quick purpose: this bundle installs the Agent Forge framework onto a fresh machi
 
 - \`_agent_forge/\` canonical factory snapshot
 - \`shared-root/\` shared doctrine docs for a clean \`~/Projects\` root
-- deployment script at \`_agent_forge/scripts/deploy-factory.sh\`
+- deployment scripts at \`_agent_forge/scripts/deploy-and-bootstrap.sh\` and \`_agent_forge/scripts/deploy-and-bootstrap.ps1\`
 
 ## What This Bundle Does Not Contain
 
@@ -316,13 +333,19 @@ cd ~/Projects/_agent_forge
 ./scripts/bootstrap-workstation.sh
 \`\`\`
 
-If you used the \`.zip\` archive instead, unzip it first and then run the same two scripts.
+If you used the \`.zip\` archive on Windows, prefer the generated sidecar PowerShell deploy script instead of Explorer's Extract All.
+
+Recommended on Windows:
+
+\`\`\`powershell
+powershell.exe -ExecutionPolicy Bypass -File .\\${BUNDLE_BASENAME}-deploy-and-bootstrap.ps1 -BundleZip .\\${BUNDLE_BASENAME}.zip -DestinationRoot .\\af
+\`\`\`
 
 ## Deploy On A Fresh Machine
 
 \`\`\`bash
 cd <unpacked-bundle>
-./_agent_forge/scripts/deploy-factory.sh
+./_agent_forge/scripts/deploy-and-bootstrap.sh
 \`\`\`
 
 What this does:
@@ -417,7 +440,9 @@ if export_mode == "onboarding":
     manifest["framework_only"] = True
     manifest["onboarding_mode_note"] = (
         "Production-grade framework bundle. Machine-local runtime state "
-        "(runtime/managed-state.json, runtime/validation/, dev/, dist/) excluded. "
+        "(runtime/managed-state.json, runtime/validation/, dev/, dist/, "
+        ".forge_state/, .claude/, .codex/, .gemini/, .agents/, MEMORY.md) excluded "
+        "— these are regenerated on the target machine by deploy-factory. "
         "START_HERE.txt at bundle root has platform-specific quickstart."
     )
 with open(manifest_path, "w", encoding="utf-8") as fh:
@@ -444,7 +469,10 @@ with zipfile.ZipFile(archive_zip, "w", compression=zipfile.ZIP_DEFLATED) as zf:
         zf.write(path, arcname)
 PY
 
+cp "${AGENT_FORGE_ROOT}/scripts/deploy-and-bootstrap.ps1" "${WINDOWS_DEPLOY_SCRIPT}"
+
 echo "Portable factory export created:"
 echo "  Directory: ${EXPORT_DIR}"
 echo "  tar.gz:    ${ARCHIVE_TGZ}"
 echo "  zip:       ${ARCHIVE_ZIP}"
+echo "  Windows:   ${WINDOWS_DEPLOY_SCRIPT}"

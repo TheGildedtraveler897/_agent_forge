@@ -31,3 +31,6 @@ dev/
 
 # Distiller/archivist file lock guards (POSIX flock files; ephemeral)
 .forge_state/*.lock
+
+# SOTA 2026: Tiered Memory Private Storage
+MEMORY.md

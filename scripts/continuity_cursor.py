@@ -149,6 +149,73 @@ def cmd_verify(args: argparse.Namespace) -> int:
     return 0
 
 
+def parse_line_range(value: str) -> dict[str, int]:
+    try:
+        start_raw, end_raw = value.split(",", 1)
+        start = int(start_raw)
+        end = int(end_raw)
+    except Exception as exc:
+        raise ValueError("--line-range must be '<start>,<end>'") from exc
+    if start <= 0 or end < start:
+        raise ValueError("--line-range must use positive lines with end >= start")
+    return {"start": start, "end": end}
+
+
+def cmd_checkpoint(args: argparse.Namespace) -> int:
+    root = Path(args.root).resolve()
+    require_slug(args.slug)
+    state = load_cursor(root, args.slug)
+    file_path = repo_relative(root, args.file, must_exist=False)
+    checkpoint = {
+        "task": state.get("current_task"),
+        "file": file_path,
+        "line_range": parse_line_range(args.line_range),
+        "test_name": args.test_name or None,
+        "exit_code": args.exit_code,
+        "recorded_at": utc_now(),
+    }
+    state["task_checkpoint"] = checkpoint
+    state["dirty_files"] = dirty_files(root)
+    state["updated_at"] = checkpoint["recorded_at"]
+    write_cursor(root, args.slug, state)
+    print(json.dumps({"cursor": str(cursor_path(root, args.slug)), "slug": args.slug, "checkpoint": checkpoint}))
+    return 0
+
+
+def current_short_commit(root: Path) -> str:
+    proc = subprocess.run(
+        ["git", "rev-parse", "--short", "HEAD"],
+        cwd=root,
+        check=False,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    if proc.returncode != 0:
+        raise ValueError((proc.stderr or proc.stdout).strip() or "git rev-parse failed")
+    return proc.stdout.strip()
+
+
+def cmd_task_complete(args: argparse.Namespace) -> int:
+    root = Path(args.root).resolve()
+    require_slug(args.slug)
+    state = load_cursor(root, args.slug)
+    commit = current_short_commit(root)
+    state.setdefault("task_status", {})[args.task] = "done"
+    state["current_task"] = args.task
+    state["last_completed_task"] = args.task
+    state[f"{args.task}_commit"] = commit
+    state["last_note"] = f"{args.task} completed at {commit}"
+    state["blocker"] = None
+    if (state.get("task_checkpoint") or {}).get("task") == args.task:
+        state["task_checkpoint"] = None
+    state["dirty_files"] = dirty_files(root)
+    state["updated_at"] = utc_now()
+    write_cursor(root, args.slug, state)
+    print(json.dumps({"cursor": str(cursor_path(root, args.slug)), "slug": args.slug, "task": args.task, "commit": commit}))
+    return 0
+
+
 def cmd_status(args: argparse.Namespace) -> int:
     root = Path(args.root).resolve()
     require_slug(args.slug)
@@ -195,6 +262,19 @@ def build_parser() -> argparse.ArgumentParser:
     p_verify.add_argument("--exit-code", type=int, required=True)
     p_verify.add_argument("--artifact", default=None)
     p_verify.set_defaults(func=cmd_verify)
+
+    p_checkpoint = sub.add_parser("checkpoint", help="Record precise mid-task resume state.")
+    p_checkpoint.add_argument("--slug", required=True)
+    p_checkpoint.add_argument("--file", required=True)
+    p_checkpoint.add_argument("--line-range", required=True, help="Line range as '<start>,<end>'.")
+    p_checkpoint.add_argument("--test-name", default=None)
+    p_checkpoint.add_argument("--exit-code", type=int, default=None)
+    p_checkpoint.set_defaults(func=cmd_checkpoint)
+
+    p_task_complete = sub.add_parser("task-complete", help="Record the git commit that completed a task.")
+    p_task_complete.add_argument("--slug", required=True)
+    p_task_complete.add_argument("--task", required=True)
+    p_task_complete.set_defaults(func=cmd_task_complete)
 
     p_status = sub.add_parser("status", help="Print the cursor JSON.")
     p_status.add_argument("--slug", required=True)
