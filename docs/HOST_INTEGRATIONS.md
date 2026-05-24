@@ -41,7 +41,7 @@ Host behavior:
 
 - Claude Code auto-loads `CLAUDE.md` while walking up the directory tree.
 - `_agent_forge/CLAUDE.md` stays thin and imports `AGENTS.md`, `docs/CONOPS.md`, `docs/HANDOFF.md`, and `docs/LESSONS_LEARNED.md`.
-- Generated Claude agents and commands point back to the canonical `SKILL.md`.
+- Generated Claude agents and skills point back to the canonical `SKILL.md`. The Claude docs explicitly state that "custom commands have been merged into skills" — files at `.claude/commands/<name>.md` and skills at `.claude/skills/<name>/SKILL.md` both create `/name` and work the same way.
 
 ## Codex
 
@@ -56,6 +56,7 @@ Generated surfaces:
 Host behavior:
 
 - Codex auto-loads `AGENTS.md` before work.
+- The `~/.agents/skills/` and `<project>/.agents/skills/` paths are the cross-vendor [agentskills.io](https://agentskills.io) home aliases: both Codex and Gemini read them in addition to their host-specific (`~/.codex/`, `~/.gemini/`) directories, which take precedence within their own tier.
 - Codex does not natively auto-load arbitrary docs paths the same way Claude and Gemini import files.
 - The lesson ledger therefore stays canonical at `docs/LESSONS_LEARNED.md`, while `AGENTS.md`, generated Codex agents, and runtime-validation prompts explicitly point Codex to it when workaround history matters.
 
@@ -193,6 +194,8 @@ Event names use snake_case and are translated to each host's native casing by th
 | `post_edit`     | `PostToolUse` | `PostToolUse`   | `AfterTool`    |
 | `session_start` | `SessionStart`| `SessionStart`  | `SessionStart` |
 | `stop`          | `Stop`        | `Stop`          | `SessionEnd`   |
+
+`pre_commit` and `post_edit` are semantic aliases authored at the canonical layer for hooks that conceptually fire around commit / edit operations; they share native dispatch with `pre_tool_use` / `post_tool_use` because none of the three host CLIs publishes a distinct commit-scoped or edit-scoped event today. Defined in `scripts/omni_factory.py` `_EVENT_ALIASES`.
 
 **Gemini event-name correctness note (Sprint 1, 2026-04-26):** Gemini CLI v0.39 expects PascalCase event names (`BeforeTool` / `AfterTool` / `BeforeAgent` / `AfterAgent` / `BeforeModel` / `AfterModel` / `BeforeToolSelection` / `SessionStart` / `SessionEnd` / `Notification` / `PreCompress`), not the camelCase pattern Claude uses. Earlier roadmap iterations had `preToolUse` / `postToolUse` here; those were silently broken (Gemini's hook dispatcher never recognized the keys) and the triad validator's `hook_surface_for` only passed because it did a substring command-path match. Both bugs are fixed: aliases corrected and `hook_surface_for` now also requires the per-host expected event key to be a top-level key in the rendered hooks payload. Live-invocation proof: `runtime/validation/hook-probe/20260426-035313/gemini/` (Gemini blocked `--no-verify` for real, exit 0).
 

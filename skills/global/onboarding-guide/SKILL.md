@@ -59,7 +59,7 @@ into each tool's native format from one source.
 I'll keep this short. Answer the prompt below; I'll pause between
 beats so you can absorb each one.
 
-(Last reviewed against vendor docs: 2026-05-22. State of the field
+(Last reviewed against vendor docs: 2026-05-23. State of the field
 changes; re-verify before relying on specifics.)
 ```
 
@@ -127,13 +127,16 @@ Render this block as your next reply. The tease first; then on the user's next "
 ```
 ◆ Here's the trick.
 
-Each AI tool calls things by different names.
+All three tools share one capability format: the SKILL.md
+open standard (agentskills.io, adopted late 2025 / early 2026).
+Where they differ is HOW you invoke a skill and what they call
+the isolated-context variant.
 
-  Claude calls it a 'slash command' or a 'subagent.'
-  Codex  calls it a 'skill.'
-  Gemini calls it a 'command' or a 'subagent.'
+  Claude:  /skill-name  invokes skills.  @agent-name  spawns subagents.
+  Codex:   /skills menu or $mention.     Subagents via delegation.
+  Gemini:  Model auto-activates skills.  @subagent-name  for subagents.
 
-Same idea. Three names.
+Same primitive. Three invocation styles.
 ```
 
 End with: "press Enter to see all the names side-by-side."
@@ -141,22 +144,23 @@ End with: "press Enter to see all the names side-by-side."
 **Second reply (the payoff — render the ASCII table verbatim inside a code fence):**
 
 ```
-Concept           Claude       Codex            Gemini
------------------------------------------------------------
-Workflow skill    command      skill            command
-Expert skill      subagent     (none native)    subagent
-Slash syntax      /name        (no slash)       /name
-Pre-tool hook     PreToolUse   PreToolUse       BeforeTool
-Stop event        Stop         Stop             SessionEnd
-MCP config        .mcp.json    config.toml      settings.json
-Memory target     native       sidecar          sidecar
-Boot file         CLAUDE.md    AGENTS.md        GEMINI.md
+Concept             Claude         Codex           Gemini
+-------------------------------------------------------------
+Skill format        SKILL.md       SKILL.md        SKILL.md   (agentskills.io)
+Skill invocation    /name          /skills, $name  activate_skill tool
+Subagent format     YAML md        TOML            YAML md
+Subagent invocation @name          delegation      @name
+Pre-tool hook       PreToolUse     PreToolUse      BeforeTool
+Stop / end event    Stop           Stop            SessionEnd
+MCP config          .mcp.json      config.toml     settings.json
+Memory target       native         sidecar         sidecar
+Boot file           CLAUDE.md      AGENTS.md       GEMINI.md
 ```
 
 Underneath, add two short lines:
 
-> Three vendors, similar primitives, different names.
-> You don't have to memorize this — the factory translates.
+> All three adopted the agentskills.io standard in late 2025 / early 2026.
+> The factory still translates per-host quirks the standard doesn't cover.
 
 **PAUSE:** "press Enter to continue."
 
