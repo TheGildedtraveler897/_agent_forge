@@ -30,7 +30,7 @@ _Short-lived in-flight work; rewriteable as state changes. The only non-append-o
 _Rewriteable section — entries reflect current state, not history._
 
 <!-- entries:start -->
-- 2026-05-23T18:49:03Z [codex] — Plan: docs/plans/feat-sota-2026-deep-refactor.md - SOTA 2026 ship-prep refactor (status: approved, current: T-01 Windows suitcase deployment)
+- 2026-05-24T04:35:52Z [codex] — None - feat/sota-2026-deep-refactor merged to master and archived.
 <!-- entries:end -->
 
 ## Recent Decisions

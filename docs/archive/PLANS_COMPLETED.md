@@ -27,3 +27,4 @@ Each entry is a single line under `## Entries`:
 - 2026-05-23 feat-sota-agent-expansion — SOTA 2026 Agent & Team Expansion (GStack / GSD Integration) (1 tasks, created 2026-05-23)
 - 2026-05-23 feat-great-consolidation — The Great Consolidation & State-Machine Orchestration (1 tasks, created 2026-05-23)
 - 2026-05-22 feat-sota-2026-alignment — SOTA 2026 Drift Audit, Repair, and Onboarding-Guide Inline-Delivery Fix (10 tasks, created 2026-05-22)
+- 2026-05-23 feat-sota-2026-deep-refactor — SOTA 2026 ship-prep refactor (6 tasks, created 2026-05-23)
