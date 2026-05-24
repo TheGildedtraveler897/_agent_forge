@@ -1,6 +1,6 @@
 # Agent Forge
 
-**A portable governance factory that gives three AI coding command-line tools — Claude Code, OpenAI Codex, and Gemini CLI — the same skills, the same safety guardrails, and the same shared memory, generated outward from one canonical source of truth.**
+**A portable governance factory that gives three AI coding command-line tools — Claude Code, OpenAI Codex, and Gemini CLI — equivalent skills, identical safety guardrails, and a unified memory layer (native on Claude, sidecar bridges on Codex and Gemini), generated outward from one canonical source of truth.**
 
 You write a skill, a hook, or a memory section *once*, in `_agent_forge/`. The factory translates it into each host's native shape and validates that all three host CLIs can actually see and use it. No more maintaining three parallel sets of prompts, hooks, and memory files. No vendor lock-in. No silent drift between hosts.
 
@@ -76,6 +76,32 @@ The Omni-Factory is a single repository (`_agent_forge`) that holds **canonical 
 
 ---
 
+## Multi-Agent Workflows
+
+Three agents, one plan.
+
+Claude can spec a feature with `spec-architect`, which writes the plan
+to `docs/plans/<branch-slug>.md` with status frontmatter. The plan's
+existence and status get pinned to `MEMORY.md`'s `active_tasks`
+section, which all three hosts auto-load on session start.
+
+Switch to Codex in the same project. Codex reads `MEMORY.md`, sees the
+plan pointer, opens the plan file, and executes the task list with
+`tdd-engineer`. Test results and decisions append back to `MEMORY.md`.
+
+Switch to Gemini. Gemini reads the updated `MEMORY.md` plus the diff,
+runs `paranoid-reviewer` or `verification-gate`, and gates the merge.
+
+No manual context copy-paste. No three separate prompts of "here's
+what we did." The canonical files are the handoff artifact.
+
+What this is NOT (yet): automatic agent invocation. You still start
+each host's CLI manually. The factory keeps state in sync; it does
+not orchestrate which host runs next. See `subagent-dispatcher/SKILL.md`
+for the operator-driven dispatch pattern.
+
+---
+
 ## What you get today
 
 | Surface | State | Detail |
@@ -88,6 +114,19 @@ The Omni-Factory is a single repository (`_agent_forge`) that holds **canonical 
 | **Triad runtime validator** | ✅ Production | Asks each host's CLI to enumerate skills + verifies hook surface + verifies memory surface + verifies MCP surface. Live invocation probe gate via `--probe-invocations`. |
 | **Codex sandbox-aware probe** | ✅ Production | When Codex's bubblewrap blocks shell inspection, the validator escalates to filesystem evidence per documented doctrine. |
 | **Suitcase / portability** | ✅ Production | One-shot export + deploy + bootstrap script chain. Move the factory between machines without carrying secrets or per-machine residue. |
+
+---
+
+## Honest limitations
+
+The factory is in a strong position on the canonical-first axis. It is honestly weaker on the runtime-orchestration axis. These are the limitations a fresh operator should know about:
+
+1. **Codex sandbox is bubblewrap-fragile on Linux.** `bwrap: loopback: Failed RTM_NEWADDR: Operation not permitted` and `needs access to create user namespaces` are recurring errors. The triad validator escalates to filesystem-evidence per documented doctrine when this fires.
+2. **Headless `claude -p` cannot live-probe hooks.** With `--dangerously-skip-permissions`, the entire pre-tool hook system is bypassed (false positive). Without it, the CLI hangs waiting on a permission prompt that has no interactive stdin to deliver. The live-hook-prober treats this as `escalated`. Real Claude live-probing requires either an interactive session or a pre-approved permission rule for the test command.
+3. **Host MCP management UIs are not parity proof.** `global-mcp.json` ships with the seeded local `forge-factory` server, and `mcp_pass` verifies rendered aliases plus direct stdio `tools/list`. Host-native `mcp get/list` commands still differ enough that they remain secondary spot checks.
+4. **The memory bridge is conservative by design.** Claude has a true native auto-memory path, while Codex and Gemini use project sidecars because current host docs do not expose equivalent stable project fact-memory stores. The sidecars are evidence, not claims of native auto-load parity.
+5. **Tool-result delivery stalls** in agent harnesses are real. Two distinct mechanisms have been observed: bridge fragility on bulky compound-bash output, and leftover-subprocess-tree leaks on long-running CLI invocations. Mitigation rules are in §Governance discipline.
+6. **Native Windows bootstrap of host CLIs is operator-driven.** The factory's skills and Python helpers work on native Windows Claude Code; installing the Claude CLI on Windows is currently a user-driven step. `bootstrap-workstation.sh` covers Linux and macOS-via-MacPorts.
 
 ---
 
@@ -420,19 +459,6 @@ _agent_forge/
     ├── PREMIUM_FACTORY_RUN.md
     └── FUTURE_WORK_VM_ONBOARDING.md
 ```
-
----
-
-## Honest limitations
-
-The factory is in a strong position on the canonical-first axis. It is honestly weaker on the runtime-orchestration axis. These are the limitations a fresh operator should know about:
-
-1. **Codex sandbox is bubblewrap-fragile on Linux.** `bwrap: loopback: Failed RTM_NEWADDR: Operation not permitted` and `needs access to create user namespaces` are recurring errors. The triad validator escalates to filesystem-evidence per documented doctrine when this fires.
-2. **Headless `claude -p` cannot live-probe hooks.** With `--dangerously-skip-permissions`, the entire pre-tool hook system is bypassed (false positive). Without it, the CLI hangs waiting on a permission prompt that has no interactive stdin to deliver. The live-hook-prober treats this as `escalated`. Real Claude live-probing requires either an interactive session or a pre-approved permission rule for the test command.
-3. **Host MCP management UIs are not parity proof.** `global-mcp.json` ships with the seeded local `forge-factory` server, and `mcp_pass` verifies rendered aliases plus direct stdio `tools/list`. Host-native `mcp get/list` commands still differ enough that they remain secondary spot checks.
-4. **The memory bridge is conservative by design.** Claude has a true native auto-memory path, while Codex and Gemini use project sidecars because current host docs do not expose equivalent stable project fact-memory stores. The sidecars are evidence, not claims of native auto-load parity.
-5. **Tool-result delivery stalls** in agent harnesses are real. Two distinct mechanisms have been observed: bridge fragility on bulky compound-bash output, and leftover-subprocess-tree leaks on long-running CLI invocations. Mitigation rules are in §Governance discipline.
-6. **Native Windows bootstrap of host CLIs is operator-driven.** The factory's skills and Python helpers work on native Windows Claude Code; installing the Claude CLI on Windows is currently a user-driven step. `bootstrap-workstation.sh` covers Linux and macOS-via-MacPorts.
 
 ---
 
