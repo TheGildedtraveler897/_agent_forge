@@ -31,6 +31,12 @@ If either precondition is missing, stop and return to the appropriate upstream s
 
 ## Workflow (per task)
 
+### Resumption Gate
+1. If `dev/active/<branch-slug>/cursor.json` exists, inspect it before editing.
+2. If `task_checkpoint` is present and its `task` matches the current task, show the checkpoint file, line range, test name, exit code, and recorded timestamp.
+3. Ask the operator whether to resume from the checkpoint or restart the task. If resuming, begin by opening the checkpoint file and re-running the recorded test if present.
+4. If restarting, clear the stale checkpoint with the next cursor update before writing new code.
+
 ### RED
 1. Open the test file named in the plan.
 2. Write the minimal failing test exactly as specified.
@@ -52,6 +58,8 @@ If either precondition is missing, stop and return to the appropriate upstream s
 
 ### Handoff
 - Update the task's status in the plan (for example, append `DONE` to the task ID).
+- After fresh verification passes and the task commit exists, record the commit that completed the task:
+  `python3 scripts/continuity_cursor.py task-complete --slug <branch-slug> --task <T-XX>`.
 - Hand off to `verification-gate` for fresh end-to-end evidence before committing.
 
 ## Red-flag patterns to refuse

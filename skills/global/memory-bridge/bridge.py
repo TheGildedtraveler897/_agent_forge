@@ -185,7 +185,39 @@ def managed_block(host: str, project_root: Path, canonical: str, digest: str) ->
             END,
             "",
         ]
-    )
+)
+
+
+def active_cursor_summary(project_root: Path) -> str:
+    active_dir = project_root / "dev" / "active"
+    if not active_dir.exists():
+        return ""
+    candidates: list[tuple[str, Path, dict]] = []
+    for cursor_file in active_dir.glob("*/cursor.json"):
+        try:
+            state = json.loads(cursor_file.read_text())
+        except Exception:
+            continue
+        updated = str(state.get("updated_at") or cursor_file.stat().st_mtime)
+        candidates.append((updated, cursor_file, state))
+    if not candidates:
+        return ""
+    _, cursor_file, state = sorted(candidates, key=lambda item: item[0])[-1]
+    slug = str(state.get("slug") or cursor_file.parent.name)
+    task = str(state.get("current_task") or "unknown")
+    last = str(state.get("last_completed_task") or "none")
+    next_action = " ".join(str(state.get("next_action") or "").split())
+    if len(next_action) > 80:
+        next_action = next_action[:77].rstrip() + "..."
+    line = f"- slug={slug}; task={task}; last={last}; next={next_action}"
+    return "\n\n## Active Cursor State\n\n" + line + "\n"
+
+
+def outbound_payload(project_root: Path, canonical: str) -> str:
+    summary = active_cursor_summary(project_root)
+    if summary:
+        return canonical.rstrip() + summary
+    return canonical
 
 
 def upsert_managed_block(existing: str, block: str) -> str:
@@ -290,12 +322,13 @@ def cmd_outbound(args: argparse.Namespace) -> int:
             log_event(project_root, {"action": "outbound", "host": host, "pass": False, "reason": state["last_errors"][host]})
             die(state["last_errors"][host])
 
-        digest = sha256_text(canonical)
+        payload = outbound_payload(project_root, canonical)
+        digest = sha256_text(payload)
         existing = target.read_text() if target.exists() else ""
         if managed_block_matches_hash(existing, digest):
             changed = False
         else:
-            next_body = upsert_managed_block(existing, managed_block(host, project_root, canonical, digest))
+            next_body = upsert_managed_block(existing, managed_block(host, project_root, payload, digest))
             changed = next_body != existing
             if changed:
                 atomic_write(target, next_body)
@@ -379,6 +412,48 @@ def cmd_status(args: argparse.Namespace) -> int:
     return 0
 
 
+def _writable_existing_ancestor(path: Path) -> bool:
+    candidate = path if path.exists() else path.parent
+    while not candidate.exists() and candidate != candidate.parent:
+        candidate = candidate.parent
+    return candidate.exists() and os.access(candidate, os.W_OK)
+
+
+def cmd_validate(args: argparse.Namespace) -> int:
+    project_root = Path(args.project).expanduser().resolve()
+    host = args.host
+    target = native_target(project_root, host)
+    memory = memory_path(project_root)
+    bridge_state = state_path(project_root)
+    bridge_log = log_path(project_root)
+
+    result = {
+        "pass": True,
+        "project": str(project_root),
+        "host": host,
+        "canonical_memory": str(memory),
+        "canonical_memory_readable": memory.exists() and os.access(memory, os.R_OK),
+        "native_target": str(target),
+        "target_writable": _writable_existing_ancestor(target),
+        "bridge_state": str(bridge_state),
+        "bridge_state_accessible": bridge_state.exists() and os.access(bridge_state, os.R_OK | os.W_OK),
+        "bridge_log": str(bridge_log),
+        "bridge_log_accessible": bridge_log.exists() and os.access(bridge_log, os.R_OK | os.W_OK),
+        "warnings": [],
+    }
+    for key in (
+        "canonical_memory_readable",
+        "target_writable",
+        "bridge_state_accessible",
+        "bridge_log_accessible",
+    ):
+        if not result[key]:
+            result["pass"] = False
+            result["warnings"].append(key)
+    print(json.dumps(result, sort_keys=True))
+    return 0 if result["pass"] else 1
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(prog="memory-bridge", description=__doc__)
     sub = parser.add_subparsers(dest="cmd", required=True)
@@ -392,6 +467,11 @@ def main() -> int:
     p_status = sub.add_parser("status")
     p_status.add_argument("--project", required=True, help="Path to governed project root")
     p_status.set_defaults(func=cmd_status)
+
+    p_validate = sub.add_parser("validate")
+    p_validate.add_argument("--project", required=True, help="Path to governed project root")
+    p_validate.add_argument("--host", required=True, choices=HOSTS)
+    p_validate.set_defaults(func=cmd_validate)
 
     args = parser.parse_args()
     return args.func(args)

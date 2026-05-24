@@ -49,6 +49,11 @@ function Resolve-PythonCommand {
 }
 
 $python = Resolve-PythonCommand
+$pythonExe = $python[0]
+$pythonArgs = @()
+for ($i = 1; $i -lt $python.Length; $i++) {
+    $pythonArgs += $python[$i]
+}
 
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $factoryRoot = Resolve-Path (Join-Path $scriptDir '..')
@@ -212,7 +217,7 @@ $omniFactory = Join-Path $factoryRoot 'scripts\omni_factory.py'
 
 function Invoke-Sync {
     param([Parameter(Mandatory)][string[]]$Args)
-    & $python[0] $python[1..($python.Length - 1)] @Args
+    & $pythonExe @pythonArgs @Args
     if ($LASTEXITCODE -ne 0) {
         throw "sync failed: $($Args -join ' ')"
     }

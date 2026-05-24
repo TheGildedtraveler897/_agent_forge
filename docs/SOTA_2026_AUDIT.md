@@ -261,10 +261,62 @@ Each drift surface below is being addressed in the current sprint or explicitly 
 
 ---
 
-## Section 7 — Revision History
+## Section 7 — 2026-05-23 Deep Audit Delta
+
+This section amends the 2026-05-22 baseline without rewriting it. Treat the items below as the current correction layer for vendor-surface decisions until the next dated audit.
+
+### 7.1 Claude hooks are broader than the baseline table
+
+Claude Code's current hooks reference enumerates 27+ lifecycle events, including newer or under-modeled events such as `Setup`, `InstructionsLoaded`, `UserPromptExpansion`, `PostToolUseFailure`, `PostToolBatch`, `PermissionDenied`, `TaskCreated`, `TaskCompleted`, `StopFailure`, `TeammateIdle`, `ConfigChange`, `CwdChanged`, `FileChanged`, `WorktreeCreate`, `WorktreeRemove`, `Elicitation`, and `ElicitationResult`, in addition to the events captured in the earlier cross-vendor table.
+
+**Agent Forge implication:** `scripts/omni_factory.py:_EVENT_ALIASES` intentionally covers a broad canonical set, but `policies/hooks.json` exercises only a small live subset. A future hook-expansion sprint should distinguish "known to render" from "actively exercised by policy" and add fixtures before enabling new lifecycle controls.
+
+**Primary source:** [Claude Code hooks reference](https://code.claude.com/docs/en/hooks)
+
+### 7.2 Gemini hook semantics are control-flow primitives, not just aliases
+
+Gemini's hook docs demonstrate four lifecycle controls that require first-class modeling:
+
+- `BeforeAgent` can inject additional context before the agent loop starts.
+- `BeforeToolSelection` can set tool mode (`AUTO`, `ANY`, `NONE`) and whitelist candidate tools before the model chooses.
+- `AfterModel` observes model request/response content and can support streaming-era logging or redaction patterns.
+- `AfterAgent` can validate the final response and block it to trigger a retry.
+
+**Agent Forge implication:** The canonical schema already declares these Gemini-only event names with `None` aliases for Claude and Codex. The missing piece is policy coverage: no active hook currently exercises those records, so runtime assurance is shallow for these semantics.
+
+**Primary source:** [Gemini CLI writing hooks](https://github.com/google-gemini/gemini-cli/blob/main/docs/hooks/writing-hooks.md)
+
+### 7.3 Codex subagent and MCP config details need renderer follow-up
+
+Codex subagent files are TOML and current docs name optional fields such as `model_reasoning_effort`, `sandbox_mode`, `mcp_servers`, and `skills.config`. Codex MCP configuration uses `[mcp_servers.<name>]` tables in `config.toml`, including nested env/header/tool-policy tables.
+
+**Agent Forge implication:** The previous "flat TOML" conclusion remains directionally correct, but Agent Forge's renderer/docs still need explicit coverage for `model_reasoning_effort` and per-agent `mcp_servers` inheritance so future authors do not assume Claude/Gemini frontmatter fields map directly.
+
+**Primary sources:** [Codex subagents](https://developers.openai.com/codex/subagents), [Codex MCP](https://developers.openai.com/codex/mcp)
+
+### 7.4 MCP convergence is protocol-level; host config files diverge
+
+MCP 2025-11-25 standardizes JSON-RPC 2.0 communication, server features (Resources, Prompts, Tools), and client features (Sampling, Roots, Elicitation). That does not mean host configuration files share one schema. Claude Code project MCP uses `.mcp.json` with `mcpServers`, Codex uses TOML `[mcp_servers.<name>]` tables, and Gemini uses `mcpServers` in `.gemini/settings.json`.
+
+**Agent Forge implication:** `global-mcp.json` remains the correct canonical inventory, but docs should say "rendered to host-native config shapes" rather than "field names are identical across hosts." The earlier 2026-05-22 claim was overbroad at the config-file layer.
+
+**Primary sources:** [MCP specification 2025-11-25](https://modelcontextprotocol.io/specification/latest), [Claude Code MCP](https://code.claude.com/docs/en/mcp), [Codex MCP](https://developers.openai.com/codex/mcp), [Gemini CLI configuration](https://github.com/google-gemini/gemini-cli/blob/main/docs/cli/configuration.md)
+
+### 7.5 Prompt caching is a load-bearing cost doctrine
+
+Anthropic's prompt caching docs make stable-prefix design operational. Cache prefixes are built over `tools`, then `system`, then `messages`; static content belongs before variable content, and the cache breakpoint should sit on the last reusable block. Timestamps, request IDs, session-unique labels, and other per-turn values before the breakpoint create new hashes and destroy cache reuse.
+
+**Agent Forge implication:** Progressive disclosure, tiered memory, and bounded-decay docs already reduce context load. The new doctrine is economic: keep host boot prompts, tool definitions, and canonical skill summaries stable and push volatile cursor/task details later. This should inform future renderer changes and API-harness integrations.
+
+**Primary source:** [Anthropic prompt caching](https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching)
+
+---
+
+## Section 8 — Revision History
 
 | Date | Editor | Change |
 |---|---|---|
+| 2026-05-23 | Codex (under operator-approved deep-refactor plan) | Added deep audit delta: Claude hook breadth, Gemini hook control-flow semantics, Codex `model_reasoning_effort` / `mcp_servers` details, MCP config-file divergence, and Anthropic prompt-caching doctrine. |
 | 2026-05-22 | Opus 4.7 (under operator approval) | Initial audit. Phase 1 research baseline captured; four drift surfaces identified; six watch-items recorded; KAIROS/dream/Stanford-Fudan-collab claims rejected with evidence. |
 
 When updating this file, append a row above. Do not silently rewrite earlier claims — the audit history is itself a load-bearing artifact for future agents.

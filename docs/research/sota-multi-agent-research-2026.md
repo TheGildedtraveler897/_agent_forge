@@ -1,6 +1,6 @@
 # SOTA 2026 Multi-Agent Research
 
-*Citation hygiene last reviewed: 2026-05-22. Cross-referenced against `docs/SOTA_2026_AUDIT.md` which is the load-bearing primary-source anchor for SOTA decisions; any new citation added here should also land there.*
+*Citation hygiene last reviewed: 2026-05-23. Cross-referenced against `docs/SOTA_2026_AUDIT.md` which is the load-bearing primary-source anchor for SOTA decisions; any new citation added here should also land there.*
 
 This document serves as the foundational academic and industry research driving "The Great Consolidation" of Agent Forge. It anchors the architectural decisions to empirical data regarding LLM performance, tool design, and context management.
 
@@ -37,3 +37,14 @@ This document serves as the foundational academic and industry research driving 
 *   **Architectural Mandate:** Upgrading the `subagent-dispatcher` from a simple parallel executor to a DAG parser. It must read `teams/*.json` blueprints and autonomously transition between the defined roles (e.g., Discuss -> Plan -> Execute -> Review).
 **Links:**
 *   [LangGraph Documentation](https://langchain-ai.github.io/langgraph/)
+
+## 4. Prompt Caching & Stable Prefix Design
+**Concept:** Long-running agents repeatedly send large stable prefixes: tool definitions, system/developer instructions, durable doctrine, memory summaries, and examples. Prompt caching makes those stable prefixes cheaper to reuse, but only when they remain byte-stable before the cache breakpoint.
+**Primary Source:** Anthropic, *Prompt caching* (reviewed 2026-05-23).
+**Key Findings:**
+*   Cache prefixes are created in the order `tools`, `system`, then `messages`, so request structure matters.
+*   Static content should appear before variable per-request content; the cache breakpoint belongs at the end of the reusable prefix.
+*   Timestamps, request IDs, and other turn-specific material before the breakpoint invalidate cache reuse because the prefix hash changes.
+*   **Architectural Mandate:** Keep Agent Forge doctrine and generated host boot content stable at the top of prompts where possible. Put volatile cursor state, rate-limit handoff notes, and per-turn user detail after reusable instructions.
+**Links:**
+*   [Anthropic Prompt Caching](https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching)

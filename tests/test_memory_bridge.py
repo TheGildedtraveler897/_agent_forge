@@ -8,6 +8,7 @@ import sys
 import tempfile
 import unittest
 from argparse import Namespace
+from datetime import datetime, timezone
 from pathlib import Path
 
 
@@ -125,6 +126,51 @@ class MemoryBridgeTests(unittest.TestCase):
             self.assertEqual(bridge_state["version"], 1)
             self.assertEqual(set(bridge_state["native_targets"]), {"claude", "codex", "gemini"})
             self.assertTrue((project / ".forge_state" / "bridge.log").exists())
+
+    def test_validate_confirms_canonical_memory_and_bridge_state_are_accessible(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp) / "example-project"
+            project.mkdir()
+            state: dict[str, object] = {}
+            omni_factory.sync_memory(project, state)
+
+            buffer = io.StringIO()
+            with contextlib.redirect_stdout(buffer):
+                result = bridge.cmd_validate(Namespace(project=str(project), host="codex"))
+
+            self.assertEqual(result, 0)
+            payload = json.loads(buffer.getvalue())
+            self.assertTrue(payload["pass"])
+            self.assertTrue(payload["canonical_memory_readable"])
+            self.assertTrue(payload["bridge_state_accessible"])
+            self.assertTrue(payload["bridge_log_accessible"])
+            self.assertTrue(payload["target_writable"])
+
+    def test_outbound_appends_active_cursor_state_summary(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            project = self.make_project(tmp)
+            cursor_dir = project / "dev" / "active" / "demo"
+            cursor_dir.mkdir(parents=True)
+            (cursor_dir / "cursor.json").write_text(
+                json.dumps(
+                    {
+                        "slug": "demo",
+                        "current_task": "T-04",
+                        "last_completed_task": "T-03",
+                        "next_action": "validate bridge",
+                        "updated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+                    }
+                )
+                + "\n"
+            )
+
+            run_silently(bridge.cmd_outbound, Namespace(project=str(project), host="codex"))
+
+            target = bridge.native_target(project, "codex")
+            body = target.read_text()
+            self.assertIn("Active Cursor State", body)
+            self.assertIn("demo", body)
+            self.assertIn("T-04", body)
 
 
 if __name__ == "__main__":

@@ -22,7 +22,7 @@ A team in this factory is a portable role contract. It lives at `teams/<name>.js
 
 ## bootstrap
 
-Bootstrapping is the one-time setup. `scripts/bootstrap-workstation.sh` installs the three host CLIs (Claude / Codex / Gemini) on a fresh machine. `scripts/bootstrap-project.sh --name <foo>` creates a new governed project with the minimum required files and immediately syncs Claude / Codex / Gemini surfaces into it. `scripts/deploy-and-bootstrap.sh` is the one-shot operator path from a freshly unpacked suitcase: deploys the factory, then offers to run the workstation bootstrap.
+Bootstrapping is the one-time setup. `scripts/bootstrap-workstation.sh` installs the three host CLIs (Claude / Codex / Gemini) on a fresh Linux or macOS machine; `scripts/bootstrap-workstation.ps1` performs the Windows prerequisite check and can install common tools through `winget` when available. `scripts/bootstrap-project.sh --name <foo>` creates a new governed project with the minimum required files and immediately syncs Claude / Codex / Gemini surfaces into it. `scripts/deploy-and-bootstrap.sh` is the one-shot Linux/macOS operator path from a freshly unpacked suitcase; `scripts/deploy-and-bootstrap.ps1` is the Windows path that unblocks and expands the ZIP before deployment.
 
 ---
 
@@ -76,13 +76,23 @@ The factory writes to four different config directory names depending on the hos
 
 ## mcp
 
-MCP (Model Context Protocol) is the open standard that lets an AI agent call external tools — GitHub, Slack, your internal services. The current spec is [MCP 2025-11-25](https://modelcontextprotocol.io/specification/latest) and all three host CLIs implement it: JSON-RPC 2.0 transport, three server feature types (Resources, Prompts, Tools), identical field names across hosts. The factory declares shared MCP servers in `global-mcp.json`. When the factory syncs, it writes each host's native MCP config: Claude `<project>/.mcp.json`, Codex `<project>/.codex/config.toml`, Gemini `<project>/.gemini/settings.json`. The seeded `forge-factory` stdio server exposes `read_handoff`; other shared MCP servers can be added to the canonical file and will render outward to all three hosts.
+MCP (Model Context Protocol) is the open standard that lets an AI agent call external tools — GitHub, Slack, your internal services. The current spec is [MCP 2025-11-25](https://modelcontextprotocol.io/specification/latest) and all three host CLIs implement the same protocol concepts: JSON-RPC 2.0 transport, server features (Resources, Prompts, Tools), and client features (Sampling, Roots, Elicitation). Host config files are not identical: Claude reads project MCP from `<project>/.mcp.json`, Codex renders MCP as `[mcp_servers.<name>]` TOML tables in `<project>/.codex/config.toml`, and Gemini uses an `mcpServers` object in `<project>/.gemini/settings.json`. The factory declares shared MCP servers in `global-mcp.json` and translates that one canonical record into each native shape.
 
 ---
 
 ## memory
 
 The shared memory layer is one Markdown file per project, at `<project>/MEMORY.md`. Five sections: build commands, project quirks, active tasks, recent decisions, known failures. The schema is defined in `policies/memory.json`. All three host CLIs read this file. The `memory-archivist` skill (`append`/`validate`/`summary`) writes to it; entries are timestamped and tagged by host. Append-first; secrets-deny at write time. Only Claude has documented native auto-memory; for Codex and Gemini the factory bridges to sidecar files (`.codex/memory/AGENTS_MEMORY.md`, `.gemini/memory/MEMORY.md`) — outbound from canonical works on all three, inbound has a true native target only on Claude.
+
+---
+
+## prompt-caching
+
+Prompt caching is a Claude API feature that lets repeated prompt prefixes be reused instead of paid and processed as fresh input every time. Anthropic documents automatic caching and explicit cache breakpoints in its [prompt caching guide](https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching). For long-running agents, this is a cost and latency lever because the stable parts of a request — tool definitions, system instructions, project context, and durable examples — can be cached while the new user message remains uncached.
+
+The core design rule is stability before variability. Put the most stable material first and mark the end of the reusable prefix: tools, system instructions, then stable messages or examples, then per-request material. A small change before the cache breakpoint creates a different prefix hash, so cache-friendly harnesses keep doctrine, tools, and reusable context byte-stable across turns.
+
+Avoid putting timestamps, request IDs, random session labels, or other per-turn data near the top of a request. Put variable content after the cached prefix. In Agent Forge terms, canonical doctrine and progressive-disclosure skill summaries are good cache-prefix candidates; live task notes, cursor snippets, and user-specific one-off details belong later.
 
 ---
 
@@ -100,12 +110,12 @@ A skill is a packaged, reusable workflow. It lives at `skills/global/<name>/SKIL
 
 ## state-of-the-field
 
-*Last reviewed against vendor docs: 2026-05-22. Re-verify before relying on specifics. The source-of-truth for what was actually checked is `docs/SOTA_2026_AUDIT.md`.*
+*Last reviewed against vendor docs: 2026-05-23. Re-verify before relying on specifics. The source-of-truth for what was actually checked is `docs/SOTA_2026_AUDIT.md`.*
 
 **What has converged across Claude / Codex / Gemini (the cross-vendor SOTA):**
 
 - **Skills** — all three vendors adopted the [agentskills.io](https://agentskills.io) open standard. `SKILL.md` with YAML frontmatter, progressive disclosure (`name` + `description` load eagerly, full body lazily). Optional siblings: `scripts/`, `references/`, `assets/`.
-- **MCP** — all three implement the [Model Context Protocol 2025-11-25 spec](https://modelcontextprotocol.io/specification/latest). JSON-RPC 2.0 transport. Identical field names across hosts. Per-host config locations differ (`.mcp.json` / `.codex/config.toml` / `.gemini/settings.json`), but the server-declaration schema is the same.
+- **MCP** — all three implement the [Model Context Protocol 2025-11-25 spec](https://modelcontextprotocol.io/specification/latest). JSON-RPC 2.0 transport, Resources / Prompts / Tools server features, and Sampling / Roots / Elicitation client features are converged at the protocol level. Per-host config files still diverge: Claude project `.mcp.json`, Codex `[mcp_servers.<name>]` TOML tables in `.codex/config.toml`, and Gemini `mcpServers` objects in `.gemini/settings.json`.
 
 **What has NOT converged:**
 
@@ -119,6 +129,7 @@ A skill is a packaged, reusable workflow. It lives at `skills/global/<name>/SKIL
 - *Long-context degradation is real.* [Context Rot (Chroma, July 2025)](https://research.trychroma.com/context-rot) and [Lost in the Middle (Liu et al., TACL 2024, arXiv 2307.03172)](https://arxiv.org/abs/2307.03172) show that LLM performance drops as input grows, even on simple retrieval. The factory's response is tiered memory + bounded-decay distillation: append-first in `LESSONS_LEARNED.md` and `HANDOFF.md`, archive-on-promote via `lesson-distiller` and `handoff-archiver`. Keep the most important instructions at the top of canonical files; the middle of long contexts is where attention degrades.
 - *Multi-turn agents forget.* [LLMs Get Lost in Multi-Turn Conversation (Laban et al., ICLR 2026, arXiv 2505.06120)](https://arxiv.org/abs/2505.06120) measured a 39% average performance drop in multi-turn vs single-turn tasks. The factory's response is plan persistence (`docs/plans/<branch-slug>.md`) and subagent dispatch with fresh context.
 - *Tool overlap hurts agents.* [SWE-agent (NeurIPS 2024)](https://proceedings.neurips.cc/paper_files/paper/2024/file/5a7c947568c1b1328ccc5230172e1e7c-Paper-Conference.pdf) showed restricting agents to rigid, single-purpose tools improved GPT-4 on SWE-bench Lite by 10.7 percentage points. The factory's recent "great consolidation" (commit `efc74b8`) merged overlapping planner / reviewer skills with this finding as the warrant.
+- *Cost lever available today: prompt caching.* Anthropic's [prompt caching guide](https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching) makes stable-prefix design operational: keep tools, system instructions, and reusable context stable before per-request content, then cache that prefix. See `prompt-caching` for the operator-level explanation.
 
 **Why this matters to you, the operator:** the rate of change in this field is high. A vendor doc you read three months ago may no longer be accurate. `docs/SOTA_2026_AUDIT.md` is dated and re-verifiable; when in doubt, re-check primary sources before acting on a memory of how things used to work.
 
@@ -126,7 +137,7 @@ A skill is a packaged, reusable workflow. It lives at `skills/global/<name>/SKIL
 
 ## suitcase
 
-The "suitcase" is the portable export of the factory you can carry to a fresh machine or VM without copying secrets or per-machine residue. `scripts/factory-export.sh` produces `agent-forge-suitcase-<timestamp>.tar.gz` (and `.zip`) in `exports/`. The bundle includes `_agent_forge/` canonical sources, the sync/bootstrap/validation scripts, and the doctrine docs — no `.env`, no auth tokens, no machine-local caches. On the target machine, `./_agent_forge/scripts/deploy-and-bootstrap.sh` is the one-shot path: deploys the factory into `~/Projects`, syncs the global host surfaces, and offers to run the workstation bootstrap (which installs the three host CLIs). The host-specific surfaces (`<project>/.claude/`, `.codex/`, `.gemini/`) and per-project `MEMORY.md` are re-rendered on first sync; they are NOT carried in the suitcase. This is the canonical-first doctrine in practice: ship the source of truth; let the engine generate the host views fresh on the target.
+The "suitcase" is the portable export of the factory you can carry to a fresh machine or VM without copying secrets or per-machine residue. `scripts/factory-export.sh` produces `agent-forge-suitcase-<timestamp>.tar.gz` (and `.zip`) in `exports/`. The bundle includes `_agent_forge/` canonical sources, the sync/bootstrap/validation scripts, and the doctrine docs — no `.env`, no auth tokens, no machine-local caches. On Linux/macOS, run `./_agent_forge/scripts/deploy-and-bootstrap.sh`. On Windows, run the sidecar `agent-forge-suitcase-<timestamp>-deploy-and-bootstrap.ps1` against the ZIP so PowerShell unblocks the transferred file before extraction. The host-specific surfaces (`<project>/.claude/`, `.codex/`, `.gemini/`) and per-project `MEMORY.md` are re-rendered on first sync; they are NOT carried in the suitcase. This is the canonical-first doctrine in practice: ship the source of truth; let the engine generate the host views fresh on the target.
 
 ---
 

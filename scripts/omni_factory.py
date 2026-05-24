@@ -346,12 +346,14 @@ def validate_skill_frontmatter() -> tuple[list[str], list[str]]:
 
         targets = meta.get("targets")
         hosts = meta.get("hosts")
-        if targets is None and hosts is None:
+        if hosts is not None:
+            errors.append(
+                f"{rel} uses legacy 'hosts'; migrate to canonical 'targets' "
+                "before the 2026-06-30 sunset"
+            )
+        if targets is None:
             errors.append(f"{rel} frontmatter missing required field 'targets'")
             continue
-        if targets is None and hosts is not None:
-            warnings.append(f"{rel} uses legacy 'hosts'; prefer canonical 'targets'")
-            targets = hosts
         if not isinstance(targets, list) or not targets or not all(isinstance(item, str) for item in targets):
             errors.append(f"{rel} frontmatter 'targets' must be a non-empty string list")
             continue
@@ -359,6 +361,93 @@ def validate_skill_frontmatter() -> tuple[list[str], list[str]]:
         if invalid_targets:
             errors.append(f"{rel} frontmatter has invalid targets: {invalid_targets}")
 
+    return errors, warnings
+
+
+def validate_projects_catalog() -> tuple[list[str], list[str]]:
+    errors: list[str] = []
+    warnings: list[str] = []
+    try:
+        payload = load_json(PROJECTS_CATALOG_PATH)
+    except Exception as exc:
+        return [f"projects.json does not parse: {exc}"], warnings
+
+    projects = payload.get("governed_projects")
+    if not isinstance(projects, list):
+        errors.append("projects.json governed_projects must be a list")
+        return errors, warnings
+    if not projects:
+        warnings.append(
+            "projects.json governed_projects is empty. Bootstrap a project with "
+            "scripts/bootstrap-project.sh --name <name>."
+        )
+        return errors, warnings
+
+    seen: set[str] = set()
+    for entry in projects:
+        if not isinstance(entry, dict):
+            errors.append(f"projects.json governed_projects entry must be an object: {entry!r}")
+            continue
+        name = entry.get("name")
+        root = entry.get("root")
+        if not name:
+            errors.append(f"projects.json governed project missing name: {entry}")
+        elif name in seen:
+            errors.append(f"projects.json duplicate governed project: {name}")
+        else:
+            seen.add(name)
+        if not root:
+            errors.append(f"projects.json governed project missing root: {entry}")
+        required = entry.get("required_files", [])
+        if required is not None and not isinstance(required, list):
+            errors.append(f"projects.json[{name}] required_files must be a list")
+    return errors, warnings
+
+
+def _parse_frontmatter_datetime(meta: dict[str, Any], *keys: str) -> datetime | None:
+    for key in keys:
+        value = meta.get(key)
+        if not isinstance(value, str) or not value:
+            continue
+        try:
+            return datetime.fromisoformat(value.replace("Z", "+00:00"))
+        except ValueError:
+            continue
+    return None
+
+
+def validate_plan_hygiene(now: datetime | None = None) -> tuple[list[str], list[str]]:
+    errors: list[str] = []
+    warnings: list[str] = []
+    now = now or datetime.now(timezone.utc)
+    plans_dir = ROOT / "docs" / "plans"
+    if plans_dir.exists():
+        for plan_path in sorted(plans_dir.glob("*.md")):
+            if plan_path.name == ".gitkeep":
+                continue
+            rel = plan_path.relative_to(ROOT).as_posix()
+            try:
+                meta = parse_frontmatter(plan_path.read_text())
+            except Exception as exc:
+                errors.append(f"{rel} frontmatter does not parse: {exc}")
+                continue
+            status = str(meta.get("status") or "").lower()
+            if status in {"completed", "superseded"}:
+                continue
+            updated = _parse_frontmatter_datetime(meta, "last_updated", "created")
+            if updated is None:
+                warnings.append(f"plan file missing parseable timestamp: {rel}")
+                continue
+            age_days = (now - updated).days
+            if age_days > 7:
+                warnings.append(f"stale plan file ({age_days} days old, status={status or 'unknown'}): {rel}")
+
+    memory_path = ROOT / "MEMORY.md"
+    if memory_path.exists():
+        body = memory_path.read_text()
+        for match in sorted(set(re.findall(r"docs/plans/[A-Za-z0-9._/\-]+\.md", body))):
+            if not (ROOT / match).exists():
+                warnings.append(f"stale MEMORY.md active_tasks pointer: {match}")
     return errors, warnings
 
 
@@ -834,6 +923,15 @@ def validate_mcp_inventory() -> tuple[list[str], list[str]]:
 HOOK_TARGETS = ("claude", "codex", "gemini")
 HOOK_HANDLER_TYPES = ("command", "http", "mcp_tool", "prompt", "agent")
 
+# Canonical hook names cover both events currently exercised by
+# policies/hooks.json and reserved host-specific lifecycle points. Aliases set
+# to None mean the host does not support that lifecycle point and the renderer
+# must skip the record for that host. Gemini-only BeforeAgent,
+# BeforeToolSelection, BeforeModel, AfterModel, and AfterAgent are intentionally
+# represented here because they control prompt admission, tool availability,
+# model request/stream handling, and final-response validation. When adding an
+# event, update this allow-list, policies/hooks.json targets, HOST_INTEGRATIONS,
+# and validate-triad-runtime expectations in the same change.
 _EVENT_ALIASES: dict[str, dict[str, str | None]] = {
     "claude": {
         "pre_tool_use": "PreToolUse",
@@ -1536,8 +1634,8 @@ def sync_claude(project_name: str | None, projects_root: Path, claude_home: Path
             name = f"{capability.capability_id}.md"
             user_agents[name] = render_claude_agent(capability, read_path)
 
-    sync_symlink_dir(claude_home / "skills", user_skills)
     sync_managed_dir(claude_home / "skills", user_commands, CLAUDE_COMMAND_MARKER)
+    sync_symlink_dir(claude_home / "skills", user_skills)
     sync_managed_dir(claude_home / "agents", user_agents, CLAUDE_AGENT_MARKER)
 
     if project_name:
@@ -1773,6 +1871,18 @@ def verify() -> int:
     for message in skill_metadata_errors:
         fail(message)
     for message in skill_metadata_warnings:
+        warn(message)
+
+    project_errors, project_warnings = validate_projects_catalog()
+    for message in project_errors:
+        fail(message)
+    for message in project_warnings:
+        warn(message)
+
+    plan_errors, plan_warnings = validate_plan_hygiene()
+    for message in plan_errors:
+        fail(message)
+    for message in plan_warnings:
         warn(message)
 
     capabilities: list[Capability] = []

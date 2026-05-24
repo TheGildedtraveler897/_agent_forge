@@ -4,6 +4,7 @@ import importlib.util
 import contextlib
 import io
 import json
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -88,6 +89,64 @@ class ContinuityCursorTests(unittest.TestCase):
 
             with self.assertRaises(FileNotFoundError):
                 cursor.load_cursor(project, "saved")
+
+    def test_checkpoint_records_precise_resume_state(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp)
+            plan = project / "docs" / "plans" / "demo.md"
+            target = project / "scripts" / "thing.py"
+            plan.parent.mkdir(parents=True)
+            target.parent.mkdir(parents=True)
+            plan.write_text("# Demo Plan\n")
+            target.write_text("print('demo')\n")
+
+            run_silently(
+                cursor.cmd_start,
+                Namespace(root=str(project), slug="demo", plan=str(plan), task="T-03", next_action="resume work"),
+            )
+            run_silently(
+                cursor.cmd_checkpoint,
+                Namespace(
+                    root=str(project),
+                    slug="demo",
+                    file=str(target),
+                    line_range="1,4",
+                    test_name="test_demo",
+                    exit_code=1,
+                ),
+            )
+
+            state = json.loads((project / "dev" / "active" / "demo" / "cursor.json").read_text())
+            self.assertEqual(state["task_checkpoint"]["task"], "T-03")
+            self.assertEqual(state["task_checkpoint"]["file"], "scripts/thing.py")
+            self.assertEqual(state["task_checkpoint"]["line_range"], {"start": 1, "end": 4})
+            self.assertEqual(state["task_checkpoint"]["test_name"], "test_demo")
+            self.assertEqual(state["task_checkpoint"]["exit_code"], 1)
+
+    def test_task_complete_records_short_commit_hash(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp)
+            subprocess.run(["git", "init"], cwd=project, check=True, stdout=subprocess.DEVNULL)
+            subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=project, check=True)
+            subprocess.run(["git", "config", "user.name", "Test User"], cwd=project, check=True)
+            (project / "README.md").write_text("demo\n")
+            subprocess.run(["git", "add", "README.md"], cwd=project, check=True)
+            subprocess.run(["git", "commit", "-m", "demo"], cwd=project, check=True, stdout=subprocess.DEVNULL)
+
+            plan = project / "docs" / "plans" / "demo.md"
+            plan.parent.mkdir(parents=True)
+            plan.write_text("# Demo Plan\n")
+            run_silently(
+                cursor.cmd_start,
+                Namespace(root=str(project), slug="demo", plan=str(plan), task="T-01", next_action="finish"),
+            )
+            run_silently(cursor.cmd_task_complete, Namespace(root=str(project), slug="demo", task="T-01"))
+
+            state = json.loads((project / "dev" / "active" / "demo" / "cursor.json").read_text())
+            expected = subprocess.check_output(["git", "rev-parse", "--short", "HEAD"], cwd=project, text=True).strip()
+            self.assertEqual(state["T-01_commit"], expected)
+            self.assertEqual(state["task_status"]["T-01"], "done")
+            self.assertEqual(state["last_completed_task"], "T-01")
 
 
 if __name__ == "__main__":

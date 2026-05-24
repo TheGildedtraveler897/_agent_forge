@@ -24,6 +24,46 @@ This file is the append-first knowledge anchor for Agent Forge. Validated workar
 
 ## Entries
 
+### 2026-05-23 - Windows ZIP deploy must unblock before extraction
+
+- `Date:` 2026-05-23
+- `Context:` Fresh Windows VM smoke testing showed Explorer's "Extract All" path could leave an incomplete `_agent_forge\` tree after a transferred ZIP, causing `deploy-factory.ps1` to fail because docs, policies, and top-level files were missing.
+- `Lesson:` Native Windows suitcase deploys need a PowerShell entry point that calls `Unblock-File` on the ZIP before extraction, warns on long paths, validates required top-level contents, recursively unblocks the extracted tree, and only then runs the deploy script.
+- `Architectural Decision:` Ship `scripts/deploy-and-bootstrap.ps1` as the Windows-first entry point and generate a matching sidecar script next to every ZIP export. Treat Explorer extraction as a fallback, not the runbook path.
+- `Evidence:` `scripts/deploy-and-bootstrap.ps1`, `scripts/deploy-factory.ps1`, `scripts/factory-export.sh`, `BUNDLE_README.md`, `docs/QUICKSTART.md`, `docs/DEMO_PATH.md`, `tests/test_windows_powershell_scripts.py`, and `runtime/validation/windows-2026-05-23.md`.
+- `Promotion Target:` `docs/QUICKSTART.md` and `BUNDLE_README.md` already promoted the runbook.
+- `Status:` promoted
+
+### 2026-05-23 - Codex subagent TOML details need explicit renderer coverage
+
+- `Date:` 2026-05-23
+- `Context:` The deep SOTA audit re-checked current Codex subagent docs and confirmed `model_reasoning_effort`, `sandbox_mode`, `mcp_servers`, and `skills.config` are documented as supported custom-agent TOML fields.
+- `Lesson:` "Codex uses TOML" is not enough detail for future renderer work. The factory should document and eventually render the fields that control reasoning effort and per-agent MCP inheritance, instead of relying on Claude/Gemini-style frontmatter assumptions.
+- `Architectural Decision:` Keep current flat TOML rendering for now, but track explicit Codex field coverage as follow-on work before claiming full 2026 Codex parity.
+- `Evidence:` `docs/SOTA_2026_AUDIT.md` § 7.3 and `skills/global/onboarding-guide/EXPLAINERS.md` state-of-the-field refresh.
+- `Promotion Target:` `docs/HOST_INTEGRATIONS.md` § Codex subagent rendering.
+- `Status:` active
+
+### 2026-05-23 - Prompt caching is a SOTA cost doctrine, not optional trivia
+
+- `Date:` 2026-05-23
+- `Context:` The deeper 2026 SOTA pass found Anthropic's prompt-caching guidance was absent from Agent Forge docs even though the factory already invests heavily in progressive disclosure and stable doctrine files.
+- `Lesson:` Long-context agent systems should structure stable prefixes deliberately: tools, system/developer instructions, and durable context before per-turn data. Timestamps, IDs, cursor snippets, and other volatile material near the top destroy cache reuse.
+- `Architectural Decision:` Treat stable-prefix ordering as a design rule for future API harnesses, renderer output, and memory summaries. Keep volatile continuity state later in prompts or host-local sidecars.
+- `Evidence:` `docs/SOTA_2026_AUDIT.md` § 7.5, `skills/global/onboarding-guide/EXPLAINERS.md` `prompt-caching`, and `docs/research/sota-multi-agent-research-2026.md` § 4.
+- `Promotion Target:` Future renderer/API-harness docs when those layers are introduced.
+- `Status:` active
+
+### 2026-05-23 - Export bundles must exclude Python bytecode caches
+
+- `Date:` 2026-05-23
+- `Context:` Final COI grep against the regenerated onboarding export returned binary matches inside `__pycache__/*.pyc` files. The matches came from machine-local path strings compiled into bytecode, not from source text.
+- `Lesson:` `.gitignore` is not a packaging boundary. Export scripts must explicitly exclude runtime and cache artifacts, especially bytecode files that can embed absolute source paths.
+- `Architectural Decision:` `scripts/factory-export.sh` now excludes `__pycache__`, `*.pyc`, `*.pyo`, and common Python tool caches before building `.tar.gz` and `.zip` artifacts.
+- `Evidence:` `runtime/validation/linux-2026-05-23/export-coi-grep.*` after the fix, `scripts/factory-export.sh`, and `runtime/validation/linux-2026-05-23/bundle-check.md`.
+- `Promotion Target:` `scripts/factory-export.sh` itself now enforces the rule.
+- `Status:` promoted
+
 ### 2026-05-22 - MCP stdio transport must not use sh-c on Windows
 
 - `Date:` 2026-05-22

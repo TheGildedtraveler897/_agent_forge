@@ -38,6 +38,22 @@
   ],
   "claude": [
     {
+      "id": "memory-bridge-validate-claude",
+      "description": "No-fail preflight for Claude memory bridge state before outbound sync.",
+      "event": "session_start",
+      "matcher": "",
+      "handler": {
+        "type": "command",
+        "command": "python3 ~/Projects/_agent_forge/skills/global/memory-bridge/bridge.py validate --project . --host claude || true"
+      },
+      "targets": [
+        "claude"
+      ],
+      "async": true,
+      "timeout_ms": 5000,
+      "status_message": "memory-bridge validation for Claude"
+    },
+    {
       "id": "memory-bridge-outbound-claude",
       "description": "Bridge canonical MEMORY.md into Claude's native machine-local auto-memory at session start.",
       "event": "session_start",
@@ -68,76 +84,25 @@
       "async": true,
       "timeout_ms": 30000,
       "status_message": "memory-bridge inbound from Claude auto-memory"
-    },
-    {
-      "id": "example-http-audit",
-      "enabled": false,
-      "description": "Dormant v3 schema example for Claude HTTP hook rendering.",
-      "event": "post_tool_use",
-      "matcher": "Write|Edit",
-      "handler": {
-        "type": "http",
-        "url": "http://127.0.0.1:9/agent-forge/example-hook",
-        "headers": {},
-        "allowed_env_vars": []
-      },
-      "targets": [
-        "claude"
-      ],
-      "timeout_ms": 30000
-    },
-    {
-      "id": "example-mcp-tool-audit",
-      "enabled": false,
-      "description": "Dormant v3 schema example for Claude MCP tool hook rendering.",
-      "event": "post_tool_use",
-      "matcher": "Write|Edit",
-      "handler": {
-        "type": "mcp_tool",
-        "server": "example",
-        "tool": "audit_file",
-        "input": {
-          "file_path": "${tool_input.file_path}"
-        }
-      },
-      "targets": [
-        "claude"
-      ],
-      "timeout_ms": 30000
-    },
-    {
-      "id": "example-prompt-review",
-      "enabled": false,
-      "description": "Dormant v3 schema example for Claude prompt hook rendering.",
-      "event": "stop",
-      "matcher": "",
-      "handler": {
-        "type": "prompt",
-        "prompt": "Review the hook input JSON and return a yes/no JSON decision.",
-        "model": "fast"
-      },
-      "targets": [
-        "claude"
-      ],
-      "timeout_ms": 30000
-    },
-    {
-      "id": "example-agent-review",
-      "enabled": false,
-      "description": "Dormant v3 schema example for Claude agent hook rendering.",
-      "event": "stop",
-      "matcher": "",
-      "handler": {
-        "type": "agent",
-        "prompt": "Inspect the changed files and report whether a policy issue exists."
-      },
-      "targets": [
-        "claude"
-      ],
-      "timeout_ms": 60000
     }
   ],
   "codex": [
+    {
+      "id": "memory-bridge-validate-codex",
+      "description": "No-fail preflight for Codex memory bridge state before outbound sync.",
+      "event": "session_start",
+      "matcher": "",
+      "handler": {
+        "type": "command",
+        "command": "python3 ~/Projects/_agent_forge/skills/global/memory-bridge/bridge.py validate --project . --host codex || true"
+      },
+      "targets": [
+        "codex"
+      ],
+      "async": true,
+      "timeout_ms": 5000,
+      "status_message": "memory-bridge validation for Codex"
+    },
     {
       "id": "memory-bridge-outbound-codex",
       "description": "Bridge canonical MEMORY.md into a Codex-readable project sidecar at session start.",
@@ -172,6 +137,22 @@
     }
   ],
   "gemini": [
+    {
+      "id": "memory-bridge-validate-gemini",
+      "description": "No-fail preflight for Gemini memory bridge state before outbound sync.",
+      "event": "session_start",
+      "matcher": "",
+      "handler": {
+        "type": "command",
+        "command": "python3 ~/Projects/_agent_forge/skills/global/memory-bridge/bridge.py validate --project . --host gemini || true"
+      },
+      "targets": [
+        "gemini"
+      ],
+      "async": true,
+      "timeout_ms": 5000,
+      "status_message": "memory-bridge validation for Gemini"
+    },
     {
       "id": "memory-bridge-outbound-gemini",
       "description": "Bridge canonical MEMORY.md into a Gemini project-local memory sidecar at session start.",

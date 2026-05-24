@@ -24,8 +24,8 @@ cd agent-forge-suitcase-<timestamp>
 
 **Windows (PowerShell):**
 ```powershell
-Expand-Archive .\agent-forge-suitcase-<timestamp>.zip -DestinationPath .
-cd .\agent-forge-suitcase-<timestamp>\
+powershell.exe -ExecutionPolicy Bypass -File .\agent-forge-suitcase-<timestamp>-deploy-and-bootstrap.ps1 -BundleZip .\agent-forge-suitcase-<timestamp>.zip -DestinationRoot .\af
+cd .\af\agent-forge-suitcase-<timestamp>\
 ```
 
 You should now have a directory containing `_agent_forge/`, `BUNDLE_README.md`, `START_HERE.txt`, and `MANIFEST.json`.
@@ -38,12 +38,12 @@ This installs Agent Forge into `~/Projects/_agent_forge` on your machine. No adm
 
 **Linux / macOS:**
 ```bash
-./_agent_forge/scripts/deploy-factory.sh
+./_agent_forge/scripts/deploy-and-bootstrap.sh
 ```
 
 **Windows (PowerShell):**
 ```powershell
-pwsh -File .\_agent_forge\scripts\deploy-factory.ps1
+powershell.exe -ExecutionPolicy Bypass -File .\_agent_forge\scripts\deploy-factory.ps1 -ClaudeOnly
 ```
 
 The script copies the canonical sources, generates the host-native rendering, and exits with a one-line summary. If it asks to install the host CLIs, say no for this demo — the demo runs entirely from the Python skill helper.
