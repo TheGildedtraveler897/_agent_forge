@@ -1,4 +1,6 @@
-# One-shot Windows ZIP deploy for an Agent Forge suitcase.
+# Suitcase one-shot deploy: unblocks the ZIP, expands it, and runs deploy-factory.ps1 internally.
+# Do not call deploy-factory.ps1 directly for a suitcase install.
+#
 # Run this from a directory that contains the suitcase .zip. It unblocks the
 # archive before extraction, validates the extracted tree, then delegates to
 # deploy-factory.ps1 for the canonical sync.

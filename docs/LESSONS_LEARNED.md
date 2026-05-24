@@ -113,3 +113,13 @@ This file is the append-first knowledge anchor for Agent Forge. Validated workar
 - `Evidence:` `docs/archive/PLANS_COMPLETED.md` entries; commits in master: c5807bf (Track F implementation), c9732a6 (first persisted plan), and the subsequent merge archives.
 - `Promotion Target:` `docs/CONOPS.md` § Plan Persistence Layer — already promoted in Track F.
 - `Status:` promoted
+
+### 2026-05-24 - Onboarding audit Tier 3 Polish Items (Deferred Post-NRC)
+
+- `Date:` 2026-05-24
+- `Context:` Follow-up onboarding audit discovered six polish items across scripts, docs, and explanations. Three were quick wins (beat count sync, demo fallback, ps1 header). Three are heavier and require fresh spec work or host-specific testing (MacPorts rationale, Windows Python version check, npm pre-flight validation, EXPLAINERS vs Beat 5 sidecar specificity). NRC ship deadline is 2026-05-25; these were deferred to post-ship sprint.
+- `Lesson:` Beat numbering and cross-doc consistency require careful sync when new beats are inserted mid-stream. Polish passes should include a sweep for "N beats" references across all doc files (BUNDLE_README, QUICKSTART, DEMO_PATH) to catch off-by-one discrepancies early.
+- `Architectural Decision:` Implemented quick wins: DEMO_PATH and BUNDLE_README/QUICKSTART now reference "eight beats" (not "seven") to account for the new Beat 5.5. Added fallback sentence to DEMO_PATH Step 3 for single-CLI edge case. Clarified deploy-and-bootstrap.ps1 header comment. Deferred T3-A (MacPorts justification), T3-D (Windows Python 3.10+ version check), T3-E (npm pre-flight check), T3-G (EXPLAINERS sidecar specificity) to future sprint pending deeper spec work or OS-specific validation.
+- `Evidence:` Branch `feat/onboarding-multi-agent-story` commits: Beat count sync in BUNDLE_README.md, QUICKSTART.md, DEMO_PATH.md; demo fallback in DEMO_PATH.md line ~55; deploy-and-bootstrap.ps1 header comment refresh.
+- `Promotion Target:` Each deferred item (T3-A/D/E/G) should spawn its own post-NRC lesson entry once the rationale is decided (MacPorts decision, Windows Python policy, npm package reliability strategy, memory bridge side-car naming audit). Do not silently slip these into doctrine — spec first, then promote.
+- `Status:` active

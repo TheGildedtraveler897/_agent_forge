@@ -118,7 +118,7 @@ Inside Claude Code, with `~/Projects/my-first-app` as the working directory, inv
 /onboarding-guide
 ```
 
-The tour runs inline in the chat — seven paced beats, two short prompts (experience and role), the cross-host translation table, and a per-host install gate. Read-only.
+The tour runs inline in the chat — eight paced beats, two short prompts (experience and role), the cross-host translation table, the shared brain, the cross-host handoff, and a per-host install gate. Read-only.
 
 ## Step 9 — First demo task
 
