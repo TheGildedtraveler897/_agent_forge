@@ -234,9 +234,9 @@ All three host CLIs are installed. Nothing to do here.
 
 | CLI | Vendor | What it's for | Docs | Install command |
 |---|---|---|---|---|
-| `claude` | Anthropic | Best memory story; native slash commands and subagents. | https://docs.anthropic.com/claude/docs/claude-code | `npm install -g @anthropic-ai/claude-cli` |
-| `codex` | OpenAI | Strongest default sandbox (bwrap on Linux, Seatbelt on macOS). | https://platform.openai.com/docs/codex | Follow the docs link — install method varies by platform. |
-| `gemini` | Google | Vision-capable; cheapest non-trivial tier. | https://ai.google.dev/gemini-api/docs/cli | `npm install -g @google/gemini-cli` |
+| `claude` | Anthropic | Best memory story; native skills and subagents. | https://code.claude.com/docs/en/setup | `curl -fsSL https://claude.ai/install.sh \| bash` (recommended) or `npm install -g @anthropic-ai/claude-code` |
+| `codex` | OpenAI | Strongest default sandbox (bwrap on Linux, Seatbelt on macOS). | https://developers.openai.com/codex/quickstart | `npm install -g @openai/codex` |
+| `gemini` | Google | Vision-capable; cheapest non-trivial tier. | https://geminicli.com/docs/ | `npm install -g @google/gemini-cli` |
 
 Then offer: "Or install all three at once: `bash ~/Projects/_agent_forge/scripts/bootstrap-workstation.sh`."
 

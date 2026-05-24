@@ -98,8 +98,9 @@ If you also have Codex:
 
 ```bash
 codex --version
-# In a Codex session:
-# (Codex uses no slash convention — skills are invoked by name via delegation.)
+# In a Codex session, open the /skills menu, mention the skill,
+# or let Codex auto-activate it by description match:
+$onboarding-guide
 ```
 
 Same skill, same `SKILL.md` body, two host-native invocations.
