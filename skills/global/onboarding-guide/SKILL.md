@@ -214,6 +214,30 @@ to sidecar files in .codex/memory/ and .gemini/memory/.
 
 ---
 
+### Beat 5.5 — The Cross-Host Handoff
+
+Render this block as your next reply:
+
+```
+◆ The handoff
+
+The shared brain isn't just a file. It's the handoff artifact.
+
+Claude can spec a feature, write a plan to docs/plans/<branch>.md,
+and pin the plan pointer to MEMORY.md. Switch to Codex in the same
+project — Codex reads MEMORY.md on session start, sees the pointer,
+opens the plan, picks up the task list.
+
+One source of truth. Three agents reading from it. No copy-paste.
+
+(What the factory does NOT yet do: auto-invoke the next host. You
+still start each session manually.)
+```
+
+**PAUSE:** "press Enter to continue."
+
+---
+
 ### Beat 6 — Install Gate
 
 Detect missing host CLIs first. Run `which claude codex gemini` via Bash. For each CLI present, note it as ✓; for each missing, mention it explicitly.

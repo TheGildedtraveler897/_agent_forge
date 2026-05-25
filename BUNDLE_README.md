@@ -40,7 +40,7 @@ powershell.exe -ExecutionPolicy Bypass -File .\_agent_forge\scripts\deploy-facto
 /onboarding-guide
 ```
 
-The assistant walks you through seven paced beats right in the chat — what the factory is, the cross-host translation table, the safety gate, the shared brain, and a per-host install gate. The tour is read-only; nothing it shows you modifies your system.
+The assistant walks you through eight paced beats right in the chat — what the factory is, the cross-host translation table, the safety gate, the shared brain, the cross-host handoff, and a per-host install gate. The tour is read-only; nothing it shows you modifies your system.
 
 **Step 3 — Machine state check (optional, for terminal-only operators):**
 
