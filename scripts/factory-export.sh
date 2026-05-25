@@ -128,6 +128,8 @@ tar -C "${WORKSPACE_ROOT}" \
   --exclude='_agent_forge/.pytest_cache' \
   --exclude='_agent_forge/.mypy_cache' \
   --exclude='_agent_forge/.ruff_cache' \
+  --exclude='_agent_forge/.venv' \
+  --exclude='_agent_forge/venv' \
   --exclude='_agent_forge/.forge_state' \
   --exclude='_agent_forge/.claude' \
   --exclude='_agent_forge/.codex' \

@@ -13,6 +13,8 @@ Thumbs.db
 __pycache__/
 *.pyc
 *.pyo
+.venv/
+venv/
 
 # Never commit secrets
 .env
