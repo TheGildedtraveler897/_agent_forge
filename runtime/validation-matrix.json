@@ -23,6 +23,30 @@
         "method": "manual checklist prepared for fresh Windows VM smoke test",
         "pass": null
       }
+    },
+    "2026-05-25": {
+      "linux": {
+        "artifact_path": "runtime/validation/linux-2026-05-23",
+        "bundle_name": "agent-forge-suitcase-20260525-153017",
+        "coi_grep_exit": 1,
+        "factory_export_exit": 0,
+        "method": "in-session regenerate + in-process verifier + COI grep against extracted tarball; results captured inline in branch-finisher session log",
+        "pass": true,
+        "source_commit": "95953fe",
+        "triad_runtime": "skipped: no governed_projects entry exists",
+        "unit_tests_exit": 0,
+        "verify_agent_forge_exit": 0
+      },
+      "mac": {
+        "artifact_path": "runtime/validation/mac-checklist.md",
+        "method": "manual checklist refreshed for 2026-05-25 bundle and demo walkthrough; awaiting operator run on Mac host",
+        "pass": null
+      },
+      "windows": {
+        "artifact_path": "runtime/validation/windows-2026-05-23.md",
+        "method": "Windows checklist from 2026-05-23 still valid; no Windows-side regression in this cycle",
+        "pass": null
+      }
     }
   },
   "rows": [

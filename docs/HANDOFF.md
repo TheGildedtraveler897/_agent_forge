@@ -26,7 +26,7 @@ This file is the rolling operator handoff log. The `sprint-harvester` skill appe
 - Validation: Linux verifier/unit/export evidence lives at `runtime/validation/linux-2026-05-23/`; Mac and Windows checklists are staged for operator-run smoke tests.
 
 ## Current State
-Agent Forge is on the deep-refactor branch with Linux structural validation passing, full test discovery passing, and a regenerated onboarding suitcase at `exports/agent-forge-suitcase-20260523-validation.*`. The bundle now excludes Python bytecode/cache residue after the COI grep exposed machine-local path strings inside `*.pyc` files.
+The NRC ship branches (T1 terminology-drift, T2 multi-agent-story) are merged to `master` and pushed to `origin/master` (HEAD `95953fe`). Linux structural validation is green: verifier exit 0, 71 unit tests pass, COI grep clean. The current production onboarding suitcase is `exports/agent-forge-suitcase-20260525-153017.*` (source commit `95953fe`); the bundle now excludes `.venv/`, `__pycache__/`, and Python bytecode in addition to the prior runtime-cache exclusions. macOS demo prep is the next gate — `runtime/validation/mac-checklist.md` carries both the smoke-test steps and the boss-walkthrough path.
 
 ## Remaining Weaknesses
 - Windows VM smoke test still needs to be run by the operator with `runtime/validation/windows-2026-05-23.md`.
