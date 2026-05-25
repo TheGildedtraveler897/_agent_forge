@@ -4,6 +4,16 @@ This file is the rolling operator handoff log. The `sprint-harvester` skill appe
 
 ## What Changed
 
+### Sprint: Onboarding Audit + NRC Ship Prep (2026-05-24)
+
+- Branches: `fix/onboarding-guide-terminology-drift` (T1) + `feat/onboarding-multi-agent-story` (T2+T3)
+- **T1 — Factual fixes:** Beat 6 install table (3 broken URLs, wrong Claude package name), citation errors (TACL 2023, arXiv venue), host-dirs misframing (.agents/skills/ is agentskills.io standard, not "legacy"), Codex demo ($onboarding-guide invocation syntax).
+- **T2 — Multi-agent value-prop:** README "Multi-Agent Workflows" section, Beat 5.5 "The Cross-Host Handoff", DEMO_PATH Step 5b (Claude→Codex→Gemini plan handoff), new docs/MULTI_AGENT_EXAMPLES.md (GSD and research team walkthroughs), reframed docs to reflect "unified memory layer (native on Claude, sidecar bridges on Codex/Gemini)".
+- **T3 — Polish quick-wins:** Beat count sync 7→8 across BUNDLE_README/QUICKSTART/DEMO_PATH, single-CLI fallback sentence, deploy-and-bootstrap.ps1 header comment.
+- **Deferred to post-NRC:** T3-A MacPorts justification, T3-D Windows Python 3.10+ version check, T3-E npm pre-flight, T3-G EXPLAINERS sidecar naming.
+- **Deferred (needs spec):** feat/gsd-extraction-foundation (14 new skills).
+- **Validation:** Structural verifier exits 0, all 71 unit tests pass, clean T1→T2 rebase, no stale 2026-05-22 dates.
+
 ### Sprint: SOTA 2026 Deep Refactor (2026-05-23)
 
 - Branch: `feat/sota-2026-deep-refactor`

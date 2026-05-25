@@ -205,7 +205,7 @@
 
 ### Known Clean-Up Gaps (Active Issues)
 1. **Plan Persistence** — Awaiting-approval plan was lost on glitch; no disk save
-2. **Ship-prep finalization** — Final validation, bundle verification, COI audit trail still TODO
+2. **Ship-prep finalization** — COI audit completed 2026-05-23; bundle verified clean.
 
 ---
 
