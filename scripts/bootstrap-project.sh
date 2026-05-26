@@ -258,6 +258,27 @@ if [[ "${WITH_LOCAL_SKILLS}" == "1" ]]; then
   mkdir -p "${AGENT_FORGE_ROOT}/skills/projects/${PROJECT_NAME}"
 fi
 
+# Register the project in projects.json (parity with bootstrap-project.ps1).
+# Both scripts drive the SAME Python snippet so the catalog output is
+# byte-identical (json.dump indent=2 + trailing newline) regardless of host.
+python3 - "${AGENT_FORGE_ROOT}/projects.json" "${PROJECT_NAME}" "${PROJECT_PATH}" <<'PY'
+import json, sys
+catalog, name, root = sys.argv[1], sys.argv[2], sys.argv[3]
+with open(catalog) as fh:
+    data = json.load(fh)
+gp = data.setdefault("governed_projects", [])
+if not any(e.get("name") == name for e in gp):
+    gp.append({"name": name, "root": root, "trusted_workspace": False,
+               "required_files": ["AGENTS.md", "CLAUDE.md", "docs/CONOPS.md",
+                                   "docs/HANDOFF.md", ".claude/CLAUDE.md"]})
+    with open(catalog, "w") as fh:
+        json.dump(data, fh, indent=2)
+        fh.write("\n")
+    print("registered")
+else:
+    print("present")
+PY
+
 echo "Bootstrapped project at ${TARGET_ROOT}"
 echo
 
