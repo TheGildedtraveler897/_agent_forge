@@ -83,7 +83,17 @@ def run_cmd(
         )
         return proc.returncode, proc.stdout, proc.stderr
     except subprocess.TimeoutExpired as exc:
-        return 124, exc.stdout or "", (exc.stderr or "") + f"\n[timeout after {timeout}s]"
+        # With text=True, TimeoutExpired.stdout/.stderr can still come back as
+        # bytes (the buffered output is attached undecoded on timeout), so
+        # normalize before concatenating the timeout marker.
+        def _to_text(value: object) -> str:
+            if value is None:
+                return ""
+            if isinstance(value, bytes):
+                return value.decode("utf-8", "replace")
+            return str(value)
+
+        return 124, _to_text(exc.stdout), _to_text(exc.stderr) + f"\n[timeout after {timeout}s]"
 
 
 def host_sandbox_blocked(text: str) -> bool:
