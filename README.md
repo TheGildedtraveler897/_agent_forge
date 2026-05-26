@@ -385,10 +385,10 @@ _agent_forge/
 │   ├── global/                   ← portable cross-project skills
 │   │   ├── branch-finisher/
 │   │   ├── brand-guardian/
-│   │   ├── code-review-doctrine/
 │   │   ├── company-onboarder/
 │   │   ├── context-engineer/
 │   │   ├── corporate-controller/
+│   │   ├── e2e-qa-tester/
 │   │   ├── evidence-packager/
 │   │   ├── execution-planner/
 │   │   ├── handoff-archiver/
@@ -400,11 +400,10 @@ _agent_forge/
 │   │   ├── memory-bridge/
 │   │   ├── multi-agent-governor/
 │   │   ├── onboarding-guide/
+│   │   ├── paranoid-reviewer/     ← supersedes legacy code-review / quality-gate flows
 │   │   ├── portability-auditor/
 │   │   ├── project-bootstrap/
 │   │   ├── prompt-auto-activator/
-│   │   ├── quality-gate/
-│   │   ├── quick-task-runner/
 │   │   ├── root-cause-analyst/
 │   │   ├── skill-author/
 │   │   ├── spec-architect/
@@ -413,8 +412,7 @@ _agent_forge/
 │   │   ├── tdd-engineer/
 │   │   ├── telemetry-guardian/
 │   │   ├── token-optimizer/
-│   │   ├── verification-gate/
-│   │   └── workstream-manager/
+│   │   └── verification-gate/
 │   └── projects/                 ← project-local skills (empty on fresh install)
 │
 ├── teams/                        ← canonical team manifests

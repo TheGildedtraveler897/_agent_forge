@@ -114,6 +114,7 @@ copy_file_if_needed "${SHARED_ROOT_SOURCE}/docs/port_ledger.md" "${PROJECTS_ROOT
   --claude-home "${CLAUDE_HOME}"
 
 "${TARGET_FACTORY_ROOT}/scripts/sync-codex-skills.sh" \
+  --codex-home "${CODEX_HOME}" \
   --target "${HOME}/.agents/skills"
 
 "${TARGET_FACTORY_ROOT}/scripts/sync-gemini-adapters.sh" \
