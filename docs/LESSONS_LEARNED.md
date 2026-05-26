@@ -31,7 +31,7 @@ This file is the append-first knowledge anchor for Agent Forge. Validated workar
 - `Lesson:` Native Windows suitcase deploys need a PowerShell entry point that calls `Unblock-File` on the ZIP before extraction, warns on long paths, validates required top-level contents, recursively unblocks the extracted tree, and only then runs the deploy script.
 - `Architectural Decision:` Ship `scripts/deploy-and-bootstrap.ps1` as the Windows-first entry point and generate a matching sidecar script next to every ZIP export. Treat Explorer extraction as a fallback, not the runbook path.
 - `Evidence:` `scripts/deploy-and-bootstrap.ps1`, `scripts/deploy-factory.ps1`, `scripts/factory-export.sh`, `BUNDLE_README.md`, `docs/QUICKSTART.md`, `docs/DEMO_PATH.md`, `tests/test_windows_powershell_scripts.py`, and `runtime/validation/windows-2026-05-23.md`.
-- `Promotion Target:` `docs/QUICKSTART.md` and `BUNDLE_README.md` already promoted the runbook.
+- `Promotion Target:` Windows deployment runbook (`docs/QUICKSTART.md`, `BUNDLE_README.md`).
 - `Status:` promoted
 
 ### 2026-05-23 - Codex subagent TOML details need explicit renderer coverage
@@ -61,7 +61,7 @@ This file is the append-first knowledge anchor for Agent Forge. Validated workar
 - `Lesson:` `.gitignore` is not a packaging boundary. Export scripts must explicitly exclude runtime and cache artifacts, especially bytecode files that can embed absolute source paths.
 - `Architectural Decision:` `scripts/factory-export.sh` now excludes `__pycache__`, `*.pyc`, `*.pyo`, and common Python tool caches before building `.tar.gz` and `.zip` artifacts.
 - `Evidence:` `runtime/validation/linux-2026-05-23/export-coi-grep.*` after the fix, `scripts/factory-export.sh`, and `runtime/validation/linux-2026-05-23/bundle-check.md`.
-- `Promotion Target:` `scripts/factory-export.sh` itself now enforces the rule.
+- `Promotion Target:` Export script now enforces bytecode exclusion (`scripts/factory-export.sh`).
 - `Status:` promoted
 
 ### 2026-05-22 - MCP stdio transport must not use sh-c on Windows
@@ -111,7 +111,7 @@ This file is the append-first knowledge anchor for Agent Forge. Validated workar
 - `Lesson:` The new layer is durable under real-world multi-track sprint pressure. The frontmatter status field plus the archive-on-merge contract is enough to let a peer agent re-ground from disk after a session glitch. No additional MCP tool, no policy schema, no validator extension was needed; the layer is pure project-governance convention.
 - `Architectural Decision:` Treat plan persistence as the reference pattern for future agent-governance primitives that don't need host-native rendering. The five-step omni-factory pattern (policy + renderers + verifier + validator + skill) is reserved for primitives that are surfaced into host-native config; project-governance concerns get a lighter pattern.
 - `Evidence:` `docs/archive/PLANS_COMPLETED.md` entries; commits in master: c5807bf (Track F implementation), c9732a6 (first persisted plan), and the subsequent merge archives.
-- `Promotion Target:` `docs/CONOPS.md` § Plan Persistence Layer — already promoted in Track F.
+- `Promotion Target:` Plan persistence doctrine (`docs/CONOPS.md`).
 - `Status:` promoted
 
 ### 2026-05-24 - Onboarding audit Tier 3 Polish Items (Deferred Post-NRC)
