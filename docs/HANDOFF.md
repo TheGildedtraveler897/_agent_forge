@@ -26,7 +26,9 @@ This file is the rolling operator handoff log. The `sprint-harvester` skill appe
 - Validation: Linux verifier/unit/export evidence lives at `runtime/validation/linux-2026-05-23/`; Mac and Windows checklists are staged for operator-run smoke tests.
 
 ## Current State
-The NRC ship branches (T1 terminology-drift, T2 multi-agent-story) are merged to `master` and pushed to `origin/master` (HEAD `95953fe`). Linux structural validation is green: verifier exit 0, 71 unit tests pass, COI grep clean. The current production onboarding suitcase is `exports/agent-forge-suitcase-20260525-153017.*` (source commit `95953fe`). macOS smoke test ran on NRC055206R (2026-05-25): all three CLIs confirmed (Claude Code 2.1.150, Codex 0.133.0, Gemini CLI 0.43.0) and `bootstrap-project.sh` passed. MacPorts npm EACCES root cause identified and fixed in branch `fix/macports-npm-sudo` (`npm_global_install()` helper in `scripts/bootstrap-workstation.sh`).
+RC branch `rc/2026-05-26` prepared (HEAD `8400fa9`) with MacPorts npm fix merged and Windows launch candidate ready. **Distiller verification failures resolved** (3 promoted lessons now have parenthetical file citations per distiller spec). Verifier exits 0. Windows suitcase bundle: `exports/agent-forge-suitcase-20260526-201418.zip` (318 KB) verified — ZIP extracts cleanly, no COI-sensitive content, all required files present. Ready for Windows VM smoke test.
+
+**Production baseline (NRC 2026-05-25):** Suitcase `agent-forge-suitcase-20260525-153017.*` from commit `95953fe` shipped without MacPorts npm fix (issue discovered post-ship). Fix captured in `fix/macports-npm-sudo`, now merged into RC. macOS CLIs confirmed on NRC055206R; Boot 0 inline render still needs verification on Mac.
 
 ## Remaining Weaknesses
 - Windows VM smoke test still needs to be run by the operator with `runtime/validation/windows-2026-05-23.md`.
