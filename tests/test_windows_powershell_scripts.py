@@ -71,6 +71,10 @@ class WindowsPowerShellScriptTests(unittest.TestCase):
         self.assertIn("Developer Mode", body)
         self.assertIn("Managed by Agent Forge", body)
         self.assertIn("function Test-Command", body)
+        # Must skip the Windows Store python3 alias stub and probe defensively
+        # so a misbehaving candidate can't crash the caller under EAP=Stop.
+        self.assertIn("WindowsApps", body)
+        self.assertIn("ErrorActionPreference", body)
 
     def test_entry_scripts_dot_source_shared_helper_not_local_resolver(self) -> None:
         for name in ("bootstrap-project.ps1", "deploy-factory.ps1"):

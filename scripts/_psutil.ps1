@@ -24,6 +24,10 @@ function Resolve-Python {
     foreach ($candidate in @('python3', 'python', 'py')) {
         $cmd = Get-Command $candidate -ErrorAction SilentlyContinue
         if (-not $cmd) { continue }
+        # Skip the Windows Store "App Execution Alias" stub: it prints
+        # "Python was not found..." and, under ErrorActionPreference=Stop, that
+        # native stderr would terminate the probe instead of falling through.
+        if ($cmd.Source -and $cmd.Source -like '*\WindowsApps\*') { continue }
         if ($candidate -eq 'py') {
             $exe = 'py'
             $pre = @('-3')
@@ -31,7 +35,14 @@ function Resolve-Python {
             $exe = $cmd.Source
             $pre = @()
         }
-        $verText = (& $exe @pre --version 2>&1 | Out-String).Trim()
+        # Probe defensively: a misbehaving candidate (alias stub, broken install)
+        # must be skipped, never crash the caller.
+        $verText = ''
+        $savedEAP = $ErrorActionPreference
+        $ErrorActionPreference = 'Continue'
+        try { $verText = (& $exe @pre --version 2>&1 | Out-String).Trim() }
+        catch { $verText = '' }
+        finally { $ErrorActionPreference = $savedEAP }
         if ($verText -match 'Python\s+(\d+)\.(\d+)') {
             $maj = [int]$matches[1]
             $min = [int]$matches[2]
