@@ -224,3 +224,4 @@ It is a planning and coverage artifact, not a session log.
 - `registry.json` remains for compatibility, but it is derived from canonical sources.
 - Secondary docs can be renamed to host-agnostic names without affecting host-native boot behavior.
 - Existing governed projects are not all migrated yet to the new Gemini and project-first Codex layout; the factory now has the machinery to do that safely.
+- Supported OS families and their proven / structurally-checked / needs-host status are tracked in `docs/SUPPORTED_PLATFORMS.md`. As of the 2026-05-26 enterprise-readiness pass the factory supports Debian/Ubuntu (apt), RHEL-family (dnf/yum), macOS (MacPorts-only), and native Windows (winget + npm); RHEL and Windows runtime proofs remain host-gated.

@@ -206,6 +206,7 @@ Level 1 — Structural verifier (cheapest, run constantly)
 | `docs/TRIAD_RUNTIME_VALIDATION.md` | The live-validation runbook. |
 | `docs/TECH_DEBT.md` | Honest open-debt and recently-resolved-debt inventory. |
 | `docs/QUICKSTART.md` | First-run flow for a fresh operator. |
+| `docs/SUPPORTED_PLATFORMS.md` | OS support matrix (Debian/Ubuntu, RHEL-family, macOS, native Windows) with proven / structurally-checked / needs-host status. |
 
 ### Recent architectural decisions worth knowing
 
