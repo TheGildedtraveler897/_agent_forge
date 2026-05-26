@@ -11,7 +11,7 @@ A third subcommand `tour` exists only as a redirect message:
 the paced, interactive tour now runs inline in Claude Code, Codex,
 or Gemini via the slash command `/onboarding-guide`. The host CLI
 reads SKILL.md (sibling file) and the assistant walks the user
-through the seven beats directly in chat — no subprocess. The
+through the eight beats directly in chat — no subprocess. The
 redirect message exists so a terminal-only operator who tries
 `python3 onboard.py tour` is pointed at the right path.
 
@@ -386,7 +386,7 @@ def cmd_explain(args: argparse.Namespace) -> int:
 def cmd_tour(_args: argparse.Namespace) -> int:
     print(bold("Agent Forge onboarding tour — now runs inline in your host CLI."))
     print()
-    print("The seven-beat tour is delivered by the assistant directly in chat,")
+    print("The eight-beat tour is delivered by the assistant directly in chat,")
     print("not as a subprocess. To run it:")
     print()
     print(f"  - Claude Code: type {bold('/onboarding-guide')}")

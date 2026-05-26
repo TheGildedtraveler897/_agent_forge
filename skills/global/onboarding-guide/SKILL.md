@@ -1,6 +1,6 @@
 ---
 name: onboarding-guide
-description: Walk a first-time operator through the Agent Forge factory inline in chat — what it is, what just got generated on their machine, what the green or red lights mean, what to do next. Seven paced beats with prompts between them. Plain-English explanations of agentic vocabulary as terms appear. Use when the user types `/onboarding-guide` in Claude Code, Codex, or Gemini.
+description: Walk a first-time operator through the Agent Forge factory inline in chat — what it is, what just got generated on their machine, what the green or red lights mean, what to do next. Eight paced beats with prompts between them. Plain-English explanations of agentic vocabulary as terms appear. Use when the user types `/onboarding-guide` in Claude Code, Codex, or Gemini.
 context_cost: light
 model_tier: any
 capability_class: workflow
@@ -35,7 +35,7 @@ Translate the factory from "a folder with a lot of files" into "I see what each 
 
 ---
 
-## The Seven Beats (Beat 0 through Beat 7)
+## The Eight Beats (Beat 0 through Beat 7, plus the Beat 5.5 cross-host handoff)
 
 Each beat is small (≤12 lines of visible output before the next pause or prompt) and ends in either a `PROMPT THE USER:` line or a "press Enter / continue when ready" pause. Render the content as your assistant reply. Render code blocks and tables as Markdown. Do not collapse multiple beats into a single mega-reply; pace them so the user can absorb each one before the next.
 
@@ -305,7 +305,7 @@ The skill has three modes from the operator's perspective:
 
 | Mode | Where it runs | What it does |
 |---|---|---|
-| `tour` (default) | **Inline in chat** (this file) | The seven beats above, paced. |
+| `tour` (default) | **Inline in chat** (this file) | The eight beats above, paced. |
 | `check` | Terminal via Bash | Non-interactive machine-state report (six probes). The assistant invokes `python3 ~/Projects/_agent_forge/skills/global/onboarding-guide/onboard.py check` and shows the output. |
 | `explain <topic>` | Inline or terminal | Single-concept explainer. The assistant reads the matching `## <topic>` section from `EXPLAINERS.md` and serves it back; the terminal fallback is `python3 onboard.py explain <topic>` which reads the same file. |
 
@@ -346,7 +346,7 @@ The inline tour does not run all six probes by default (it would slow Beat 0). O
 ### Acceptance Criteria for Maintainers
 
 - **Inline-delivery acceptance gate:** Type `/onboarding-guide` in a fresh Claude Code session in this repo. Within the assistant's first reply, Beat 0's greeting and the experience-level prompt must appear as visible chat output. No subprocess attempt. No "did nothing" silence. This is the primary regression gate.
-- The seven beats read naturally aloud at a normal pace in under 10 minutes including pauses. If a contributor adds a beat that pushes total length past that, split into two skills or move content into an `explain` topic.
+- The eight beats read naturally aloud at a normal pace in under 10 minutes including pauses. If a contributor adds a beat that pushes total length past that, split into two skills or move content into an `explain` topic.
 - Every agentic term used in the tour appears either in `EXPLAINERS.md` or in the on-screen jargon-translation aside. If a new term shows up untranslated, that is a regression.
 - Cross-host names (PreToolUse / BeforeTool, MCP config file names, etc.) in the Beat 3 table must match the canonical → native mapping in `scripts/omni_factory.py:_EVENT_ALIASES` and in `docs/HOST_INTEGRATIONS.md`. If the table drifts from the code, the code is right and the table needs updating.
 - No beat may exceed ~12 lines of visible output before a `PROMPT THE USER:` or pause. Walls of text are the failure mode this design exists to prevent.

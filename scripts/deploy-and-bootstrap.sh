@@ -34,6 +34,7 @@ Options:
   --projects-root DIR     Target Projects root (default: ~/Projects)
   --claude-home DIR       Target Claude home (default: ~/.claude)
   --codex-home DIR        Target Codex home (default: ~/.codex)
+  --gemini-home DIR       Target Gemini home (default: ~/.gemini)
   --overwrite-root-docs   Replace shared root docs if they already exist
   --replace-factory       Replace an existing target _agent_forge snapshot
   -h, --help              Show this message
@@ -60,7 +61,7 @@ while [[ $# -gt 0 ]]; do
       DEPLOY_ARGS+=("$1" "$2")
       shift 2
       ;;
-    --claude-home|--codex-home)
+    --claude-home|--codex-home|--gemini-home)
       DEPLOY_ARGS+=("$1" "${2:?$1 requires a value}")
       shift 2
       ;;

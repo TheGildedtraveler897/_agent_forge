@@ -13,7 +13,8 @@ usage() {
   cat <<'EOF'
 Usage: bootstrap-workstation.sh [--allow-external-node-repo]
 
-Prepare a fresh Debian/Ubuntu or macOS workstation for Agent Forge development.
+Prepare a fresh Debian/Ubuntu, Red Hat family (RHEL/Fedora/CentOS/Rocky/Alma),
+or macOS workstation for Agent Forge development.
 
 This script:
   - installs base CLI dependencies
@@ -22,7 +23,8 @@ This script:
   - writes a durable machine setup log under _agent_forge/runtime/machine-setup/
 
 Options:
-  --allow-external-node-repo  Pre-approve use of a vetted external Node LTS apt repo
+  --allow-external-node-repo  Pre-approve use of a vetted external Node LTS repo
+                              (NodeSource apt on Debian/Ubuntu, NodeSource rpm on Red Hat family)
   -h, --help                  Show this message
 EOF
 }
@@ -56,6 +58,7 @@ INSTALL_CODEX="0"
 INSTALL_GEMINI="0"
 NODE_VERSION=""
 NODE_MAJOR=0
+DNF_BIN=""
 
 log() {
   echo "$*"
@@ -110,9 +113,22 @@ detect_platform() {
 
       if [[ "${OS_ID}" == "debian" || "${OS_ID}" == "ubuntu" || "${OS_LIKE}" == *debian* ]]; then
         PACKAGE_MODE="apt"
+      elif [[ "${OS_ID}" == "rhel" || "${OS_ID}" == "fedora" || "${OS_ID}" == "centos" \
+           || "${OS_ID}" == "rocky" || "${OS_ID}" == "almalinux" \
+           || "${OS_LIKE}" == *rhel* || "${OS_LIKE}" == *fedora* ]]; then
+        PACKAGE_MODE="dnf"
+        if command -v dnf >/dev/null 2>&1; then
+          DNF_BIN="dnf"
+        elif command -v yum >/dev/null 2>&1; then
+          DNF_BIN="yum"
+        else
+          echo "Red Hat family detected (${OS_NAME}) but neither dnf nor yum is on PATH." >&2
+          exit 1
+        fi
       else
         echo "Unsupported Linux distribution for automated bootstrap: ${OS_NAME}" >&2
-        echo "First implementation supports Debian/Ubuntu only. See docs/WORKSTATION_BOOTSTRAP.md." >&2
+        echo "Supported: Debian/Ubuntu, Red Hat family (RHEL/Fedora/CentOS/Rocky/Alma), macOS." >&2
+        echo "See docs/WORKSTATION_BOOTSTRAP.md and docs/SUPPORTED_PLATFORMS.md." >&2
         exit 1
       fi
       ;;
@@ -129,8 +145,19 @@ detect_platform() {
 }
 
 ensure_sudo() {
-  if [[ "${PACKAGE_MODE}" == "apt" || "${PACKAGE_MODE}" == "macports" ]]; then
+  if [[ "${PACKAGE_MODE}" == "apt" || "${PACKAGE_MODE}" == "macports" || "${PACKAGE_MODE}" == "dnf" ]]; then
     require_command "sudo" "Install sudo or run from an admin-capable shell."
+  fi
+}
+
+# MacPorts manages npm at /opt/local/lib/node_modules (root-owned).
+# All other MacPorts installs already use sudo; npm global installs must too.
+# On apt/nvm setups the prefix is user-writable, so sudo is omitted.
+npm_global_install() {
+  if [[ "${PACKAGE_MODE}" == "macports" ]]; then
+    sudo npm install -g "$@"
+  else
+    npm install -g "$@"
   fi
 }
 
@@ -236,6 +263,93 @@ ensure_node_macports() {
   fi
 }
 
+dnf_install() {
+  sudo "${DNF_BIN}" install -y "$@"
+}
+
+# EPEL provides ripgrep and jq on RHEL/CentOS/Rocky/Alma; Fedora ships them in base.
+# Runs only on RHEL-family-but-not-Fedora. Idempotent (no-op if already enabled).
+# Note: on minimal RHEL images, ripgrep may also need CodeReady Builder
+# (`sudo dnf config-manager --set-enabled crb` on RHEL9 / `powertools` on RHEL8).
+# We do not auto-enable CRB (trust-surface discipline); see docs/WORKSTATION_BOOTSTRAP.md.
+ensure_epel_if_needed() {
+  if [[ "${OS_ID}" == "fedora" ]]; then
+    return 0
+  fi
+  if rpm -q epel-release >/dev/null 2>&1; then
+    return 0
+  fi
+  log "Enabling EPEL (provides ripgrep, jq on RHEL-family hosts)..."
+  dnf_install epel-release
+}
+
+ensure_base_dependencies_dnf() {
+  ensure_epel_if_needed
+  dnf_install git curl jq ripgrep zip unzip tar ca-certificates gcc gcc-c++ make
+  # Wider toolchain, best-effort; group syntax can be absent on minimal images.
+  if ! sudo "${DNF_BIN}" groupinstall -y "Development Tools" 2>/dev/null; then
+    sudo "${DNF_BIN}" install -y "@development" 2>/dev/null || true
+  fi
+}
+
+ensure_node_dnf() {
+  if command -v node >/dev/null 2>&1; then
+    NODE_VERSION="$(node --version)"
+    NODE_MAJOR="$(printf '%s' "${NODE_VERSION#v}" | cut -d. -f1)"
+    if [[ "${NODE_MAJOR}" -ge 20 ]]; then
+      return 0
+    fi
+  fi
+
+  # Preferred, lowest-trust-surface: distro AppStream module (dnf only, distro-signed).
+  if [[ "${DNF_BIN}" == "dnf" ]]; then
+    if sudo dnf module reset -y nodejs 2>/dev/null \
+       && sudo dnf module enable -y nodejs:20 2>/dev/null; then
+      dnf_install nodejs
+    fi
+  else
+    # yum / RHEL7: no module streams. Try the base package; fall through if too old.
+    dnf_install nodejs 2>/dev/null || true
+  fi
+
+  if command -v node >/dev/null 2>&1; then
+    NODE_VERSION="$(node --version)"
+    NODE_MAJOR="$(printf '%s' "${NODE_VERSION#v}" | cut -d. -f1)"
+  else
+    NODE_MAJOR=0
+  fi
+
+  if [[ "${NODE_MAJOR}" -ge 20 ]]; then
+    return 0
+  fi
+
+  cat <<'EOF'
+Node.js 20+ is required for Gemini CLI and recommended for the other hosted CLIs.
+Your distro packages/modules do not provide a new enough Node version.
+
+Security tradeoff:
+- Native dnf packages / AppStream modules are preferred and lowest-trust-surface.
+- A vetted external Node LTS rpm source keeps installation under dnf signature/update workflows.
+- This is safer than ad hoc per-user package managers, but it still expands trust beyond the base distro.
+EOF
+
+  if [[ "${FORCE_NODE_EXTERNAL}" != "1" ]]; then
+    if ! yes_no_prompt "Add the vetted external Node LTS rpm source now?"; then
+      echo "Cannot continue without Node 20+. Re-run later or install Node manually." >&2
+      exit 1
+    fi
+  fi
+
+  curl -fsSL https://rpm.nodesource.com/setup_lts.x | sudo -E bash -
+  dnf_install nodejs
+  NODE_VERSION="$(node --version)"
+  NODE_MAJOR="$(printf '%s' "${NODE_VERSION#v}" | cut -d. -f1)"
+  if [[ "${NODE_MAJOR}" -lt 20 ]]; then
+    echo "Node 20+ still unavailable after adding external Node LTS source." >&2
+    exit 1
+  fi
+}
+
 choose_services() {
   cat <<'EOF'
 Select which hosted coding CLIs to install:
@@ -266,21 +380,21 @@ EOF
 
 install_claude() {
   log "Installing Claude Code..."
-  npm install -g @anthropic-ai/claude-code
+  npm_global_install @anthropic-ai/claude-code
   require_command "claude" "Claude Code install did not place the binary on PATH."
   record_line "- Claude Code installed: $(command -v claude)"
 }
 
 install_codex() {
   log "Installing Codex..."
-  npm install -g @openai/codex
+  npm_global_install @openai/codex
   require_command "codex" "Codex install did not place the binary on PATH."
   record_line "- Codex installed: $(command -v codex)"
 }
 
 install_gemini() {
   log "Installing Gemini CLI..."
-  npm install -g @google/gemini-cli
+  npm_global_install @google/gemini-cli
   require_command "gemini" "Gemini CLI install did not place the binary on PATH."
   record_line "- Gemini CLI installed: $(command -v gemini)"
 }
@@ -398,6 +512,9 @@ record_section "## Base Dependencies"
 if [[ "${PACKAGE_MODE}" == "apt" ]]; then
   ensure_base_dependencies_apt
   ensure_node_apt
+elif [[ "${PACKAGE_MODE}" == "dnf" ]]; then
+  ensure_base_dependencies_dnf
+  ensure_node_dnf
 elif [[ "${PACKAGE_MODE}" == "macports" ]]; then
   ensure_base_dependencies_macports
   ensure_node_macports

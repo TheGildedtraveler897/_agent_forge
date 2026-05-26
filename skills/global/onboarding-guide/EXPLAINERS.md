@@ -58,7 +58,7 @@ A governed project is one declared in `projects.json` and managed by the factory
 
 ## guardian
 
-`telemetry-guardian` is the universal pre-tool seatbelt. POSIX shell script at `skills/global/telemetry-guardian/guardian.sh`. Reads one tool invocation on stdin, matches the command against a fixed deny list, exits 0 to allow or 1 to block. Bypass via `AGENT_FORGE_GUARDIAN=off` env var; every bypass is logged. Intentionally dumb — predictability beats sophistication for safety gates. The deny list covers `--no-verify`, force-push to protected branches, wildcard home deletion, unscoped `terraform destroy`, whole-disk `dd`, recursive 777, `--no-gpg-sign`, explicit `git reset --hard <ref>`.
+`telemetry-guardian` is the universal pre-tool seatbelt. Python-first (`skills/global/telemetry-guardian/guardian.py`) so it runs natively on Windows, macOS, and Linux without bash — important on no-WSL native Windows. A thin `guardian.sh` POSIX forwarder is kept for legacy hook records that still point at the bash entry point. Reads one tool invocation on stdin, matches the command against a fixed deny list, exits 0 to allow or 1 to block. Bypass via `AGENT_FORGE_GUARDIAN=off` env var; every bypass is logged. Intentionally dumb — predictability beats sophistication for safety gates. The deny list covers `--no-verify`, force-push to protected branches, wildcard home deletion, unscoped `terraform destroy`, whole-disk `dd`, recursive 777, `--no-gpg-sign`, explicit `git reset --hard <ref>`.
 
 ---
 

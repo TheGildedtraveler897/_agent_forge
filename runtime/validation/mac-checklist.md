@@ -3,9 +3,25 @@
 Date refreshed: 2026-05-25 (post-NRC-ship; HEAD `95953fe`)
 Bundle under test: `agent-forge-suitcase-20260525-153017`
 
+---
+
+**Smoke test result (2026-05-25→26, NRC055206R, bundle 20260525-153017):**
+- Deploy + workstation bootstrap: ✅ passed (workaround: `sudo ./bootstrap-workstation.sh`)
+- Claude Code 2.1.150: ✅ installed and on PATH
+- Codex 0.133.0: ✅ installed and on PATH
+- Gemini CLI 0.43.0: ✅ installed and on PATH
+- `bootstrap-project.sh` (BeyondTrust_MacOS): ✅ no sudo required
+- npm EACCES on MacPorts: ⚠️ root cause confirmed, fix applied in `scripts/bootstrap-workstation.sh`
+  (`npm_global_install()` helper — branch `fix/macports-npm-sudo`; operator no longer needs
+  `sudo` prefix on the full script)
+- Beat 0 inline render: not yet tested — pending next Claude Code session on Mac
+- `mac.pass` in `validation-matrix.json`: set to `true` after Beat 0 confirmation
+
+---
+
 ## Part 1 — Fresh-host smoke test
 
-Run this on a fresh or clean macOS user profile when a Mac is available. The bundle is MacPorts-only on macOS (Homebrew is intentionally not supported).
+Run this on a fresh or clean macOS user profile. The bundle is MacPorts-only on macOS (Homebrew is intentionally not supported).
 
 1. Transfer `exports/agent-forge-suitcase-20260525-153017.tar.gz` to the Mac.
 
@@ -36,7 +52,10 @@ Run this on a fresh or clean macOS user profile when a Mac is available. The bun
 
 6. Acceptance gate: in Claude Code under any `~/Projects/<name>` directory, run `/onboarding-guide` and confirm Beat 0 renders **inline in the chat** (not only as terminal output from a subprocess).
 
-7. Record outputs and screenshots under `runtime/validation/mac-2026-05-25/` before promoting `validation-matrix.json` `mac.pass` from `null` to `true`.
+7. Record outputs and screenshots under `runtime/validation/mac-2026-05-25/`. CLIs and
+   project bootstrap are already confirmed (see result block above). Promote
+   `validation-matrix.json` `mac.pass` from `null` to `true` **after** Beat 0 inline render
+   is confirmed in step 6.
 
 ## Part 2 — Demo path (for boss walkthrough)
 

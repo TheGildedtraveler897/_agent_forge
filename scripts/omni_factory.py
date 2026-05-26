@@ -211,16 +211,45 @@ def remove_managed_text(path: Path, state: dict[str, Any]) -> None:
     unmark_managed(state, path)
 
 
+# Marker dropped inside a directory that was copied as a fallback when the OS
+# refused a symlink (native Windows without Developer Mode/elevation raises
+# WinError 1314). Lets sync_symlink_dir recognize and prune stale copies the
+# same way it prunes stale symlinks, and lets ensure_symlink refresh idempotently.
+WINDOWS_COPY_MARKER = ".agent_forge_managed_copy"
+
+
+def _is_managed_copy(path: Path) -> bool:
+    return path.is_dir() and not path.is_symlink() and (path / WINDOWS_COPY_MARKER).exists()
+
+
 def ensure_symlink(target: Path, source: Path) -> None:
     ensure_parent(target)
-    if target.exists() or target.is_symlink():
-        if not target.is_symlink():
-            raise RuntimeError(f"Refusing to replace non-symlink target: {target}")
+    if target.is_symlink():
         actual = target.resolve()
         if actual == source.resolve():
             return
         target.unlink()
-    target.symlink_to(source)
+    elif target.exists():
+        if _is_managed_copy(target):
+            # Refresh a prior Windows copy-fallback rather than refusing.
+            shutil.rmtree(target)
+        else:
+            raise RuntimeError(f"Refusing to replace non-symlink target: {target}")
+
+    try:
+        target.symlink_to(source)
+    except OSError:
+        # POSIX should always succeed; only native Windows lacks the privilege.
+        if os.name != "nt":
+            raise
+        if source.is_dir():
+            shutil.copytree(source, target)
+            (target / WINDOWS_COPY_MARKER).write_text(
+                "Managed by Agent Forge: copy fallback because this Windows host "
+                "refused a symlink (enable Developer Mode or run elevated for a real link).\n"
+            )
+        else:
+            shutil.copy2(source, target)
 
 
 def sync_symlink_dir(target_dir: Path, desired: dict[str, Path]) -> None:
@@ -233,6 +262,8 @@ def sync_symlink_dir(target_dir: Path, desired: dict[str, Path]) -> None:
             continue
         if existing.is_symlink():
             existing.unlink()
+        elif _is_managed_copy(existing):
+            shutil.rmtree(existing)
 
 
 def sync_managed_dir(target_dir: Path, desired: dict[str, str], marker: str) -> None:

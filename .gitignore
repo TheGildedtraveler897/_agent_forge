@@ -34,5 +34,8 @@ dev/
 # Distiller/archivist file lock guards (POSIX flock files; ephemeral)
 .forge_state/*.lock
 
+# Distiller/archivist/bridge run logs (append-on-run; local audit trail, not tracked state)
+.forge_state/*.log
+
 # SOTA 2026: Tiered Memory Private Storage
 MEMORY.md

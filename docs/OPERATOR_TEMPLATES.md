@@ -12,7 +12,7 @@ When a fresh operator finishes `./scripts/bootstrap-project.sh --name <name>` an
 /onboarding-guide
 ```
 
-The assistant (Claude / Codex / Gemini) reads `skills/global/onboarding-guide/SKILL.md` and walks the operator through seven paced beats right in the chat: greeting + experience prompt, role prompt, factory introduction, cross-host translation table, the seatbelt, the shared brain, per-host install gate, and a role-tuned next action. Read-only and observational; plain-English translations of every agentic-vocabulary term on first mention.
+The assistant (Claude / Codex / Gemini) reads `skills/global/onboarding-guide/SKILL.md` and walks the operator through eight paced beats right in the chat: greeting + experience prompt, role prompt, factory introduction, cross-host translation table, the seatbelt, the shared brain, the cross-host handoff, per-host install gate, and a role-tuned next action. Read-only and observational; plain-English translations of every agentic-vocabulary term on first mention.
 
 **Terminal-mode helpers (for non-conversational contexts — CI scripts, fresh boxes without any host CLI yet):**
 

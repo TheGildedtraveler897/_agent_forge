@@ -31,7 +31,7 @@ This file is the append-first knowledge anchor for Agent Forge. Validated workar
 - `Lesson:` Native Windows suitcase deploys need a PowerShell entry point that calls `Unblock-File` on the ZIP before extraction, warns on long paths, validates required top-level contents, recursively unblocks the extracted tree, and only then runs the deploy script.
 - `Architectural Decision:` Ship `scripts/deploy-and-bootstrap.ps1` as the Windows-first entry point and generate a matching sidecar script next to every ZIP export. Treat Explorer extraction as a fallback, not the runbook path.
 - `Evidence:` `scripts/deploy-and-bootstrap.ps1`, `scripts/deploy-factory.ps1`, `scripts/factory-export.sh`, `BUNDLE_README.md`, `docs/QUICKSTART.md`, `docs/DEMO_PATH.md`, `tests/test_windows_powershell_scripts.py`, and `runtime/validation/windows-2026-05-23.md`.
-- `Promotion Target:` `docs/QUICKSTART.md` and `BUNDLE_README.md` already promoted the runbook.
+- `Promotion Target:` Windows deployment runbook (`docs/QUICKSTART.md`, `BUNDLE_README.md`).
 - `Status:` promoted
 
 ### 2026-05-23 - Codex subagent TOML details need explicit renderer coverage
@@ -61,7 +61,7 @@ This file is the append-first knowledge anchor for Agent Forge. Validated workar
 - `Lesson:` `.gitignore` is not a packaging boundary. Export scripts must explicitly exclude runtime and cache artifacts, especially bytecode files that can embed absolute source paths.
 - `Architectural Decision:` `scripts/factory-export.sh` now excludes `__pycache__`, `*.pyc`, `*.pyo`, and common Python tool caches before building `.tar.gz` and `.zip` artifacts.
 - `Evidence:` `runtime/validation/linux-2026-05-23/export-coi-grep.*` after the fix, `scripts/factory-export.sh`, and `runtime/validation/linux-2026-05-23/bundle-check.md`.
-- `Promotion Target:` `scripts/factory-export.sh` itself now enforces the rule.
+- `Promotion Target:` Export script now enforces bytecode exclusion (`scripts/factory-export.sh`).
 - `Status:` promoted
 
 ### 2026-05-22 - MCP stdio transport must not use sh-c on Windows
@@ -111,7 +111,7 @@ This file is the append-first knowledge anchor for Agent Forge. Validated workar
 - `Lesson:` The new layer is durable under real-world multi-track sprint pressure. The frontmatter status field plus the archive-on-merge contract is enough to let a peer agent re-ground from disk after a session glitch. No additional MCP tool, no policy schema, no validator extension was needed; the layer is pure project-governance convention.
 - `Architectural Decision:` Treat plan persistence as the reference pattern for future agent-governance primitives that don't need host-native rendering. The five-step omni-factory pattern (policy + renderers + verifier + validator + skill) is reserved for primitives that are surfaced into host-native config; project-governance concerns get a lighter pattern.
 - `Evidence:` `docs/archive/PLANS_COMPLETED.md` entries; commits in master: c5807bf (Track F implementation), c9732a6 (first persisted plan), and the subsequent merge archives.
-- `Promotion Target:` `docs/CONOPS.md` § Plan Persistence Layer — already promoted in Track F.
+- `Promotion Target:` Plan persistence doctrine (`docs/CONOPS.md`).
 - `Status:` promoted
 
 ### 2026-05-24 - Onboarding audit Tier 3 Polish Items (Deferred Post-NRC)
@@ -122,4 +122,64 @@ This file is the append-first knowledge anchor for Agent Forge. Validated workar
 - `Architectural Decision:` Implemented quick wins: DEMO_PATH and BUNDLE_README/QUICKSTART now reference "eight beats" (not "seven") to account for the new Beat 5.5. Added fallback sentence to DEMO_PATH Step 3 for single-CLI edge case. Clarified deploy-and-bootstrap.ps1 header comment. Deferred T3-A (MacPorts justification), T3-D (Windows Python 3.10+ version check), T3-E (npm pre-flight check), T3-G (EXPLAINERS sidecar specificity) to future sprint pending deeper spec work or OS-specific validation.
 - `Evidence:` Branch `feat/onboarding-multi-agent-story` commits: Beat count sync in BUNDLE_README.md, QUICKSTART.md, DEMO_PATH.md; demo fallback in DEMO_PATH.md line ~55; deploy-and-bootstrap.ps1 header comment refresh.
 - `Promotion Target:` Each deferred item (T3-A/D/E/G) should spawn its own post-NRC lesson entry once the rationale is decided (MacPorts decision, Windows Python policy, npm package reliability strategy, memory bridge side-car naming audit). Do not silently slip these into doctrine — spec first, then promote.
+- `Status:` active
+
+### 2026-05-26 - MacPorts npm global prefix is root-owned; npm install -g needs sudo on macOS
+
+- `Date:` 2026-05-26
+- `Context:` macOS smoke test (NRC055206R, bundle 20260525-153017). `bootstrap-workstation.sh` failed with EACCES when attempting `npm install -g @anthropic-ai/claude-code`. MacPorts installs Node/npm to `/opt/local/`, a root-owned tree. All other MacPorts commands in the script already use `sudo` (`sudo port selfupdate`, `sudo port install`), but the three npm global installs were bare. Running the whole script as `sudo ./bootstrap-workstation.sh` was the workaround that confirmed all three CLIs install correctly.
+- `Lesson:` On MacPorts, `npm install -g` requires sudo because the npm global prefix (`/opt/local/lib/node_modules`) is root-owned. On nvm/Homebrew setups the prefix is user-writable. The two behaviours look identical until a real macOS host runs the script.
+- `Architectural Decision:` Introduced `npm_global_install()` helper in `scripts/bootstrap-workstation.sh`. When `PACKAGE_MODE=macports` the helper prepends `sudo`; all other modes run bare `npm install -g`. This is consistent with the existing pattern where every other MacPorts install already uses sudo. Keeps apt and nvm paths unchanged.
+- `Evidence:` npm EACCES error (`errno -13`, `path /opt/local/lib/node_modules/@anthropic-ai`). All three CLIs confirmed working via sudo workaround (Claude Code 2.1.150, Codex 0.133.0, Gemini CLI 0.43.0). Fix: `scripts/bootstrap-workstation.sh` `npm_global_install()` helper, branch `fix/macports-npm-sudo`.
+- `Promotion Target:` `docs/CONOPS.md` or bootstrap runbook if npm prefix strategy ever changes (e.g. switching to a user-writable prefix via `npm config set prefix`).
+- `Status:` active
+
+### 2026-05-26 - RHEL-family bootstrap: EPEL for ripgrep/jq, AppStream-first for Node
+
+- `Date:` 2026-05-26
+- `Context:` Enterprise pivot. `bootstrap-workstation.sh` rejected all non-Debian/Ubuntu Linux, but enterprise Linux is dominated by RHEL-family (RHEL/Rocky/Alma/Fedora). Added a `dnf`/`yum` path mirroring the apt path.
+- `Lesson:` Two RHEL-specific traps differ from Debian: (1) `ripgrep` and `jq` are NOT in base RHEL/CentOS/Rocky/Alma repos — they need EPEL (`epel-release`); Fedora has them in base, so the EPEL step must be guarded to RHEL-family-but-not-Fedora. On minimal images `ripgrep` may further need CodeReady Builder (`crb`/`powertools`), which should be a documented manual step, not auto-enabled (trust-surface discipline). (2) Node 20+ is cleanest via the distro-signed AppStream module (`dnf module enable nodejs:20`), reserving the consent-gated NodeSource rpm as fallback — mirroring the apt prefer-distro-then-consent pattern.
+- `Architectural Decision:` `detect_platform` resolves `PACKAGE_MODE=dnf` + `DNF_BIN` (prefer dnf, fall back to yum). New `ensure_base_dependencies_dnf` (with `ensure_epel_if_needed`) and `ensure_node_dnf` (AppStream → consent-gated NodeSource rpm). macOS stays MacPorts-only; apt/macports paths unchanged.
+- `Evidence:` `scripts/bootstrap-workstation.sh` (detect_platform 3-arm chain, dnf helpers, main dispatch); `tests/test_bootstrap_workstation_dnf.py` (14 static tests incl. live DNF_BIN subshell). Runtime proof host-gated — see `docs/TECH_DEBT.md` "RHEL-family runtime proof on a real host".
+- `Promotion Target:` `docs/SUPPORTED_PLATFORMS.md` and `docs/WORKSTATION_BOOTSTRAP.md` already document the matrix; promote a CONOPS bullet once a real RHEL host confirms EPEL + AppStream + npm-prefix behavior.
+- `Status:` active
+
+### 2026-05-26 - omni_factory symlink delivery hard-fails on native Windows
+
+- `Date:` 2026-05-26
+- `Context:` Enterprise pivot, full Windows parity pass. `scripts/omni_factory.py:ensure_symlink` called `Path.symlink_to()` unconditionally. On native Windows without Developer Mode/elevation that raises `OSError` WinError 1314, breaking `.claude/skills/` delivery — so `bootstrap-project.ps1`'s auto-sync fails mid-run even though scaffolding succeeded. Any already-shipped suitcase carries this.
+- `Lesson:` A Python sync engine that delivers via symlinks is not portable to locked-down Windows. The PowerShell layer cannot fix it — the failure is in the Python `symlink_to`. The fallback must live in the engine itself, and it must stay compatible with the existing reverse-cleanup contract (which only pruned symlinks).
+- `Architectural Decision:` On `OSError` when `os.name == 'nt'`, fall back to `shutil.copytree`/`copy2`. Directory copies carry a `.agent_forge_managed_copy` sentinel so `sync_symlink_dir` cleanup prunes stale copies like stale symlinks, and `ensure_symlink` refreshes a prior managed copy idempotently instead of refusing. POSIX keeps real symlinks; a non-Windows symlink `OSError` still propagates.
+- `Evidence:` `scripts/omni_factory.py:ensure_symlink`/`sync_symlink_dir`/`_is_managed_copy`; `tests/test_symlink_fallback.py` (simulates Windows via `os.name='nt'` + `symlink_to` raising). Real-Windows proof host-gated — `docs/TECH_DEBT.md` "Windows native runtime proof on a real host".
+- `Promotion Target:` `docs/HOST_INTEGRATIONS.md` § Claude skill delivery — once a real Windows host confirms the copy fallback fires and is pruned.
+- `Status:` active
+
+### 2026-05-26 - Windows PowerShell parity needs a shared helper + byte-identical projects.json
+
+- `Date:` 2026-05-26
+- `Context:` The `.ps1` scripts were a reduced flow vs the `.sh` ones: no interactive CONOPS, no `--existing`/`--with-local-skills`, a hardcoded (wrong) `@../CLAUDE.md` adapter import, a Python 3.10+ floor that was advertised but never enforced, and `bootstrap-project.ps1` registered the project in `projects.json` while `bootstrap-project.sh` did not.
+- `Lesson:` (1) Centralize cross-script PowerShell logic in one dot-sourced helper (`_psutil.ps1`) so the Python-version gate, relative-path math, and symlink-or-copy fallback can't drift between four scripts. (2) PS 5.1 has no `[Path]::GetRelativePath`; use `System.Uri.MakeRelativeUri`. (3) When two scripts both write a shared JSON catalog, drive BOTH through the same Python snippet so output is byte-identical (avoids PS `ConvertTo-Json` BOM/escaping/reformat drift). (4) `deploy-and-bootstrap.ps1` ships as a standalone sidecar next to the ZIP, so it cannot dot-source a sibling helper — it must validate Python via the EXTRACTED helper post-extraction.
+- `Architectural Decision:` New `scripts/_psutil.ps1` (Resolve-Python with real 3.10+ gate, Get-RelativePath, New-ManagedLink, Test-Command), dot-sourced by the in-tree scripts. `bootstrap-project.sh` now also registers in `projects.json` via the same Python snippet as the `.ps1`. The sidecar dot-sources the extracted helper.
+- `Evidence:` `scripts/_psutil.ps1`, `scripts/bootstrap-project.ps1`/`.sh`, `scripts/bootstrap-workstation.ps1`, `scripts/deploy-and-bootstrap.ps1`, `scripts/deploy-factory.ps1`; `tests/test_windows_powershell_scripts.py` (6 new static checks). Runtime host-gated — `docs/TECH_DEBT.md`.
+- `Promotion Target:` `docs/HOST_INTEGRATIONS.md` § Windows surfaces, once a Windows VM confirms the flow end-to-end.
+- `Status:` active
+
+### 2026-05-26 - Deploy wrappers silently dropped host-home flags
+
+- `Date:` 2026-05-26
+- `Context:` `deploy-factory.sh` parsed `--codex-home` but forwarded only `--target` to the codex sync (the value was dropped; `omni_factory.py sync-codex` accepts `--codex-home`). `deploy-and-bootstrap.sh` accepted `--claude-home|--codex-home` but rejected `--gemini-home` (error fallthrough). The `.ps1` `deploy-and-bootstrap.ps1` exposed no home flags at all.
+- `Lesson:` A parsed-but-unforwarded flag is worse than an absent one — it looks supported and silently no-ops. Audit the full path from argument parse to the downstream invocation, and keep the three host-home flags symmetric across all deploy entry points (`.sh` and `.ps1`).
+- `Architectural Decision:` `deploy-factory.sh` forwards `--codex-home` to the codex sync; `deploy-and-bootstrap.sh` accepts `--gemini-home`; `deploy-and-bootstrap.ps1` gained `-ClaudeHome`/`-CodexHome`/`-GeminiHome` and forwards all three.
+- `Evidence:` `scripts/deploy-factory.sh`, `scripts/deploy-and-bootstrap.sh`, `scripts/deploy-and-bootstrap.ps1`; `tests/test_windows_powershell_scripts.py` home-flag parity test.
+- `Promotion Target:` None — direct fix; the scripts enforce it on disk.
+- `Status:` active
+
+### 2026-05-26 - agentskills.io sanctions metadata for client extensions (verified)
+
+- `Date:` 2026-05-26
+- `Context:` Enterprise-readiness standards re-verification against the primary source (https://agentskills.io/specification). Confirmed: a skill is a directory with `SKILL.md`; required frontmatter is `name` (≤64, lowercase/digits/hyphens, must match the parent directory name) and `description` (≤1024); optional standard fields are `license`, `compatibility` (≤500), `metadata` (string→string map), and experimental `allowed-tools`; progressive disclosure recommends `name`+`description` ~100 tokens at startup and the `SKILL.md` body under 500 lines / 5000 tokens. All 30 global skills satisfy name==directory and the size ceiling.
+- `Lesson:` The spec explicitly designates `metadata` as the home for client-specific properties "not defined by the Agent Skills spec," recommending unique key names to avoid conflicts. Agent Forge currently carries its local extensions (`targets`, `capability_class`, `delivery_projects`, `context_cost`, `model_tier`, command-name overrides, sandbox, MCP reqs) as TOP-LEVEL frontmatter keys. That is not forbidden, but the spec's sanctioned extension point is `metadata` (e.g. `metadata.agent_forge.*`).
+- `Architectural Decision:` Keep top-level local extensions for now — migrating to `metadata.agent_forge.*` is a backward-compatible-renderer-and-verifier change touching all 30 SKILL.md files and is not worth churning mid-audit. Tracked as a TECH_DEBT item. The renderer already strips these before writing host-native skill files, so there is no runtime conflict with hosts that parse the standard.
+- `Evidence:` https://agentskills.io/specification (frontmatter table + `metadata` field note); `docs/CONOPS.md` § Standard vs Local Extensions (already documents the fields as local extensions); `docs/TECH_DEBT.md` migration item.
+- `Promotion Target:` `docs/CONOPS.md` § Standard vs Local Extensions — add the `metadata.agent_forge.*` recommendation when/if the migration is scheduled.
 - `Status:` active

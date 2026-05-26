@@ -10,6 +10,9 @@ param(
     [Parameter(Mandatory=$true)][string]$BundleZip,
     [string]$DestinationRoot = (Join-Path (Get-Location) 'agent-forge-suitcase-expanded'),
     [string]$ProjectsRoot = (Join-Path $env:USERPROFILE 'Projects'),
+    [string]$ClaudeHome = (Join-Path $env:USERPROFILE '.claude'),
+    [string]$CodexHome = (Join-Path $env:USERPROFILE '.codex'),
+    [string]$GeminiHome = (Join-Path $env:USERPROFILE '.gemini'),
     [switch]$AllHosts,
     [switch]$ReplaceFactory,
     [switch]$OverwriteRootDocs,
@@ -32,6 +35,9 @@ Options:
   -BundleZip         Path to the suitcase .zip.
   -DestinationRoot   Extraction destination. Keep this short, for example C:\af.
   -ProjectsRoot      Target Projects root. Default: %USERPROFILE%\Projects.
+  -ClaudeHome        Target Claude home. Default: %USERPROFILE%\.claude.
+  -CodexHome         Target Codex home. Default: %USERPROFILE%\.codex.
+  -GeminiHome        Target Gemini home. Default: %USERPROFILE%\.gemini.
   -AllHosts          Sync Claude, Codex, and Gemini. Default is Claude only.
   -ReplaceFactory    Replace existing %USERPROFILE%\Projects\_agent_forge.
   -OverwriteRootDocs Replace shared root docs if they already exist.
@@ -42,18 +48,9 @@ Options:
 
 $ErrorActionPreference = 'Stop'
 
-function Resolve-PythonCommand {
-    foreach ($candidate in @('python3', 'python', 'py')) {
-        $cmd = Get-Command $candidate -ErrorAction SilentlyContinue
-        if ($cmd) {
-            if ($candidate -eq 'py') {
-                return @('py', '-3')
-            }
-            return @($cmd.Source)
-        }
-    }
-    throw "Python 3 not found on PATH. Install Python 3.10+ from python.org and re-run."
-}
+# This script ships as a STANDALONE sidecar next to the suitcase ZIP, so it
+# cannot dot-source a sibling _psutil.ps1 (that helper lives inside the bundle).
+# Python is validated post-extraction using the EXTRACTED helper instead.
 
 function Test-BundleIntegrity {
     param([Parameter(Mandatory=$true)][string]$FactoryRoot)
@@ -127,8 +124,15 @@ if (-not $DryRun) {
     Get-ChildItem -LiteralPath $factoryRoot -Recurse -File -ErrorAction SilentlyContinue | Unblock-File -ErrorAction SilentlyContinue
 }
 
-$python = Resolve-PythonCommand
-Write-Host "Python resolver: $($python -join ' ')"
+# Validate Python 3.10+ using the helper from the freshly-extracted tree.
+$psutil = Join-Path $factoryRoot 'scripts\_psutil.ps1'
+if (Test-Path $psutil) {
+    . $psutil
+    $py = Resolve-Python
+    Write-Host "Python resolver: $($py.Exe) $($py.Pre -join ' ') ($($py.Version))"
+} else {
+    Write-Warning "Extracted _psutil.ps1 not found; deploy-factory.ps1 will resolve Python itself."
+}
 
 $deployScript = Join-Path $factoryRoot 'scripts\deploy-factory.ps1'
 if (-not (Test-Path $deployScript)) {
@@ -136,7 +140,10 @@ if (-not (Test-Path $deployScript)) {
 }
 
 $deployArgs = @(
-    '-ProjectsRoot', $ProjectsRoot
+    '-ProjectsRoot', $ProjectsRoot,
+    '-ClaudeHome', $ClaudeHome,
+    '-CodexHome', $CodexHome,
+    '-GeminiHome', $GeminiHome
 )
 if ($ReplaceFactory) {
     $deployArgs += '-ReplaceFactory'

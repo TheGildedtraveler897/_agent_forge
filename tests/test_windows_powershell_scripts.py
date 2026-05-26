@@ -57,6 +57,82 @@ class WindowsPowerShellScriptTests(unittest.TestCase):
         self.assertIn("git-scm.com", body)
         self.assertIn("nodejs.org", body)
 
+    def test_psutil_shared_helper_enforces_python_floor_and_link_fallback(self) -> None:
+        body = self.script("_psutil.ps1")
+
+        self.assertIn("function Resolve-Python", body)
+        self.assertIn("MinMinor = 10", body)
+        self.assertIn(r"Python\s+(\d+)\.(\d+)", body)
+        self.assertIn("not found on PATH", body)
+        self.assertIn("function Get-RelativePath", body)
+        self.assertIn("MakeRelativeUri", body)
+        self.assertIn("function New-ManagedLink", body)
+        self.assertIn("New-Item -ItemType SymbolicLink", body)
+        self.assertIn("Developer Mode", body)
+        self.assertIn("Managed by Agent Forge", body)
+        self.assertIn("function Test-Command", body)
+
+    def test_entry_scripts_dot_source_shared_helper_not_local_resolver(self) -> None:
+        for name in ("bootstrap-project.ps1", "deploy-factory.ps1"):
+            with self.subTest(script=name):
+                body = self.script(name)
+                self.assertIn("_psutil.ps1", body)
+                self.assertIn("Resolve-Python", body)
+                self.assertNotIn("function Resolve-PythonCommand", body)
+                self.assertIn("$pythonExe @pythonArgs", body)
+
+    def test_bootstrap_project_has_full_parity_constructs(self) -> None:
+        body = self.script("bootstrap-project.ps1")
+
+        # interactive CONOPS
+        self.assertIn("Invoke-ProjectDefinition", body)
+        self.assertIn('Read-Host "Project mission', body)
+        self.assertIn("[switch]$Define", body)
+        self.assertIn("[switch]$NoDefine", body)
+        self.assertIn("IsInputRedirected", body)
+        # existing mode
+        self.assertIn("[switch]$Existing", body)
+        self.assertIn("Existing mode requested but target does not exist", body)
+        # local skills
+        self.assertIn("[switch]$WithLocalSkills", body)
+        self.assertIn(r"skills\projects", body)
+        # relpath fix + managed link (the wrong hardcoded import must be gone)
+        self.assertIn("New-ManagedLink", body)
+        self.assertNotIn("@../CLAUDE.md", body)
+        # Codex override stub parity
+        self.assertIn("AGENTS.override.md", body)
+
+    def test_deploy_and_bootstrap_forwards_all_home_flags(self) -> None:
+        body = self.script("deploy-and-bootstrap.ps1")
+
+        self.assertIn("$ClaudeHome", body)
+        self.assertIn("$CodexHome", body)
+        self.assertIn("$GeminiHome", body)
+        self.assertIn("-GeminiHome", body)
+
+    def test_bootstrap_workstation_installs_clis_and_enforces_floors(self) -> None:
+        body = self.script("bootstrap-workstation.ps1")
+
+        self.assertIn("@anthropic-ai/claude-code", body)
+        self.assertIn("@openai/codex", body)
+        self.assertIn("@google/gemini-cli", body)
+        self.assertIn("npm install -g", body)
+        self.assertIn("Read-ServiceSelection", body)
+        self.assertIn("Install-NpmGlobal", body)
+        self.assertIn("Resolve-Python", body)
+        self.assertIn("NODE_USE_SYSTEM_CA", body)
+        self.assertIn("GOOGLE_CLOUD_PROJECT", body)
+        self.assertIn(r"runtime\machine-setup", body)
+
+    def test_projects_json_registration_parity_between_sh_and_ps1(self) -> None:
+        ps1 = self.script("bootstrap-project.ps1")
+        sh = (ROOT / "scripts" / "bootstrap-project.sh").read_text(encoding="utf-8")
+        for body in (ps1, sh):
+            self.assertIn("governed_projects", body)
+            self.assertIn("required_files", body)
+            self.assertIn("docs/CONOPS.md", body)
+            self.assertIn(".claude/CLAUDE.md", body)
+
 
 if __name__ == "__main__":
     unittest.main()

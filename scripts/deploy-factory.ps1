@@ -45,27 +45,15 @@ Options:
 
 $ErrorActionPreference = 'Stop'
 
-function Resolve-PythonCommand {
-    foreach ($candidate in @('python3', 'python', 'py')) {
-        $cmd = Get-Command $candidate -ErrorAction SilentlyContinue
-        if ($cmd) {
-            if ($candidate -eq 'py') {
-                return @('py', '-3')
-            }
-            return @($cmd.Source)
-        }
-    }
-    throw "Python 3 not found on PATH. Install Python 3.10+ from python.org and re-run."
-}
-
-$python = Resolve-PythonCommand
-$pythonExe = $python[0]
-$pythonArgs = @()
-for ($i = 1; $i -lt $python.Length; $i++) {
-    $pythonArgs += $python[$i]
-}
-
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+. (Join-Path $scriptDir '_psutil.ps1')
+
+# Resolve-Python enforces the advertised >= 3.10 floor (see scripts/_psutil.ps1).
+$py = Resolve-Python
+$pythonExe = $py.Exe
+$pythonArgs = $py.Pre
+$python = @($pythonExe) + $pythonArgs
+
 $sourceFactoryRoot = Resolve-Path (Join-Path $scriptDir '..')
 $packageRoot = Resolve-Path (Join-Path $sourceFactoryRoot '..')
 $targetFactoryRoot = Join-Path $ProjectsRoot '_agent_forge'

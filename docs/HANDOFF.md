@@ -4,6 +4,17 @@ This file is the rolling operator handoff log. The `sprint-harvester` skill appe
 
 ## What Changed
 
+### Sprint: Enterprise Deployment-Readiness Audit (2026-05-26)
+
+- Branch: `audit/enterprise-readiness-2026-05-26` (off `master`, merged `rc/2026-05-26` to carry the MacPorts + distiller-verification fixes). Plan: `~/.claude/plans/memoized-plotting-volcano.md`. Findings: `docs/research/enterprise-readiness-findings-2026-05-26.md`.
+- **Enterprise pivot** (homelab → enterprise). Operator decisions: implement RHEL/dnf now; full PowerShell parity; low-risk proxy/TLS passthrough + document the rest.
+- **RHEL-family bootstrap** (`bootstrap-workstation.sh`): dnf/yum path mirroring apt — `detect_platform` 3-arm chain + `DNF_BIN`, EPEL guard for ripgrep/jq (non-Fedora), AppStream `nodejs:20` then consent-gated NodeSource rpm. New `tests/test_bootstrap_workstation_dnf.py` (14 static tests).
+- **Full Windows PowerShell parity:** new `scripts/_psutil.ps1` (Resolve-Python 3.10+ gate, Get-RelativePath, New-ManagedLink symlink→copy fallback, Test-Command); `bootstrap-project.ps1` interactive CONOPS / `-Existing` / `-WithLocalSkills` / relpath fix / AGENTS.override stub; `bootstrap-workstation.ps1` winget+npm install parity; `deploy-and-bootstrap.ps1` home flags; both `bootstrap-project.{sh,ps1}` register projects.json via one Python snippet.
+- **Windows sync-layer fix** (`omni_factory.py`): `ensure_symlink` falls back to a managed copy on `os.name=='nt'` OSError (WinError 1314); cleanup prunes managed copies. New `tests/test_symlink_fallback.py`.
+- **Correctness:** deploy-factory.sh `--codex-home` forwarding; deploy-and-bootstrap.sh `--gemini-home`; README skill tree synced to 30 on-disk skills (dropped 4 ghosts, added e2e-qa-tester + paranoid-reviewer); beat count 7→8 stragglers; EXPLAINERS telemetry-guardian (Python-first); `.forge_state/*.log` untracked; triad validator timeout-handler str+bytes crash.
+- **Docs:** `docs/SUPPORTED_PLATFORMS.md` (OS matrix w/ proven/structural/needs-host), WORKSTATION_BOOTSTRAP corporate proxy/TLS section, TECH_DEBT seeded, 6 append-first lessons, skill-retention matrix.
+- **Validation (Linux):** verifier exit 0; 97 unit tests pass (was 71); bash -n all 9 scripts; py_compile all .py; JSON parse all configs; registry in sync; export smoke clean (COI/cache/sidecar); ephemeral-probe bootstrap+sync+registration+symlink ✓ and triad validator runs (claude PASS via CLI).
+
 ### Sprint: Onboarding Audit + NRC Ship Prep (2026-05-24)
 
 - Branches: `fix/onboarding-guide-terminology-drift` (T1) + `feat/onboarding-multi-agent-story` (T2+T3)
@@ -26,15 +37,19 @@ This file is the rolling operator handoff log. The `sprint-harvester` skill appe
 - Validation: Linux verifier/unit/export evidence lives at `runtime/validation/linux-2026-05-23/`; Mac and Windows checklists are staged for operator-run smoke tests.
 
 ## Current State
-The NRC ship branches (T1 terminology-drift, T2 multi-agent-story) are merged to `master` and pushed to `origin/master` (HEAD `95953fe`). Linux structural validation is green: verifier exit 0, 71 unit tests pass, COI grep clean. The current production onboarding suitcase is `exports/agent-forge-suitcase-20260525-153017.*` (source commit `95953fe`); the bundle now excludes `.venv/`, `__pycache__/`, and Python bytecode in addition to the prior runtime-cache exclusions. macOS demo prep is the next gate — `runtime/validation/mac-checklist.md` carries both the smoke-test steps and the boss-walkthrough path.
+The enterprise-readiness audit (`audit/enterprise-readiness-2026-05-26`, 9 commits on top of the prior `rc/2026-05-26` work) is **merged to `master` and pushed to `origin/master`**. Linux gates are green: verifier exit 0, 97 unit tests pass, registry in sync, export smoke clean. The factory now supports Debian/Ubuntu (apt), RHEL-family (dnf/yum), macOS (MacPorts-only), and native Windows (winget+npm + symlink-copy fallback). The release-candidate suitcase was exported from this merged state (newest bundle under `exports/`).
+
+**Production baseline (NRC 2026-05-25):** Suitcase `agent-forge-suitcase-20260525-153017.*` (commit `95953fe`) — predates all audit fixes (RHEL, Windows symlink, deploy-flag, distiller-log). A re-cut RC + fresh suitcase supersedes it.
 
 ## Remaining Weaknesses
-- Windows VM smoke test still needs to be run by the operator with `runtime/validation/windows-2026-05-23.md`.
-- macOS smoke test is represented by `runtime/validation/mac-checklist.md` because no Mac host was reachable in this session.
-- `scripts/validate-triad-runtime.py --project <name>` was skipped because `projects.json` has no governed projects. Run it after the first project is bootstrapped.
+- **Windows runtime unproven** — full PowerShell parity + the `omni_factory` symlink→copy fallback are statically verified only. Run `runtime/validation/windows-2026-05-26.md` on a fresh native Windows VM; set `windows.pass` against captured evidence only.
+- **RHEL runtime unproven** — dnf path is structurally verified only. Needs a RHEL/Rocky/Alma/Fedora host to confirm EPEL ripgrep/jq (+ CRB/PowerTools), `nodejs:20` AppStream, and whether `npm install -g` needs sudo on the dnf prefix.
+- **macOS Beat 0 render** still unobserved; `mac.pass` stays null until seen.
+- Environment note: `gemini skills list --all` hung ~60s during triad probing on the Linux dev host (CLI behavior; the validator now times out gracefully rather than crashing).
+- All host-gated items tracked in `docs/TECH_DEBT.md` and `docs/SUPPORTED_PLATFORMS.md`.
 
 ## Next Evolution
-After the Windows VM passes the one-shot ZIP deploy, merge the branch, tag the ship artifact, and push with operator approval. Follow-on work should add active policy records for Gemini-only hook semantics and render Codex `model_reasoning_effort` / per-agent `mcp_servers` explicitly.
+Operator-gated: (1) run the RHEL and Windows host checklists, capture evidence, update `validation-matrix.json`; (2) re-cut the RC from this audit branch, regenerate the suitcase, push with approval; (3) schedule the deferred TECH_DEBT items (Codex `model_reasoning_effort` / per-agent `mcp_servers`, `metadata.agent_forge.*` frontmatter migration).
 
 ## Final Verdict
-Linux-side ship gates are green. Windows is structurally fixed but still requires the fresh-VM smoke test before the release tag should be treated as fully proven.
+Audit merged to `master` and pushed; RC suitcase exported. Linux-side gates are green. RHEL and Windows are structurally complete but runtime-unproven — both remain host-gated and must pass `runtime/validation/windows-2026-05-26.md` (Windows) and a Rocky/Alma/RHEL run before the RC is treated as fully proven on those platforms. macOS Beat 0 render still unobserved.
