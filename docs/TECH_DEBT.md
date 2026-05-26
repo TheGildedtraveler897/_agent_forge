@@ -12,6 +12,14 @@ Framework-level debt items are tracked here. Add an entry when you discover a ga
 - `Owner:` operator (scheduled follow-on sprint)
 - `Status:` open
 
+### Migrate SKILL.md local extensions under `metadata.agent_forge.*`
+
+- `Discovered:` 2026-05-26 (standards re-verification against https://agentskills.io/specification)
+- `Impact:` Agent Forge carries `targets`, `capability_class`, `delivery_projects`, `context_cost`, `model_tier`, command-name overrides, sandbox, and MCP-requirement fields as TOP-LEVEL `SKILL.md` frontmatter. The spec sanctions `metadata` (a string→string map) as the home for client-specific properties, recommending unique keys to avoid conflicts. Top-level extra keys are not forbidden, but `metadata.agent_forge.*` is the spec-aligned pattern.
+- `Closure plan:` Add backward-compatible parsing in `scripts/omni_factory.py` (accept both top-level and `metadata.agent_forge.*`), update `scripts/verify-agent-forge.py`, migrate all 30 `SKILL.md` files, then document in `docs/CONOPS.md` § Standard vs Local Extensions. Backward-compatible renderer+verifier first; no flag-day churn.
+- `Owner:` operator (scheduled follow-on; not worth churning mid-audit)
+- `Status:` open
+
 ### RHEL-family runtime proof on a real host
 
 - `Discovered:` 2026-05-26 (enterprise-readiness audit, Phase 2)
