@@ -134,6 +134,17 @@ ensure_sudo() {
   fi
 }
 
+# MacPorts manages npm at /opt/local/lib/node_modules (root-owned).
+# All other MacPorts installs already use sudo; npm global installs must too.
+# On apt/nvm setups the prefix is user-writable, so sudo is omitted.
+npm_global_install() {
+  if [[ "${PACKAGE_MODE}" == "macports" ]]; then
+    sudo npm install -g "$@"
+  else
+    npm install -g "$@"
+  fi
+}
+
 apt_install() {
   sudo apt-get update
   sudo DEBIAN_FRONTEND=noninteractive apt-get install -y "$@"
@@ -266,21 +277,21 @@ EOF
 
 install_claude() {
   log "Installing Claude Code..."
-  npm install -g @anthropic-ai/claude-code
+  npm_global_install @anthropic-ai/claude-code
   require_command "claude" "Claude Code install did not place the binary on PATH."
   record_line "- Claude Code installed: $(command -v claude)"
 }
 
 install_codex() {
   log "Installing Codex..."
-  npm install -g @openai/codex
+  npm_global_install @openai/codex
   require_command "codex" "Codex install did not place the binary on PATH."
   record_line "- Codex installed: $(command -v codex)"
 }
 
 install_gemini() {
   log "Installing Gemini CLI..."
-  npm install -g @google/gemini-cli
+  npm_global_install @google/gemini-cli
   require_command "gemini" "Gemini CLI install did not place the binary on PATH."
   record_line "- Gemini CLI installed: $(command -v gemini)"
 }

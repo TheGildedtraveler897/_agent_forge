@@ -26,15 +26,15 @@ This file is the rolling operator handoff log. The `sprint-harvester` skill appe
 - Validation: Linux verifier/unit/export evidence lives at `runtime/validation/linux-2026-05-23/`; Mac and Windows checklists are staged for operator-run smoke tests.
 
 ## Current State
-The NRC ship branches (T1 terminology-drift, T2 multi-agent-story) are merged to `master` and pushed to `origin/master` (HEAD `95953fe`). Linux structural validation is green: verifier exit 0, 71 unit tests pass, COI grep clean. The current production onboarding suitcase is `exports/agent-forge-suitcase-20260525-153017.*` (source commit `95953fe`); the bundle now excludes `.venv/`, `__pycache__/`, and Python bytecode in addition to the prior runtime-cache exclusions. macOS demo prep is the next gate — `runtime/validation/mac-checklist.md` carries both the smoke-test steps and the boss-walkthrough path.
+The NRC ship branches (T1 terminology-drift, T2 multi-agent-story) are merged to `master` and pushed to `origin/master` (HEAD `95953fe`). Linux structural validation is green: verifier exit 0, 71 unit tests pass, COI grep clean. The current production onboarding suitcase is `exports/agent-forge-suitcase-20260525-153017.*` (source commit `95953fe`). macOS smoke test ran on NRC055206R (2026-05-25): all three CLIs confirmed (Claude Code 2.1.150, Codex 0.133.0, Gemini CLI 0.43.0) and `bootstrap-project.sh` passed. MacPorts npm EACCES root cause identified and fixed in branch `fix/macports-npm-sudo` (`npm_global_install()` helper in `scripts/bootstrap-workstation.sh`).
 
 ## Remaining Weaknesses
 - Windows VM smoke test still needs to be run by the operator with `runtime/validation/windows-2026-05-23.md`.
-- macOS smoke test is represented by `runtime/validation/mac-checklist.md` because no Mac host was reachable in this session.
+- macOS: CLIs and project bootstrap confirmed. Fix for MacPorts npm EACCES applied (`fix/macports-npm-sudo`). Remaining gap: Beat 0 inline render in Claude Code not yet tested on Mac; `mac.pass` in `validation-matrix.json` should be set to `true` after that step.
 - `scripts/validate-triad-runtime.py --project <name>` was skipped because `projects.json` has no governed projects. Run it after the first project is bootstrapped.
 
 ## Next Evolution
 After the Windows VM passes the one-shot ZIP deploy, merge the branch, tag the ship artifact, and push with operator approval. Follow-on work should add active policy records for Gemini-only hook semantics and render Codex `model_reasoning_effort` / per-agent `mcp_servers` explicitly.
 
 ## Final Verdict
-Linux-side ship gates are green. Windows is structurally fixed but still requires the fresh-VM smoke test before the release tag should be treated as fully proven.
+Linux-side ship gates are green. macOS CLIs and bootstrap confirmed; Beat 0 render is the final mac gate. Windows is structurally fixed but still requires the fresh-VM smoke test before the release tag should be treated as fully proven.

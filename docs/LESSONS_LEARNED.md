@@ -123,3 +123,13 @@ This file is the append-first knowledge anchor for Agent Forge. Validated workar
 - `Evidence:` Branch `feat/onboarding-multi-agent-story` commits: Beat count sync in BUNDLE_README.md, QUICKSTART.md, DEMO_PATH.md; demo fallback in DEMO_PATH.md line ~55; deploy-and-bootstrap.ps1 header comment refresh.
 - `Promotion Target:` Each deferred item (T3-A/D/E/G) should spawn its own post-NRC lesson entry once the rationale is decided (MacPorts decision, Windows Python policy, npm package reliability strategy, memory bridge side-car naming audit). Do not silently slip these into doctrine — spec first, then promote.
 - `Status:` active
+
+### 2026-05-26 - MacPorts npm global prefix is root-owned; npm install -g needs sudo on macOS
+
+- `Date:` 2026-05-26
+- `Context:` macOS smoke test (NRC055206R, bundle 20260525-153017). `bootstrap-workstation.sh` failed with EACCES when attempting `npm install -g @anthropic-ai/claude-code`. MacPorts installs Node/npm to `/opt/local/`, a root-owned tree. All other MacPorts commands in the script already use `sudo` (`sudo port selfupdate`, `sudo port install`), but the three npm global installs were bare. Running the whole script as `sudo ./bootstrap-workstation.sh` was the workaround that confirmed all three CLIs install correctly.
+- `Lesson:` On MacPorts, `npm install -g` requires sudo because the npm global prefix (`/opt/local/lib/node_modules`) is root-owned. On nvm/Homebrew setups the prefix is user-writable. The two behaviours look identical until a real macOS host runs the script.
+- `Architectural Decision:` Introduced `npm_global_install()` helper in `scripts/bootstrap-workstation.sh`. When `PACKAGE_MODE=macports` the helper prepends `sudo`; all other modes run bare `npm install -g`. This is consistent with the existing pattern where every other MacPorts install already uses sudo. Keeps apt and nvm paths unchanged.
+- `Evidence:` npm EACCES error (`errno -13`, `path /opt/local/lib/node_modules/@anthropic-ai`). All three CLIs confirmed working via sudo workaround (Claude Code 2.1.150, Codex 0.133.0, Gemini CLI 0.43.0). Fix: `scripts/bootstrap-workstation.sh` `npm_global_install()` helper, branch `fix/macports-npm-sudo`.
+- `Promotion Target:` `docs/CONOPS.md` or bootstrap runbook if npm prefix strategy ever changes (e.g. switching to a user-writable prefix via `npm config set prefix`).
+- `Status:` active
