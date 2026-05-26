@@ -37,7 +37,7 @@ This file is the rolling operator handoff log. The `sprint-harvester` skill appe
 - Validation: Linux verifier/unit/export evidence lives at `runtime/validation/linux-2026-05-23/`; Mac and Windows checklists are staged for operator-run smoke tests.
 
 ## Current State
-Branch `audit/enterprise-readiness-2026-05-26` carries the full enterprise-readiness audit (9 commits) on top of the prior `rc/2026-05-26` work (MacPorts fix + distiller-verification fix). Linux gates are green: verifier exit 0, 97 unit tests pass, registry in sync, export smoke clean. The factory now supports Debian/Ubuntu (apt), RHEL-family (dnf/yum), macOS (MacPorts-only), and native Windows (winget+npm + symlink-copy fallback). Nothing pushed yet; the audit branch is the integration line and the new RC is to be re-cut from it with operator approval.
+The enterprise-readiness audit (`audit/enterprise-readiness-2026-05-26`, 9 commits on top of the prior `rc/2026-05-26` work) is **merged to `master` and pushed to `origin/master`**. Linux gates are green: verifier exit 0, 97 unit tests pass, registry in sync, export smoke clean. The factory now supports Debian/Ubuntu (apt), RHEL-family (dnf/yum), macOS (MacPorts-only), and native Windows (winget+npm + symlink-copy fallback). The release-candidate suitcase was exported from this merged state (newest bundle under `exports/`).
 
 **Production baseline (NRC 2026-05-25):** Suitcase `agent-forge-suitcase-20260525-153017.*` (commit `95953fe`) — predates all audit fixes (RHEL, Windows symlink, deploy-flag, distiller-log). A re-cut RC + fresh suitcase supersedes it.
 
@@ -52,4 +52,4 @@ Branch `audit/enterprise-readiness-2026-05-26` carries the full enterprise-readi
 Operator-gated: (1) run the RHEL and Windows host checklists, capture evidence, update `validation-matrix.json`; (2) re-cut the RC from this audit branch, regenerate the suitcase, push with approval; (3) schedule the deferred TECH_DEBT items (Codex `model_reasoning_effort` / per-agent `mcp_servers`, `metadata.agent_forge.*` frontmatter migration).
 
 ## Final Verdict
-Linux-side enterprise-readiness gates are green and the audit is complete on the branch. RHEL and Windows are structurally complete but runtime-unproven — both are explicitly host-gated and must pass their checklists before the re-cut RC is treated as fully proven. No shared-state actions (merge/push/tag) taken without operator approval.
+Audit merged to `master` and pushed; RC suitcase exported. Linux-side gates are green. RHEL and Windows are structurally complete but runtime-unproven — both remain host-gated and must pass `runtime/validation/windows-2026-05-26.md` (Windows) and a Rocky/Alma/RHEL run before the RC is treated as fully proven on those platforms. macOS Beat 0 render still unobserved.
