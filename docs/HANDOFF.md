@@ -4,6 +4,13 @@ This file is the rolling operator handoff log. The `sprint-harvester` skill appe
 
 ## What Changed
 
+### Sprint: Opt-in Auto-Provisioning (2026-05-27)
+
+- Branch: `feat/auto-provision-prereqs`. Follow-on to the enterprise audit, triggered by a live Windows VM deploy where the box had only the Microsoft Store `python3` alias stub (no real Python).
+- **Bug fix:** `Resolve-Python` skips `*\WindowsApps\*` alias stubs and probes defensively (the stub's stderr under `EAP=Stop` was crashing the resolver with `NativeCommandError`).
+- **Feature (opt-in):** `-AutoProvision` (Windows) / `--auto-provision` (bash) on the deploy wrappers. `_psutil.ps1` centralizes `Install-WingetPackage`/`Get-NodeMajor` and adds `Find-Python`, `Update-SessionPath`, `Invoke-PrerequisiteProvision` (winget Python 3.12 / Git / Node LTS), plus `Resolve-Python -AutoProvision`. Bash: `bootstrap-workstation.sh --base-deps-only` (+ python3 in apt/dnf base lists; macOS provisions MacPorts python only if absent); `deploy-and-bootstrap.sh --auto-provision` runs it before deploy. Default stays detect-and-fail-clean (locked-down hosts never force-installed).
+- **Validation:** 106 unit tests (+9), verifier exit 0, bash -n clean, registry in sync. Live Windows VM run: see Current State.
+
 ### Sprint: Enterprise Deployment-Readiness Audit (2026-05-26)
 
 - Branch: `audit/enterprise-readiness-2026-05-26` (off `master`, merged `rc/2026-05-26` to carry the MacPorts + distiller-verification fixes). Plan: `~/.claude/plans/memoized-plotting-volcano.md`. Findings: `docs/research/enterprise-readiness-findings-2026-05-26.md`.
@@ -37,15 +44,14 @@ This file is the rolling operator handoff log. The `sprint-harvester` skill appe
 - Validation: Linux verifier/unit/export evidence lives at `runtime/validation/linux-2026-05-23/`; Mac and Windows checklists are staged for operator-run smoke tests.
 
 ## Current State
-The enterprise-readiness audit (`audit/enterprise-readiness-2026-05-26`, 9 commits on top of the prior `rc/2026-05-26` work) is **merged to `master` and pushed to `origin/master`**. Linux gates are green: verifier exit 0, 97 unit tests pass, registry in sync, export smoke clean. The factory now supports Debian/Ubuntu (apt), RHEL-family (dnf/yum), macOS (MacPorts-only), and native Windows (winget+npm + symlink-copy fallback). The release-candidate suitcase was exported from this merged state (newest bundle under `exports/`).
+Opt-in auto-provisioning (`feat/auto-provision-prereqs`) is merged to `master` and pushed, on top of the enterprise-readiness audit. **Windows deploy + bootstrap is now PROVEN GREEN on a real VM** (win11 build 26200, PS 5.1, no WSL): `deploy-and-bootstrap.ps1 -AutoProvision` winget-installed Python 3.12.10, `deploy-factory.ps1` parsed and synced Claude surfaces, `verify-agent-forge.py` exit 0, `bootstrap-project.ps1` scaffolded with the symlink→managed-copy fallback firing and projects.json registration. Evidence: `runtime/validation/windows-2026-05-27/RESULTS.md`; `validation-matrix.json` windows 2026-05-27 `pass=true`. Two live-only bugs were caught + fixed (Store python alias stub crash; non-ASCII `.ps1` breaking PS 5.1 parsing). Linux gates green: verifier exit 0, 107 unit tests, registry in sync, export smoke clean. The release-candidate suitcase is the newest bundle under `exports/`.
 
 **Production baseline (NRC 2026-05-25):** Suitcase `agent-forge-suitcase-20260525-153017.*` (commit `95953fe`) — predates all audit fixes (RHEL, Windows symlink, deploy-flag, distiller-log). A re-cut RC + fresh suitcase supersedes it.
 
 ## Remaining Weaknesses
-- **Windows runtime unproven** — full PowerShell parity + the `omni_factory` symlink→copy fallback are statically verified only. Run `runtime/validation/windows-2026-05-26.md` on a fresh native Windows VM; set `windows.pass` against captured evidence only.
+- **Windows `/onboarding-guide` Beat 0 inline render** — the only Windows gate not yet observed (interactive; can't be driven over SSH). Confirm in the demo (Beat 0 renders inline; tour says "eight" beats). Everything else on the Windows deploy+bootstrap path is proven green.
 - **RHEL runtime unproven** — dnf path is structurally verified only. Needs a RHEL/Rocky/Alma/Fedora host to confirm EPEL ripgrep/jq (+ CRB/PowerTools), `nodejs:20` AppStream, and whether `npm install -g` needs sudo on the dnf prefix.
 - **macOS Beat 0 render** still unobserved; `mac.pass` stays null until seen.
-- Environment note: `gemini skills list --all` hung ~60s during triad probing on the Linux dev host (CLI behavior; the validator now times out gracefully rather than crashing).
 - All host-gated items tracked in `docs/TECH_DEBT.md` and `docs/SUPPORTED_PLATFORMS.md`.
 
 ## Next Evolution

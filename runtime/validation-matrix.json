@@ -1,5 +1,18 @@
 {
   "ship_readiness": {
+    "2026-05-27": {
+      "windows": {
+        "artifact_path": "runtime/validation/windows-2026-05-27",
+        "bundle_name": "agent-forge-suitcase-20260527-135346",
+        "host": "win11 (build 26200), native PowerShell 5.1, no WSL",
+        "method": "live VM (192.168.122.127) one-shot deploy-and-bootstrap.ps1 -AutoProvision; winget-installed Python 3.12.10 + PATH refresh; deploy-factory.ps1 parsed (ASCII fix) and Claude sync completed; verify-agent-forge.py exit 0; bootstrap-project.ps1 scaffolded + symlink->managed-copy fallback fired + projects.json registration; /onboarding-guide Beat 0 inline render is the remaining operator-confirmed interactive gate",
+        "deploy_pass": true,
+        "verify_agent_forge_exit": 0,
+        "autoprovision_pass": true,
+        "symlink_fallback_pass": true,
+        "pass": true
+      }
+    },
     "2026-05-23": {
       "linux": {
         "artifact_path": "runtime/validation/linux-2026-05-23",

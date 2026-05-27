@@ -67,7 +67,7 @@ if (-not $ClaudeOnly) {
     Write-Host "Gemini home:         $GeminiHome"
 }
 if ($DryRun) {
-    Write-Host "(dry run — no changes will be made)"
+    Write-Host "(dry run - no changes will be made)"
 }
 
 # Locate shared-root doctrine.

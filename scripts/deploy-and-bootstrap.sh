@@ -37,6 +37,10 @@ Options:
   --gemini-home DIR       Target Gemini home (default: ~/.gemini)
   --overwrite-root-docs   Replace shared root docs if they already exist
   --replace-factory       Replace an existing target _agent_forge snapshot
+  --auto-provision        Opt-in: before deploying, ensure base prerequisites
+                          (Python 3.10+, Git, Node 20+) by running
+                          bootstrap-workstation.sh --base-deps-only. Use only where
+                          package installs are permitted (sudo / not policy-blocked).
   -h, --help              Show this message
 
 Example — fully non-interactive fresh-machine setup:
@@ -45,6 +49,7 @@ EOF
 }
 
 DEPLOY_ARGS=()
+AUTO_PROVISION="0"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -67,6 +72,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --overwrite-root-docs|--replace-factory)
       DEPLOY_ARGS+=("$1")
+      shift
+      ;;
+    --auto-provision)
+      AUTO_PROVISION="1"
       shift
       ;;
     -h|--help)
@@ -92,6 +101,19 @@ echo "║  Step 1: Deploy factory     (no packages installed)      ║"
 echo "║  Step 2: Workstation setup  (you choose what to install) ║"
 echo "╚══════════════════════════════════════════════════════════╝"
 echo
+
+# ── Step 0: Optional auto-provision of prerequisites ──────────────────────────
+# Runs BEFORE deploy because deploy-factory.sh's omni_factory sync needs python3.
+# Uses the source-tree bootstrap-workstation.sh (the deployed copy doesn't exist
+# yet). Opt-in only; never silent.
+
+if [[ "${AUTO_PROVISION}" == "1" ]]; then
+  echo "── Step 0: Auto-provision prerequisites (opt-in) ───────────────────────────"
+  echo "Ensuring Python 3.10+, Git, and Node 20+ via the platform package manager."
+  echo
+  "${FACTORY_ROOT}/scripts/bootstrap-workstation.sh" --base-deps-only --allow-external-node-repo
+  echo
+fi
 
 # ── Step 1: Deploy factory ────────────────────────────────────────────────────
 

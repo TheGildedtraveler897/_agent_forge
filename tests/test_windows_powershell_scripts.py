@@ -76,6 +76,54 @@ class WindowsPowerShellScriptTests(unittest.TestCase):
         self.assertIn("WindowsApps", body)
         self.assertIn("ErrorActionPreference", body)
 
+    def test_psutil_provides_optin_winget_provisioning(self) -> None:
+        body = self.script("_psutil.ps1")
+
+        self.assertIn("function Install-WingetPackage", body)
+        self.assertIn("function Get-NodeMajor", body)
+        self.assertIn("function Update-SessionPath", body)
+        self.assertIn("function Find-Python", body)
+        self.assertIn("function Invoke-PrerequisiteProvision", body)
+        # Resolve-Python gains the opt-in provisioning switch.
+        self.assertIn("[switch]$AutoProvision", body)
+        # Full base set: Python + Git + Node LTS winget IDs.
+        self.assertIn("Python.Python.3.12", body)
+        self.assertIn("Git.Git", body)
+        self.assertIn("OpenJS.NodeJS.LTS", body)
+        # PATH refresh after install, and a graceful winget-absent path.
+        self.assertIn("GetEnvironmentVariable('Path', 'Machine')", body)
+        self.assertIn("winget unavailable", body)
+
+    def test_all_ps1_are_ascii_only(self) -> None:
+        # Windows PowerShell 5.1 reads a BOM-less .ps1 under the ANSI codepage,
+        # so a UTF-8 em-dash / box-drawing char becomes mojibake and breaks the
+        # parser (observed live: deploy-factory.ps1 failed to parse on the VM).
+        # Keep .ps1 content ASCII-only to stay codepage-independent.
+        for path in sorted((ROOT / "scripts").glob("*.ps1")):
+            with self.subTest(script=path.name):
+                data = path.read_bytes()
+                bad = [(i, b) for i, b in enumerate(data) if b > 0x7F]
+                self.assertEqual(
+                    bad, [], f"{path.name} has non-ASCII bytes at offsets {[i for i, _ in bad[:5]]}"
+                )
+
+    def test_deploy_and_bootstrap_has_optin_autoprovision(self) -> None:
+        body = self.script("deploy-and-bootstrap.ps1")
+
+        self.assertIn("[switch]$AutoProvision", body)
+        self.assertIn("Invoke-PrerequisiteProvision", body)
+        self.assertIn("Resolve-Python -AutoProvision:$AutoProvision", body)
+
+    def test_bootstrap_workstation_uses_shared_winget_helpers(self) -> None:
+        body = self.script("bootstrap-workstation.ps1")
+
+        # The duplicated definitions were removed; the shared _psutil.ps1 ones are used.
+        self.assertNotIn("function Install-WingetPackage", body)
+        self.assertNotIn("function Get-NodeMajor", body)
+        self.assertIn("_psutil.ps1", body)
+        # Still references the winget package IDs in its checks table + call sites.
+        self.assertIn("Install-WingetPackage", body)
+
     def test_entry_scripts_dot_source_shared_helper_not_local_resolver(self) -> None:
         for name in ("bootstrap-project.ps1", "deploy-factory.ps1"):
             with self.subTest(script=name):

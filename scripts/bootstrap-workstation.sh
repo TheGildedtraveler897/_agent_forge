@@ -8,10 +8,11 @@ MACHINE_SETUP_DIR="${ROOT_DIR}/runtime/machine-setup"
 TIMESTAMP="$(date -u +%Y%m%d-%H%M%S)"
 MACHINE_SETUP_LOG="${MACHINE_SETUP_DIR}/bootstrap-${TIMESTAMP}.md"
 FORCE_NODE_EXTERNAL="0"
+BASE_DEPS_ONLY="0"
 
 usage() {
   cat <<'EOF'
-Usage: bootstrap-workstation.sh [--allow-external-node-repo]
+Usage: bootstrap-workstation.sh [--allow-external-node-repo] [--base-deps-only]
 
 Prepare a fresh Debian/Ubuntu, Red Hat family (RHEL/Fedora/CentOS/Rocky/Alma),
 or macOS workstation for Agent Forge development.
@@ -25,6 +26,9 @@ This script:
 Options:
   --allow-external-node-repo  Pre-approve use of a vetted external Node LTS repo
                               (NodeSource apt on Debian/Ubuntu, NodeSource rpm on Red Hat family)
+  --base-deps-only            Install only base dependencies + Node (no hosted CLIs,
+                              no interactive service menu). Used by deploy-and-bootstrap.sh
+                              --auto-provision to ensure prerequisites non-interactively.
   -h, --help                  Show this message
 EOF
 }
@@ -33,6 +37,10 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --allow-external-node-repo)
       FORCE_NODE_EXTERNAL="1"
+      shift
+      ;;
+    --base-deps-only)
+      BASE_DEPS_ONLY="1"
       shift
       ;;
     -h|--help)
@@ -167,7 +175,7 @@ apt_install() {
 }
 
 ensure_base_dependencies_apt() {
-  apt_install git curl jq ripgrep zip unzip tar ca-certificates build-essential
+  apt_install git curl jq ripgrep zip unzip tar ca-certificates build-essential python3
 }
 
 ensure_node_apt() {
@@ -234,6 +242,12 @@ EOF
 
   sudo port selfupdate
   sudo port install git curl jq ripgrep zip unzip npm10
+  # Ensure a python3 exists, but do not disturb an existing one (Xcode CLT or a
+  # prior MacPorts select) — only provision MacPorts python if none is present.
+  if ! command -v python3 >/dev/null 2>&1; then
+    sudo port install python312
+    sudo port select --set python3 python312
+  fi
 }
 
 ensure_node_macports() {
@@ -285,7 +299,7 @@ ensure_epel_if_needed() {
 
 ensure_base_dependencies_dnf() {
   ensure_epel_if_needed
-  dnf_install git curl jq ripgrep zip unzip tar ca-certificates gcc gcc-c++ make
+  dnf_install git curl jq ripgrep zip unzip tar ca-certificates gcc gcc-c++ make python3
   # Wider toolchain, best-effort; group syntax can be absent on minimal images.
   if ! sudo "${DNF_BIN}" groupinstall -y "Development Tools" 2>/dev/null; then
     sudo "${DNF_BIN}" install -y "@development" 2>/dev/null || true
@@ -522,6 +536,15 @@ fi
 
 record_line "- Package mode: ${PACKAGE_MODE}"
 record_line "- Node version: $(node --version)"
+
+# --base-deps-only (used by deploy-and-bootstrap.sh --auto-provision): base deps
+# and Node are now ensured non-interactively; stop before the hosted-CLI menu.
+if [[ "${BASE_DEPS_ONLY}" == "1" ]]; then
+  record_line "- base-deps-only: prerequisites ensured (no hosted CLIs installed)"
+  echo "Base dependencies and Node ensured (--base-deps-only). Skipping hosted-CLI install."
+  echo "Log written to: ${MACHINE_SETUP_LOG}"
+  exit 0
+fi
 
 choose_services
 

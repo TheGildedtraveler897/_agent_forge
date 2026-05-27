@@ -183,3 +183,13 @@ This file is the append-first knowledge anchor for Agent Forge. Validated workar
 - `Evidence:` https://agentskills.io/specification (frontmatter table + `metadata` field note); `docs/CONOPS.md` § Standard vs Local Extensions (already documents the fields as local extensions); `docs/TECH_DEBT.md` migration item.
 - `Promotion Target:` `docs/CONOPS.md` § Standard vs Local Extensions — add the `metadata.agent_forge.*` recommendation when/if the migration is scheduled.
 - `Status:` active
+
+### 2026-05-27 - Windows Store python alias stub + opt-in auto-provisioning
+
+- `Date:` 2026-05-27
+- `Context:` Live deploy on a fresh Windows 11 VM. The box had **no real Python — only the Microsoft Store `python3` App Execution Alias stub**. Under `$ErrorActionPreference='Stop'`, the stub's "Python was not found" native stderr crashed `Resolve-Python` with `NativeCommandError` instead of falling through. Static tests could not have caught this (Store-alias + EAP interaction needs a real Windows host).
+- `Lesson:` (1) On Windows, candidate interpreters can be alias stubs that error on invocation; a resolver must skip `*\WindowsApps\*` stubs AND wrap each probe in try/finally with local `EAP=Continue` so a bad candidate is skipped, never fatal. (2) "Detect and fail clean" is the right default, but a self-healing deploy should optionally *remediate* — install the missing prerequisite — gated behind an explicit opt-in flag. Auto-install must never be the silent default: locked-down enterprise hosts forbid unsanctioned installs (SCCM/Intune) and may block winget.
+- `Architectural Decision:` `_psutil.ps1` skips the alias stub + probes defensively; adds `Find-Python` (no-throw), `Invoke-PrerequisiteProvision` (winget Python 3.12 / Git / Node LTS, idempotent, PATH refresh), and `Resolve-Python -AutoProvision`. `deploy-and-bootstrap.ps1 -AutoProvision` / `deploy-and-bootstrap.sh --auto-provision` (the latter via `bootstrap-workstation.sh --base-deps-only`) provision on opt-in only. winget-installed tools need a session PATH refresh (`Update-SessionPath`) before re-resolving.
+- `Evidence:` Live VM run (`win11`@192.168.122.127) showed the NativeCommandError pre-fix; `scripts/_psutil.ps1`, `scripts/deploy-and-bootstrap.{ps1,sh}`, `scripts/bootstrap-workstation.{ps1,sh}`; `tests/test_windows_powershell_scripts.py` + `tests/test_auto_provision.py`.
+- `Promotion Target:` `docs/WORKSTATION_BOOTSTRAP.md` and `docs/SUPPORTED_PLATFORMS.md` already document the opt-in flag.
+- `Status:` active

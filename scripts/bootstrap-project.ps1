@@ -79,7 +79,7 @@ if ($Existing) {
     New-Item -ItemType Directory -Force -Path $targetRoot | Out-Null
 }
 
-# Subdirectories — kept identical to bootstrap-project.sh so re-running either
+# Subdirectories - kept identical to bootstrap-project.sh so re-running either
 # script yields the same tree.
 foreach ($sub in @('docs', '.claude\agents', '.claude\skills', '.codex\agents',
                    '.gemini\agents', '.gemini\skills', '.agents\skills')) {
@@ -190,7 +190,7 @@ Last updated: $(Get-Date -Format 'yyyy-MM-dd')
 3. Use the workflow chain (\`spec-architect\` -> \`execution-planner\` -> \`tdd-engineer\` -> ...) for your first sprint.
 "@
 
-# AGENTS.override.md — Codex 2026 precedence stub. Idempotent (New-StubFile skips
+# AGENTS.override.md - Codex 2026 precedence stub. Idempotent (New-StubFile skips
 # if present), so re-running never clobbers operator-authored Codex overrides.
 $agentsOverrideBody = @"
 <!-- Project-local Codex overrides. Codex reads this file BEFORE the parent-tree AGENTS.md. -->
@@ -284,7 +284,7 @@ if (-not $ClaudeOnly) {
     catch { Write-Warning "Gemini sync failed: $_" }
 }
 
-# ── Interactive project-definition flow (parity with bootstrap-project.sh) ─────
+# -- Interactive project-definition flow (parity with bootstrap-project.sh) -----
 
 function Invoke-ProjectDefinition {
     param(

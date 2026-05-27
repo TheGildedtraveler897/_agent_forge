@@ -12,14 +12,6 @@ Framework-level debt items are tracked here. Add an entry when you discover a ga
 - `Owner:` operator (scheduled follow-on sprint)
 - `Status:` open
 
-### Opt-in auto-provisioning of missing prerequisites in the deploy flow
-
-- `Discovered:` 2026-05-26 (live Windows VM test — VM had only the Store python3 alias, no real Python)
-- `Impact:` The deploy path detects a missing/old Python and fails clean, but does not remediate. Operators must run `bootstrap-workstation.ps1 -Install` (or apt/dnf install) as a separate step. A self-healing deploy would detect AND provision Python 3.10+, Git, Node 20+ automatically.
-- `Closure plan:` Add an explicit `-AutoProvision` (PowerShell) / `--auto-provision` (bash) flag to `deploy-and-bootstrap.{ps1,sh}` that, when a prerequisite is missing, invokes the existing installer (winget on Windows, apt/dnf/MacPorts on *nix) for the known set, then re-resolves. MUST be opt-in, never silent default: locked-down enterprise hosts often forbid unsanctioned installs (SCCM/Intune/managed portals) and may block winget. Handle the post-install PATH-refresh (re-resolve or instruct a new shell). Idempotent; bounded to the known prereq set.
-- `Owner:` operator (scheduled follow-on)
-- `Status:` open
-
 ### Migrate SKILL.md local extensions under `metadata.agent_forge.*`
 
 - `Discovered:` 2026-05-26 (standards re-verification against https://agentskills.io/specification)
@@ -54,7 +46,15 @@ Framework-level debt items are tracked here. Add an entry when you discover a ga
 
 ## Recently Resolved
 
-_Resolved items land here for one milestone before being removed._
+### Opt-in auto-provisioning of missing prerequisites in the deploy flow
+
+- `Resolved:` 2026-05-27 (`feat/auto-provision-prereqs`)
+- `What shipped:` `-AutoProvision` (PowerShell) / `--auto-provision` (bash) on the
+  deploy wrappers. Windows: `_psutil.ps1` gains `Invoke-PrerequisiteProvision` +
+  `Resolve-Python -AutoProvision` (winget Python 3.12 / Git / Node LTS, PATH refresh,
+  re-scan). Bash: `bootstrap-workstation.sh --base-deps-only` + python3 in base lists;
+  `deploy-and-bootstrap.sh --auto-provision` runs it before deploy. Opt-in only;
+  default stays detect-and-fail-clean for locked-down hosts.
 
 ---
 

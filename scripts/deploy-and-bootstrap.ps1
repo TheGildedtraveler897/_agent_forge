@@ -16,6 +16,7 @@ param(
     [switch]$AllHosts,
     [switch]$ReplaceFactory,
     [switch]$OverwriteRootDocs,
+    [switch]$AutoProvision,
     [switch]$DryRun,
     [switch]$Help
 )
@@ -41,6 +42,10 @@ Options:
   -AllHosts          Sync Claude, Codex, and Gemini. Default is Claude only.
   -ReplaceFactory    Replace existing %USERPROFILE%\Projects\_agent_forge.
   -OverwriteRootDocs Replace shared root docs if they already exist.
+  -AutoProvision     Opt-in: if Python 3.10+, Git, or Node 20+ is missing, install
+                     it via winget before deploying. Default is detect-and-fail-clean.
+                     Do not use on locked-down hosts where installs must go through a
+                     managed software portal (SCCM/Intune) or winget is blocked.
   -DryRun            Print deploy-factory actions where supported.
 "@
     exit 0
@@ -125,10 +130,15 @@ if (-not $DryRun) {
 }
 
 # Validate Python 3.10+ using the helper from the freshly-extracted tree.
+# With -AutoProvision, install missing base prerequisites (Python/Git/Node) first.
 $psutil = Join-Path $factoryRoot 'scripts\_psutil.ps1'
 if (Test-Path $psutil) {
     . $psutil
-    $py = Resolve-Python
+    if ($AutoProvision -and -not $DryRun) {
+        Write-Host "AutoProvision: ensuring Python 3.10+, Git, and Node 20+ via winget (opt-in)..."
+        Invoke-PrerequisiteProvision
+    }
+    $py = Resolve-Python -AutoProvision:$AutoProvision
     Write-Host "Python resolver: $($py.Exe) $($py.Pre -join ' ') ($($py.Version))"
 } else {
     Write-Warning "Extracted _psutil.ps1 not found; deploy-factory.ps1 will resolve Python itself."
