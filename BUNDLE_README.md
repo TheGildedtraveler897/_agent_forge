@@ -21,14 +21,14 @@ It also ships:
 ./_agent_forge/scripts/deploy-and-bootstrap.sh
 ```
 
-**Windows ZIP transfer (native PowerShell, no WSL required):**
+**Windows (native PowerShell, no WSL) — easiest one-shot.** Put the `.zip` and the matching `-deploy-and-bootstrap.ps1` in the same folder, then:
 ```powershell
-powershell.exe -ExecutionPolicy Bypass -File .\agent-forge-suitcase-<timestamp>-deploy-and-bootstrap.ps1 -BundleZip .\agent-forge-suitcase-<timestamp>.zip -DestinationRoot .\af
+powershell -ExecutionPolicy Bypass -File .\agent-forge-suitcase-<timestamp>-deploy-and-bootstrap.ps1 -BundleZip .\agent-forge-suitcase-<timestamp>.zip -DestinationRoot C:\af -AutoProvision
 ```
 
-This copies the canonical factory into `~/Projects/_agent_forge` and renders Claude / Codex / Gemini surfaces into your user-home host directories. Windows defaults to Claude-only; pass `-AllHosts` after Codex and Gemini are installed. The Windows entry point unblocks the ZIP before extraction, avoids Explorer's partial-extract failure mode, and warns when the destination path is long enough to risk MAX_PATH issues.
+`-AutoProvision` installs missing **Python / Git / Node** for you via winget, then deploys. This copies the canonical factory into `~/Projects/_agent_forge` and renders Claude / Codex / Gemini surfaces into your user-home host directories. Windows defaults to Claude-only; pass `-AllHosts` after Codex and Gemini are installed. The entry point unblocks the ZIP before extraction, avoids Explorer's partial-extract failure mode, and warns on long destination paths (MAX_PATH).
 
-**Missing Python / Git / Node?** Add `-AutoProvision` (Windows) or `--auto-provision` (Linux/macOS) and the one-shot deploy installs them for you (winget on Windows; apt/dnf/MacPorts on \*nix) before deploying. It's opt-in: if your machine restricts installs to a managed portal (SCCM/Intune) or blocks winget, omit the flag, install Python 3.10+, Git, and Node 20+ through your approved channel, then re-run.
+**On a locked-down / IT-managed machine** (installs must go through SCCM/Intune, or winget is blocked): drop `-AutoProvision`, install Python 3.10+, Git, and Node 20+ through your approved channel first, then re-run the same command without the flag.
 
 If the bundle is already safely extracted, Windows operators can run:
 

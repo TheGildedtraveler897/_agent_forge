@@ -264,18 +264,26 @@ QUICKSTART (pick your platform)
     cd <unpacked-bundle>
     ./_agent_forge/scripts/deploy-and-bootstrap.sh
 
-  Windows ZIP transfer (native PowerShell, no WSL required):
-    powershell.exe -ExecutionPolicy Bypass -File .\agent-forge-suitcase-<timestamp>-deploy-and-bootstrap.ps1 -BundleZip .\agent-forge-suitcase-<timestamp>.zip -DestinationRoot .\af
+  Windows (native PowerShell, no WSL required) - EASIEST, one shot:
+    Put the .zip and the matching -deploy-and-bootstrap.ps1 in the same folder, then:
+    powershell -ExecutionPolicy Bypass -File .\agent-forge-suitcase-<timestamp>-deploy-and-bootstrap.ps1 -BundleZip .\agent-forge-suitcase-<timestamp>.zip -DestinationRoot C:\af -AutoProvision
+
+    -AutoProvision installs missing Python / Git / Node for you via winget. If your
+    machine blocks installs (managed by IT / SCCM / Intune / no winget), drop the
+    -AutoProvision flag and install Python 3.10+, Git, and Node 20+ through your
+    approved channel first, then re-run.
 
   Then in Claude Code, invoke the onboarding-guide skill for an
   interactive walkthrough:
     /onboarding-guide
 
 REQUIREMENTS
-  Linux / macOS: Python 3.10+, git, tar
+  Linux / macOS: Python 3.10+, git, tar  (or pass --auto-provision to install them)
   macOS: MacPorts (NOT Homebrew)
-  Windows: Python 3.10+, git, PowerShell 5.1+ (ships with Windows 10+)
-  Windows Codex runtime: use WSL2 unless codex --version works in native PowerShell
+  Windows: PowerShell 5.1+ (ships with Windows 10/11). Python 3.10+, Git, and Node 20+
+           are installed for you by -AutoProvision; only pre-install them on locked-down
+           hosts where installs must go through a managed software portal.
+  Codex / Gemini run natively in PowerShell; WSL2 is only an optional fallback.
 
   Plus at least one host CLI:
     - Claude Code  (anthropic.com)
