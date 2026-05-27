@@ -44,25 +44,10 @@ $machineSetupDir = Join-Path $factoryRoot 'runtime\machine-setup'
 $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
 $logPath = Join-Path $machineSetupDir "bootstrap-$stamp.md"
 
-function Install-WingetPackage {
-    param(
-        [Parameter(Mandatory=$true)][string]$Id,
-        [Parameter(Mandatory=$true)][string]$Name
-    )
-    if (-not (Test-Command 'winget')) {
-        Write-Warning "winget is not available. Install $Name manually."
-        return
-    }
-    Write-Host "Installing $Name with winget..."
-    winget install --id $Id --exact --source winget --accept-package-agreements --accept-source-agreements
-}
-
-function Get-NodeMajor {
-    if (-not (Test-Command 'node')) { return 0 }
-    $v = (& node --version) 2>$null
-    if ($v -match 'v?(\d+)\.') { return [int]$matches[1] }
-    return 0
-}
+# Install-WingetPackage, Get-NodeMajor, and Test-Command are provided by the
+# dot-sourced scripts/_psutil.ps1 (shared with the deploy path). The winget
+# package IDs used below (Python.Python.3, Git.Git, OpenJS.NodeJS.LTS) remain
+# defined in the $checks table.
 
 # npm has no sudo on Windows (the global prefix is user-writable), unlike the
 # MacPorts path in the .sh. Mirrors install_claude/codex/gemini.
