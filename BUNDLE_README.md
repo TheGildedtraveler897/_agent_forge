@@ -28,6 +28,8 @@ powershell.exe -ExecutionPolicy Bypass -File .\agent-forge-suitcase-<timestamp>-
 
 This copies the canonical factory into `~/Projects/_agent_forge` and renders Claude / Codex / Gemini surfaces into your user-home host directories. Windows defaults to Claude-only; pass `-AllHosts` after Codex and Gemini are installed. The Windows entry point unblocks the ZIP before extraction, avoids Explorer's partial-extract failure mode, and warns when the destination path is long enough to risk MAX_PATH issues.
 
+**Missing Python / Git / Node?** Add `-AutoProvision` (Windows) or `--auto-provision` (Linux/macOS) and the one-shot deploy installs them for you (winget on Windows; apt/dnf/MacPorts on \*nix) before deploying. It's opt-in: if your machine restricts installs to a managed portal (SCCM/Intune) or blocks winget, omit the flag, install Python 3.10+, Git, and Node 20+ through your approved channel, then re-run.
+
 If the bundle is already safely extracted, Windows operators can run:
 
 ```powershell

@@ -16,6 +16,28 @@ cd ~/Projects/_agent_forge
 ./scripts/bootstrap-workstation.sh
 ```
 
+## Auto-provisioning prerequisites (opt-in)
+
+If the machine is missing Python 3.10+, Git, or Node 20+, the deploy fails clean
+with the install command. To have the one-shot deploy install them for you, pass
+the opt-in flag:
+
+```bash
+# Linux/macOS — installs base prereqs via apt/dnf/MacPorts before deploying:
+./_agent_forge/scripts/deploy-and-bootstrap.sh --auto-provision
+```
+
+```powershell
+# Windows — installs Python/Git/Node via winget before deploying:
+powershell.exe -ExecutionPolicy Bypass -File .\<bundle>-deploy-and-bootstrap.ps1 `
+  -BundleZip .\<bundle>.zip -DestinationRoot C:\af -AutoProvision
+```
+
+**This is opt-in by design and not the default.** On locked-down enterprise hosts,
+software must often be installed through a managed portal (SCCM/Intune) and winget
+may be blocked — there, omit the flag, install the prerequisites through your
+approved channel, and re-run. Provisioning is idempotent and bounded to Python/Git/Node.
+
 ## What This Script Does
 
 - detects the host platform

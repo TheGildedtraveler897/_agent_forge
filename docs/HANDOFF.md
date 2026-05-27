@@ -4,6 +4,13 @@ This file is the rolling operator handoff log. The `sprint-harvester` skill appe
 
 ## What Changed
 
+### Sprint: Opt-in Auto-Provisioning (2026-05-27)
+
+- Branch: `feat/auto-provision-prereqs`. Follow-on to the enterprise audit, triggered by a live Windows VM deploy where the box had only the Microsoft Store `python3` alias stub (no real Python).
+- **Bug fix:** `Resolve-Python` skips `*\WindowsApps\*` alias stubs and probes defensively (the stub's stderr under `EAP=Stop` was crashing the resolver with `NativeCommandError`).
+- **Feature (opt-in):** `-AutoProvision` (Windows) / `--auto-provision` (bash) on the deploy wrappers. `_psutil.ps1` centralizes `Install-WingetPackage`/`Get-NodeMajor` and adds `Find-Python`, `Update-SessionPath`, `Invoke-PrerequisiteProvision` (winget Python 3.12 / Git / Node LTS), plus `Resolve-Python -AutoProvision`. Bash: `bootstrap-workstation.sh --base-deps-only` (+ python3 in apt/dnf base lists; macOS provisions MacPorts python only if absent); `deploy-and-bootstrap.sh --auto-provision` runs it before deploy. Default stays detect-and-fail-clean (locked-down hosts never force-installed).
+- **Validation:** 106 unit tests (+9), verifier exit 0, bash -n clean, registry in sync. Live Windows VM run: see Current State.
+
 ### Sprint: Enterprise Deployment-Readiness Audit (2026-05-26)
 
 - Branch: `audit/enterprise-readiness-2026-05-26` (off `master`, merged `rc/2026-05-26` to carry the MacPorts + distiller-verification fixes). Plan: `~/.claude/plans/memoized-plotting-volcano.md`. Findings: `docs/research/enterprise-readiness-findings-2026-05-26.md`.

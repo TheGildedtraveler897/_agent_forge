@@ -38,6 +38,14 @@ and what still **needs a real host** before it can be called proven.
 **Needs the operator's Mac:**
 - `/onboarding-guide` Beat 0 rendering inline in Claude Code (set `mac.pass` only after observing it).
 
+## Auto-provisioning prerequisites (opt-in)
+
+Missing Python 3.10+, Git, or Node 20+? The one-shot deploy can install them when
+the operator opts in: `-AutoProvision` (Windows, via winget) or `--auto-provision`
+(Linux/macOS, via apt/dnf/MacPorts). Opt-in by design — default stays
+detect-and-fail-clean so locked-down hosts (managed-portal-only installs, winget
+blocked) are never force-provisioned. See `docs/WORKSTATION_BOOTSTRAP.md`.
+
 ## Enterprise network constraints
 
 Corporate proxy / TLS-interception handling is documented in
