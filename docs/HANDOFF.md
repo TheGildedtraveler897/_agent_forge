@@ -44,15 +44,14 @@ This file is the rolling operator handoff log. The `sprint-harvester` skill appe
 - Validation: Linux verifier/unit/export evidence lives at `runtime/validation/linux-2026-05-23/`; Mac and Windows checklists are staged for operator-run smoke tests.
 
 ## Current State
-The enterprise-readiness audit (`audit/enterprise-readiness-2026-05-26`, 9 commits on top of the prior `rc/2026-05-26` work) is **merged to `master` and pushed to `origin/master`**. Linux gates are green: verifier exit 0, 97 unit tests pass, registry in sync, export smoke clean. The factory now supports Debian/Ubuntu (apt), RHEL-family (dnf/yum), macOS (MacPorts-only), and native Windows (winget+npm + symlink-copy fallback). The release-candidate suitcase was exported from this merged state (newest bundle under `exports/`).
+Opt-in auto-provisioning (`feat/auto-provision-prereqs`) is merged to `master` and pushed, on top of the enterprise-readiness audit. **Windows deploy + bootstrap is now PROVEN GREEN on a real VM** (win11 build 26200, PS 5.1, no WSL): `deploy-and-bootstrap.ps1 -AutoProvision` winget-installed Python 3.12.10, `deploy-factory.ps1` parsed and synced Claude surfaces, `verify-agent-forge.py` exit 0, `bootstrap-project.ps1` scaffolded with the symlink→managed-copy fallback firing and projects.json registration. Evidence: `runtime/validation/windows-2026-05-27/RESULTS.md`; `validation-matrix.json` windows 2026-05-27 `pass=true`. Two live-only bugs were caught + fixed (Store python alias stub crash; non-ASCII `.ps1` breaking PS 5.1 parsing). Linux gates green: verifier exit 0, 107 unit tests, registry in sync, export smoke clean. The release-candidate suitcase is the newest bundle under `exports/`.
 
 **Production baseline (NRC 2026-05-25):** Suitcase `agent-forge-suitcase-20260525-153017.*` (commit `95953fe`) — predates all audit fixes (RHEL, Windows symlink, deploy-flag, distiller-log). A re-cut RC + fresh suitcase supersedes it.
 
 ## Remaining Weaknesses
-- **Windows runtime unproven** — full PowerShell parity + the `omni_factory` symlink→copy fallback are statically verified only. Run `runtime/validation/windows-2026-05-26.md` on a fresh native Windows VM; set `windows.pass` against captured evidence only.
+- **Windows `/onboarding-guide` Beat 0 inline render** — the only Windows gate not yet observed (interactive; can't be driven over SSH). Confirm in the demo (Beat 0 renders inline; tour says "eight" beats). Everything else on the Windows deploy+bootstrap path is proven green.
 - **RHEL runtime unproven** — dnf path is structurally verified only. Needs a RHEL/Rocky/Alma/Fedora host to confirm EPEL ripgrep/jq (+ CRB/PowerTools), `nodejs:20` AppStream, and whether `npm install -g` needs sudo on the dnf prefix.
 - **macOS Beat 0 render** still unobserved; `mac.pass` stays null until seen.
-- Environment note: `gemini skills list --all` hung ~60s during triad probing on the Linux dev host (CLI behavior; the validator now times out gracefully rather than crashing).
 - All host-gated items tracked in `docs/TECH_DEBT.md` and `docs/SUPPORTED_PLATFORMS.md`.
 
 ## Next Evolution
