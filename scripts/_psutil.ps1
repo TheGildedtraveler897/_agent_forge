@@ -50,7 +50,7 @@ function Update-SessionPath {
 
 # Scan PATH for a Python interpreter meeting the >= MinMajor.MinMinor floor.
 # Returns an object with Exe (string), Pre (string[] prefix args, @('-3') for the
-# py launcher else @()), and Version — or $null if none qualifies. Never throws.
+# py launcher else @()), and Version - or $null if none qualifies. Never throws.
 function Find-Python {
     param(
         [int]$MinMajor = 3,
@@ -116,7 +116,7 @@ function Resolve-Python {
 # Opt-in: install missing base prerequisites (Python 3.10+, Git, Node 20+) via
 # winget. Idempotent (winget skips installed). Refreshes the session PATH after
 # installs. On a host without winget (or where it is policy-blocked), warns and
-# returns so the caller's clean detect-and-fail path takes over — we never force
+# returns so the caller's clean detect-and-fail path takes over - we never force
 # an install on a locked-down enterprise machine.
 function Invoke-PrerequisiteProvision {
     [CmdletBinding()]

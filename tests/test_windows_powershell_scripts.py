@@ -94,6 +94,19 @@ class WindowsPowerShellScriptTests(unittest.TestCase):
         self.assertIn("GetEnvironmentVariable('Path', 'Machine')", body)
         self.assertIn("winget unavailable", body)
 
+    def test_all_ps1_are_ascii_only(self) -> None:
+        # Windows PowerShell 5.1 reads a BOM-less .ps1 under the ANSI codepage,
+        # so a UTF-8 em-dash / box-drawing char becomes mojibake and breaks the
+        # parser (observed live: deploy-factory.ps1 failed to parse on the VM).
+        # Keep .ps1 content ASCII-only to stay codepage-independent.
+        for path in sorted((ROOT / "scripts").glob("*.ps1")):
+            with self.subTest(script=path.name):
+                data = path.read_bytes()
+                bad = [(i, b) for i, b in enumerate(data) if b > 0x7F]
+                self.assertEqual(
+                    bad, [], f"{path.name} has non-ASCII bytes at offsets {[i for i, _ in bad[:5]]}"
+                )
+
     def test_deploy_and_bootstrap_has_optin_autoprovision(self) -> None:
         body = self.script("deploy-and-bootstrap.ps1")
 

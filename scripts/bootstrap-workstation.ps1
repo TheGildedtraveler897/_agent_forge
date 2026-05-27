@@ -1,4 +1,4 @@
-# Windows workstation bootstrap for Agent Forge — install parity with
+# Windows workstation bootstrap for Agent Forge - install parity with
 # scripts/bootstrap-workstation.sh. Detection is safe by default. With -Install,
 # uses winget for base tools (Python/Git/Node) and `npm install -g` for the
 # hosted CLIs (Claude Code, Codex, Gemini), enforces Python 3.10+ and Node 20+,
@@ -141,7 +141,7 @@ if (-not $Install) {
     exit 0
 }
 
-# ── Install path ───────────────────────────────────────────────────────────────
+# -- Install path ---------------------------------------------------------------
 
 $selection = if ($Service) { $Service } else { Read-ServiceSelection }
 $installClaude = $selection -in @('1', '4', '5', '7')
@@ -188,7 +188,7 @@ if ($installGemini) {
 }
 Add-Content -Path $logPath -Encoding UTF8 -Value ($results -join "`n")
 
-# ── Authentication guidance (ported from bootstrap-workstation.sh) ─────────────
+# -- Authentication guidance (ported from bootstrap-workstation.sh) -------------
 
 Write-Host ""
 Write-Host "## Authentication Guidance"
